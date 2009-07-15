@@ -7,13 +7,20 @@ use strict;
 use Test::More;
 
 # - test a basic RFC4934 session flow:
-#   - connect
+#   - connect;
 #   - receive and validate greeting
-#   - send <login> message
-#   - server sends response
-#   - (optional) send a dummy command and check response (mocked)
-#   - send <logout> message
-#   - check logout response, wait for remote disconnect
+#   - message queuing/exchange using mocked messages:
+#      - send <login> message
+#      - server sends response
+#      - (optional) send a dummy command and check response
+#      - (optional) test request/response pipelining
+#      - send <logout> message (mocked)
+#      - check logout response, wait for remote disconnect
+#   - hang up
+
+# The server module must defer work to another module to actually
+# prepare the XML messages - the actual content (or even being valid
+# XML) is unimportant for this test.
 
 plan skip_all => "TODO";
 
