@@ -1,10 +1,18 @@
 #!/usr/bin/perl -w
 #
-# test script for validation and transformation of messages and/or XML
-# fragments described in RFC4930 (EPP and EPP common)
+# test script for validation and load/dump between Perl/Moose and XML
+# for complete messages and fragments described in RFC4930 (EPP and
+# EPP common)
 
 use strict;
 use Test::More;
+
+# of particular note: these stateful EPP messages are never converted
+# to the stateless SRS protocol; so they will not be covered by later
+# tests and tests must be particularly thorough.
+
+#    - Hello / Greeting
+#    - logout
 
 plan skip_all => "TODO";
 

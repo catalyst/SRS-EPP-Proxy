@@ -1,7 +1,8 @@
 #!/usr/bin/perl -w
 #
-# test script for validation and transformation of messages and/or XML
-# fragments described in draft-nzrs-srs-01 (SRS protocol mapping)
+# test script for validation and load/dump between Perl/Moose and XML
+# for complete messages and fragments described in described in
+# draft-nzrs-srs-01 (SRS protocol mapping)
 
 use strict;
 use Test::More;

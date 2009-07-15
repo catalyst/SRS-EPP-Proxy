@@ -1,18 +1,38 @@
 #!/usr/bin/perl -w
 #
-# test script for general transformation infrastructure and helper
-# functions
+# test script for transformation of RFC4930 requests to SRS requests,
+# and SRS responses to RFC4930 responses.
 
 use strict;
 use Test::More;
 
-# the plan for this one is to include 'generic' transformation
-# functions, not related to a particular message, demonstrating them
-# on the 'dummy' schema introduced in the 10-xml-schema.t test case.
-# It may disappear.
+# Includes:
 #
-# At the least, this test case will test a null transform using the
-# relevant Perl modules which wrap this part of the system.
+#  - RFC4930 session management commands:
+#    - Hello / Greeting
+#    - login
+#    - login with newpassword
+#    - logout
+#
+#  - RFC4930 Query commands
+#    - <check>
+#      - host <=> ???
+#    - <info>
+#      - host <=> ???
+#    - <transfer>
+#      - host <=> ???
+#
+#  - RFC4930 Transform commands
+#    - <create>
+#      - host <=> (error)
+#    - <renew>
+#      - host <=> (error)
+#    - <transfer>
+#      - host <=> (error)
+#    - <update>
+#      - host <=> (error)
+#    - <delete>
+#      - host <=> (error)
 
 plan skip_all => "TODO";
 
@@ -29,3 +49,4 @@ plan skip_all => "TODO";
 # You should have received a copy of the Artistic License the file
 # COPYING.txt.  If not, see
 # <http://www.perlfoundation.org/artistic_license_2_0>
+1

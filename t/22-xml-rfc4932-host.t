@@ -1,7 +1,8 @@
 #!/usr/bin/perl -w
 #
-# test script for validation and transformation of important messages
-# and/or XML fragments described in RFC4932 (Host mapping)
+# test script for validation and load/dump between Perl/Moose and XML
+# for complete messages and fragments described in RFC4932 (Host
+# mapping)
 
 use strict;
 use Test::More;

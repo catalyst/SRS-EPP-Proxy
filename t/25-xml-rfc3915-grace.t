@@ -1,7 +1,7 @@
 #!/usr/bin/perl -w
 #
-# test script for validation and transformation of messages and/or XML
-# fragments described in RFC3915 (Grace period mapping)
+# test script for validation and load/dump between Perl/Moose and XML
+# for fragments described in RFC3915 (Grace period mapping)
 
 use strict;
 use Test::More;

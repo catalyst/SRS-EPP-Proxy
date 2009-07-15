@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 #
-# test script for transforming XML to Perl data structures and back.
+# test script for loading XML to Perl data structures and back.
 
 use strict;
 use Test::More;
