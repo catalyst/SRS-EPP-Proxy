@@ -14,7 +14,10 @@ use Test::More;
 #    - Hello / Greeting
 #    - logout
 
-plan skip_all => "TODO";
+plan "no_plan";
+
+# for now, we test stub modules
+
 
 # Copyright (C) 2009  NZ Registry Services
 #
