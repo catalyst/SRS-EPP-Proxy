@@ -4,8 +4,8 @@
 # for complete messages and fragments described in RFC4930 (EPP and
 # EPP common)
 
+use Test::More skip_all => "TODO";
 use strict;
-use Test::More;
 
 # of particular note: these stateful EPP messages are never converted
 # to the stateless SRS protocol; so they will not be covered by later
@@ -14,10 +14,41 @@ use Test::More;
 #    - Hello / Greeting
 #    - logout
 
-plan "no_plan";
+BEGIN {
+	use_ok("SRS::EPP::Command::Login");
+	use_ok("SRS::EPP::Response::Greeting");
+}
 
-# for now, we test stub modules
+# an example minimal-ish login message (minimal as in, no XML
+# namespaces, etc).  presumably if they supply
+# <objURI>urn:ietf:params:xml:ns:host-1.0</objURI> as a svcs we have
+# to put an error/warning in the response.
+my $login_request = <<XML;
+<epp>
+  <command>
+    <login>
+      <clID>123</clID>
+      <pw>SecureThis! orz</pw>
+      <options>
+        <version>1.0</version>
+        <lang>en_NZ</lang>
+      </options>
+      <svcs>
+        <objURI>urn:ietf:params:xml:ns:epp-1.0</objURI>
+        <objURI>urn:ietf:params:xml:ns:contact-1.0</objURI>
+        <objURI>urn:ietf:params:xml:ns:domain-1.0</objURI>
+      </svcs>
+    </login>
+  </command>
+</epp>
+XML
 
+my $login_object = SRS::EPP::Message::Command->new(
+	xmlstring => $login_request,
+       );
+
+isa_ok($login_object, "SRS::EPP::Message::Command",
+       "new login request");
 
 # Copyright (C) 2009  NZ Registry Services
 #
