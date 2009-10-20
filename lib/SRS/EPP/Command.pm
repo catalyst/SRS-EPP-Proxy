@@ -7,13 +7,14 @@
 # have received a copy of the Artistic License the file COPYING.txt.
 # If not, see <http://www.perlfoundation.org/artistic_license_2_0>
 
+package SRS::EPP::Command;
+
 use strict;
 use warnings;
 
 use XML::LibXML;
 use SRS::EPP::Response::Error;
 
-package SRS::EPP::Message::Command;
 use Moose;
 extends 'SRS::EPP::Message';
 
