@@ -9,7 +9,12 @@
 
 package SRS::EPP::Session;
 
+# this object is unfortunately something of a ``God Object'', but
+# measures are taken to stop that from being awful; mostly delegation
+# to other objects
+
 use Moose;
+use MooseX::Method::Signature;
 
 has io =>
 	is => "ro",
@@ -25,6 +30,133 @@ has state =>
 	isa => "Str",
 	default => "Waiting for Client",
 	;
+
+use Moose::Util::TypeConstraints;
+
+#----
+# input packet chunking
+has 'input_packeter' =>
+	default => sub {
+		my $self = shift;
+		SRS::EPP::Packets->new(session => $self);
+	},
+	handles => [qw( input_event input_state input_expect )],
+	;
+
+method read_input( Int $how_much where { $_ > 0 } ) {
+	my $self = shift;
+	my $how_much = shift;
+	$self->io->read($how_much);
+}
+
+#----
+# convert input packets to messages
+method input_packet( Str $data ) {
+	my $cmd = SRS::EPP::Command->parse($data);
+	$self->queue_command($cmd);
+}
+
+#----
+# queues
+
+has 'processing_queue' =>
+	default => sub {
+		my $self = shift;
+		SRS::EPP::Session::CmdQ->new();
+	},
+	handles => [qw( queue_command next_command
+			add_command_response
+			response_ready dequeue_response )],
+	;
+
+has 'backend_queue' =>
+	default => sub {
+		my $self = shift;
+		SRS::EPP::Session::BackendQ->new();
+	},
+	handles => [qw( queue_backend_request backend_next
+			backend_pending
+			add_backend_response backend_response_ready
+			dequeue_backend_response ) ],
+	;
+
+method process_queue( Int $count = 1 ) {
+	while ( $count-- > 0 ) {
+		my $command = $self->next_command;
+		if ( $command->simple ) {
+			my $response = $command->process($self);
+			$self->add_command_response($command, $response);
+		}
+		else {
+			my @messages = $command->to_srs;
+			$self->queue_backend_request($_)
+				for @messages;
+		}
+	}
+	if ( $self->backend_pending ) {
+		$self->send_backend_queue;
+	}
+}
+
+#----
+# Backend stuff.  Perhaps this should all go in the BackendQ class.
+
+has 'backend_tx_max' =>
+	isa => "Int",
+	is => "rw",
+	default => 10,
+	;
+
+has 'user_agent' =>
+	is => "rw",
+	default => sub {
+		my $self = shift;
+		SRS::EPP::Proxy::UA->new($self);
+	},
+	;
+
+has 'backend_url' =>
+	isa => "Str",
+	is => "rw",
+	;
+
+use HTTP::Request::Common qw(POST);
+
+method send_backend_queue() {
+	my @next = $self->backend_next($self->backend_tx_max);
+
+	my $tx = SRS::Tx->new( messages => \@next );
+	my $sig = $self->sign_tx($tx);
+	my $reg_id = $self->user;
+
+	my $req = POST(
+		$self->backend_url,
+		[
+			r => $tx,
+			s => $sig,
+			n => $reg_id,
+		       ],
+	       );
+
+	$self->user_agent->register( $req );
+}
+
+#----
+# Dealing with backend responses
+
+method be_response( SRS::Tx $rs_tx ) {
+	my @parts = $rs_tx->messages;
+	for my $rs ( @parts ) {
+		my $action_id = $rs->action_id;
+		$self->add_backend_response($action_id, $rs);
+	}
+	if ( ) {
+	}
+	if ( $self->backend_pending ) {
+		$self->send_backend_queue;
+	}
+	
+}
 
 1;
 
@@ -129,7 +261,8 @@ just as if a C<E<gt>helloE<lt>> message had been received.
 =head2 input_event()
 
 This event is intended to be invoked whenever there is data ready to
-read on the input socket.
+read on the input socket.  It returns false if not enough data could
+be read to get a complete subpacket.
 
 =head2 input_packet($data)
 
