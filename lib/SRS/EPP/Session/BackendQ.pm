@@ -10,6 +10,12 @@ has 'queue' =>
 	default => sub { [] },
 	;
 
+has 'owner' =>
+	is => "ro",
+	isa => "ArrayRef[SRS::EPP::Command]",
+	default => sub { [] },
+	;
+
 has 'responses' =>
 	is => "ro",
 	isa => "HashRef[SRS::Response]",
@@ -27,8 +33,11 @@ has 'session' =>
 	;
 
 # add a response corresponding to a request
-method queue_backend_request( SRS::Request $rq ) {
-	push @{ $self->queue }, $rq;
+method queue_backend_request( SRS::EPP:Command $cmd, SRS::Request @rq ) {
+	for my $rq ( @rq ) {
+		push @{ $self->queue }, $rq;
+		push @{ $self->owner }, $cmd
+	}
 }
 
 # get the next N backend messages to be sent; marks them as sent
@@ -62,6 +71,7 @@ method backend_response_ready() {
 method dequeue_backend_response() {
 	if ( $self->backend_response_ready ) {
 		my $rq = shift @{ $self->queue };
+		my $owner = shift @{ $self->owner };
 		my $sent = $self->sent;
 		$sent--;
 		if ( $sent < 0 ) {
@@ -72,9 +82,10 @@ method dequeue_backend_response() {
 		my $id = $rq->action_id;
 		my $response = delete $self->responses->{$id};
 		if ( wantarray ) {
-			($response, $rq);
+			($owner, $response, $rq);
 		}
 		else {
+			$owner->notify($response);
 			$response;
 		}
 	}

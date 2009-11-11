@@ -80,22 +80,67 @@ has 'backend_queue' =>
 			dequeue_backend_response ) ],
 	;
 
+# "stalling" means that no more processing can be advanced until the
+# responses to the currently processing commands are available.
+#
+#  eg, "login" and "logout" both stall the queue, as will the
+#  <transform><renew> command, if we have to first query the back-end
+#  to determine what the correct renewal message is.
+
+has stalled =>
+	is => "rw",
+	isa => "Bool",
+	;
+
 method process_queue( Int $count = 1 ) {
 	while ( $count-- > 0 ) {
+		if ( $self->stalled ) {
+			$self->state("Processing Command");
+			last;
+		}
 		my $command = $self->next_command;
 		if ( $command->simple ) {
+			# "simple" commands include "hello" and "logout"
 			my $response = $command->process($self);
 			$self->add_command_response($command, $response);
 		}
+		elsif ( $command->authenticated and !$self->user ) {
+			$self->add_command_response(
+				$command,
+				SRS::EPP::Response::Error->new(
+					id => 2201,
+					extra => "Not logged in",
+					),
+				);
+		}
 		else {
-			my @messages = $command->to_srs;
-			$self->queue_backend_request($_)
-				for @messages;
+			# regular message, possibly including "login"
+			my @messages = $command->to_srs($self);
+			$self->queue_backend_request($command, @messages);
+			if ( $command->type eq "login" ) {
+				$self->state("Processing <login>");
+				$self->stalled(1);
+			}
+			else {
+				$self->state("Processing Command");
+			}
 		}
 	}
+	$self->send_pending_replies;
 	if ( $self->backend_pending ) {
 		$self->send_backend_queue;
 	}
+}
+
+#----
+# method to say "we're connected, so send a greeting"; if this class
+# were abstracted to not run over a stream transport then this would
+# be important.
+method connected() {
+	$self->state("Prepare Greeting");
+	my $response = SRS::EPP::Response::Greeting->new();
+	$self->queue_reply($response);
+	$self->state("Waiting for Client Authentication");
 }
 
 #----
@@ -150,12 +195,73 @@ method be_response( SRS::Tx $rs_tx ) {
 		my $action_id = $rs->action_id;
 		$self->add_backend_response($action_id, $rs);
 	}
-	if ( ) {
+	while ( $self->backend_response_ready ) {
+		my ($cmd, $response, $rq) = $self->dequeue_backend_response;
+		$cmd->notify($response);
+		if ( $cmd->done ) {
+			$self->state("Prepare Response");
+			my $epp_rs = $response->to_epp;
+			$self->add_command_response($cmd, $epp_rs);
+		}
+		else {
+			my @messages = $command->next_backend_message($self);
+			$self->queue_backend_request($command, @messages);
+		}
 	}
+	$self->send_pending_replies;
 	if ( $self->backend_pending ) {
 		$self->send_backend_queue;
 	}
-	
+}
+
+method send_pending_replies() {
+	while ( $self->response_ready ) {
+		my $response = $self->dequeue_response;
+		$self->queue_reply($response);
+	}
+	if ( ! $self->commands_queued ) {
+		if ( $self->user ) {
+			$self->state("Waiting for Command");
+		}
+		else {
+			$self->state("Waiting for Client Authentication");
+		}
+	}
+}
+
+#----
+# Sending responses back
+has 'output_queue' =>
+	is => "ro",
+	isa => "ArrayRef[Str]",
+	default => sub { [] },
+	;
+
+method queue_reply( SRS::EPP::Response $rs ) {
+	my $reply_data = $rs->to_xml;
+	my $length = pack("N", length($reply_data));
+	push @{ $self->output_queue }, $length, $reply_data;
+	$self->output_event;
+}
+
+method output_event() {
+	my $oq = $self->output_queue;
+	my $written = 0;
+	my $io = $self->io;
+	while ( @$oq ) {
+		my $datum = shift @$oq;
+		my $wrote = $io->write( $datum );
+		$written += $wrote;
+		if ( !$wrote ) {
+			unshift @$oq, $datum;
+			last;
+		}
+		elsif ( $wrote < length $datum ) {
+			unshift @$oq, substr $datum, $written;
+			last;
+		}
+	}
+	return $written;
 }
 
 1;
@@ -178,7 +284,8 @@ SRS::EPP::Session - logic for EPP Session State machine
  $session->queue_command($command);
  $session->process_queue($count);
  $session->be_response($srs_rs);
- $session->queue_response($response);
+ $session->send_pending_replies();
+ $session->queue_reply($response);
  $session->output_event;
 
  #--- information messages:

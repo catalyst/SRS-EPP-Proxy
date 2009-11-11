@@ -33,6 +33,12 @@ method next_command() {
 	}
 }
 
+method commands_queued() {
+	my $q = $self->queue;
+	my $next = $self->next;
+	return ( $next <= $#q );
+}
+
 method queue_command( SRS::EPP::Command $cmd ) {
 	push @{ $self->queue }, $cmd;
 	push @{ $self->responses }, undef;

@@ -29,9 +29,8 @@ sub on_return {
 			split "&", $response->content;
 
 		my $rs_tx = SRS::Tx->parse( $x{r} );
-		my @parts = $rs_tx->messages;
 		my $session = $self->{_session};
-		$session->be_response($_) for @parts;
+		$session->be_response($rs_tx);
 
 	} else {
 		print "\n\nBummer! Request to ",$request->url," returned code ", $response->code,
