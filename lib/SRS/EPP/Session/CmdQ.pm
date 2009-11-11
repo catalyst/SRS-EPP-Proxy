@@ -3,6 +3,8 @@ package SRS::EPP::Session::CmdQ;
 
 use Moose;
 use MooseX::Method::Signatures;
+use SRS::EPP::Command;
+use SRS::EPP::Response;
 
 has 'queue' =>
 	is => "ro",
@@ -36,7 +38,7 @@ method next_command() {
 method commands_queued() {
 	my $q = $self->queue;
 	my $next = $self->next;
-	return ( $next <= $#q );
+	return ( $next <= $#$q );
 }
 
 method queue_command( SRS::EPP::Command $cmd ) {
@@ -46,7 +48,7 @@ method queue_command( SRS::EPP::Command $cmd ) {
 
 # with a command object, place a response at the same place in the queue
 method add_command_response(
-	SRS::EPP::Command $cmd, SRS::EPP::Response $response,
+	SRS::EPP::Command $cmd, SRS::EPP::Response $response
        )
 {
 	my $q = $self->queue;

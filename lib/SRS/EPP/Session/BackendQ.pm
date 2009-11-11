@@ -1,6 +1,9 @@
 
 package SRS::EPP::Session::BackendQ;
 
+use SRS::EPP::Command;
+use SRS::Request;
+
 use Moose;
 use MooseX::Method::Signatures;
 
@@ -29,11 +32,12 @@ has 'sent' =>
 	;
 
 has 'session' =>
+	is => "ro",
 	isa => "SRS::EPP::Session",
 	;
 
 # add a response corresponding to a request
-method queue_backend_request( SRS::EPP:Command $cmd, SRS::Request @rq ) {
+method queue_backend_request( SRS::EPP::Command $cmd, SRS::Request @rq ) {
 	for my $rq ( @rq ) {
 		push @{ $self->queue }, $rq;
 		push @{ $self->owner }, $cmd
@@ -57,7 +61,7 @@ method backend_pending() {
 
 # add a response corresponding to a request
 method add_backend_response(
-	SRS::ActionID $id, SRS::Response $response,
+	SRS::ActionID $id, SRS::Response $response
        )
 {
 	$self->responses->{$id} = $response;

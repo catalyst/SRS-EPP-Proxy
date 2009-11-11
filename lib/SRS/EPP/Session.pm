@@ -14,7 +14,7 @@ package SRS::EPP::Session;
 # to other objects
 
 use Moose;
-use MooseX::Method::Signature;
+use MooseX::Method::Signatures;
 
 has io =>
 	is => "ro",
@@ -31,7 +31,11 @@ has state =>
 	default => "Waiting for Client",
 	;
 
-use Moose::Util::TypeConstraints;
+use SRS::Tx;
+use SRS::EPP::Response;
+use SRS::EPP::Command;
+use SRS::EPP::Session::CmdQ;
+use SRS::EPP::Session::BackendQ;
 
 #----
 # input packet chunking
@@ -44,8 +48,6 @@ has 'input_packeter' =>
 	;
 
 method read_input( Int $how_much where { $_ > 0 } ) {
-	my $self = shift;
-	my $how_much = shift;
 	$self->io->read($how_much);
 }
 
@@ -204,8 +206,8 @@ method be_response( SRS::Tx $rs_tx ) {
 			$self->add_command_response($cmd, $epp_rs);
 		}
 		else {
-			my @messages = $command->next_backend_message($self);
-			$self->queue_backend_request($command, @messages);
+			my @messages = $cmd->next_backend_message($self);
+			$self->queue_backend_request($cmd, @messages);
 		}
 	}
 	$self->send_pending_replies;
@@ -242,6 +244,11 @@ method queue_reply( SRS::EPP::Response $rs ) {
 	my $length = pack("N", length($reply_data));
 	push @{ $self->output_queue }, $length, $reply_data;
 	$self->output_event;
+	my $remaining = 0;
+	for ( @{ $self->output_queue }) {
+		$remaining += length;
+	}
+	return $remaining;
 }
 
 method output_event() {
@@ -348,7 +355,7 @@ request at a time).  See L</be_response>
 
 Prepared L<SRS::EPP::Response> objects are queued, this involves
 individually converting them to strings, which are sent back to the
-client, each response its own SSL frame.  See L</queue_response>
+client, each response its own SSL frame.  See L</queue_reply>
 
 =item *
 
@@ -395,11 +402,19 @@ This is fired when a back-end response is received.  It is responsible
 for matching responses with commands in the command queue and
 converting to L<SRS::EPP::Response> objects.
 
-=head2 queue_response($response)
+=head2 send_pending_replies()
 
-This is called by process_queue() or be_response(), and converts a
+This is called by process_queue() or be_response(), and checks each
+command for a corresponding L<SRS::EPP::Response> object, dequeues and
+starts to send them back.
+
+=head2 queue_reply($response)
+
+This is called by send_pending_replies(), and converts a
 L<SRS::EPP::Response> object to network form, then starts to send it.
-Returns the number of octets which are currently outstanding.
+Returns the total number of octets which are currently outstanding; if
+this is non-zero, the caller is expected to watch the output socket
+for writability and call L<output_event()> once it is writable.
 
 =head2 output_event()
 

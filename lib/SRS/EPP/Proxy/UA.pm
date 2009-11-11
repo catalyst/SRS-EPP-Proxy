@@ -1,6 +1,7 @@
 
 package SRS::EPP::Proxy::UA;
 
+use LWP::Parallel::UserAgent;
 use base qw(LWP::Parallel::UserAgent);
 
 sub new {
