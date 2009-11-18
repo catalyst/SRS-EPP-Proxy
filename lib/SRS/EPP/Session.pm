@@ -18,6 +18,7 @@ use MooseX::Method::Signatures;
 
 has io =>
 	is => "ro",
+	isa => "Net::SSLeay::OO::SSL",
 	;
 
 has user =>
@@ -30,6 +31,20 @@ has state =>
 	isa => "Str",
 	default => "Waiting for Client",
 	;
+
+has event =>
+	is => "ro",
+	#isa => "Object",
+	required => 1,
+	;
+
+method yield(Str $method, @args) {
+	$self->event->timer(
+		after => 0,
+		cb => sub {
+			$self->$method(@args);
+		});
+}
 
 use SRS::Tx;
 use SRS::EPP::Response;
@@ -60,7 +75,6 @@ method input_packet( Str $data ) {
 
 #----
 # queues
-
 has 'processing_queue' =>
 	default => sub {
 		my $self = shift;
@@ -128,9 +142,9 @@ method process_queue( Int $count = 1 ) {
 			}
 		}
 	}
-	$self->send_pending_replies;
+	$self->yield("send_pending_replies");
 	if ( $self->backend_pending ) {
-		$self->send_backend_queue;
+		$self->yield("send_backend_queue");
 	}
 }
 
@@ -141,6 +155,21 @@ method process_queue( Int $count = 1 ) {
 method connected() {
 	$self->state("Prepare Greeting");
 	my $response = SRS::EPP::Response::Greeting->new();
+	my $socket_fd = $self->io->get_fd;
+	$self->event->io(
+		fd => $socket_fd,
+		poll => 'r',
+		cb => sub {
+			$self->input_event;
+		},
+		);
+	$self->event->io(
+		fd => $socket_fd,
+		poll => 'w',
+		cb => sub {
+			$self->output_event;
+		},
+		);
 	$self->queue_reply($response);
 	$self->state("Waiting for Client Authentication");
 }
@@ -210,9 +239,9 @@ method be_response( SRS::Tx $rs_tx ) {
 			$self->queue_backend_request($cmd, @messages);
 		}
 	}
-	$self->send_pending_replies;
+	$self->yield("send_pending_replies");
 	if ( $self->backend_pending ) {
-		$self->send_backend_queue;
+		$self->yield("send_backend_queue");
 	}
 }
 
@@ -243,7 +272,7 @@ method queue_reply( SRS::EPP::Response $rs ) {
 	my $reply_data = $rs->to_xml;
 	my $length = pack("N", length($reply_data));
 	push @{ $self->output_queue }, $length, $reply_data;
-	$self->output_event;
+	$self->yield("output_event");
 	my $remaining = 0;
 	for ( @{ $self->output_queue }) {
 		$remaining += length;

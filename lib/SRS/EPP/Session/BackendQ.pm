@@ -3,6 +3,7 @@ package SRS::EPP::Session::BackendQ;
 
 use SRS::EPP::Command;
 use SRS::Request;
+use SRS::Response;
 
 use Moose;
 use MooseX::Method::Signatures;
