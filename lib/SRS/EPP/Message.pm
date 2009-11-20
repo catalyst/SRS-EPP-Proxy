@@ -11,10 +11,21 @@ use strict;
 use warnings;
 
 package SRS::EPP::Message;
-use Moose;
 
-sub as_xml {
-	return "This non XML string is supplied courtesy of " . __PACKAGE__;
+use Moose::Role;
+use MooseX::Method::Signatures;
+
+requires 'marshaller';
+
+method to_xml() {
+	$self->marshaller->to_xml($self);
+}
+
+sub parse {
+	my $class = shift;
+	my $xml = shift;
+	my $instance = $class->marshaller->parse($xml);
+	return $instance;
 }
 
 no Moose;
@@ -31,14 +42,15 @@ SRS::EPP::Message - EPP XML
 =head1 SYNOPSIS
 
  # convert a message to XML
- $message->as_xml;
+ my $xml = $message->as_xml;
+
+ # sub-classes of the message class must define marshallers
+ SRS::EPP::Message::Consumer->parse( $xml );
 
 =head1 DESCRIPTION
 
-This class is a common ancestor of EPP commands and responses, as well
-as SRS requests and responses.  Currently the only method that all of
-these implement is conversion to XML; however parsing is likely to
-follow.
+This class is a role digested by message classes - EPP commands and
+responses, as well as SRS requests and responses.
 
 =head1 SEE ALSO
 
