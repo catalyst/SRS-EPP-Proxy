@@ -3,7 +3,8 @@ package SRS::EPP::Message::EPPCom::Password;
 
 use Moose;
 use MooseX::Method::Signatures;
-with 'SRS::EPP::Message::EPPCom::Node';
+use Moose::Util::TypeConstraints;
+our $SCHEMA_PKG = "SRS::EPP::Message::EPPCom";
 
 has 'roid' =>
 	is => "rw",
@@ -26,5 +27,10 @@ method attributes() {
 	( ( $self->has_roid
 		? ([ undef, "roid", $self->roid ]) : () ) );
 }
+
+with 'SRS::EPP::Message::EPPCom::Node';
+
+subtype "${SCHEMA_PKG}::pwAuthInfoType"
+	=> as __PACKAGE__;
 
 1;

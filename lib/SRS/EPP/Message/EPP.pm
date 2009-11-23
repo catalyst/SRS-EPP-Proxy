@@ -59,125 +59,25 @@ use SRS::EPP::Message::EPP::Hello;
 # however, as 'extURIType' is used in multiple places, with different
 # element names, it gets a name based on its type.
 use SRS::EPP::Message::EPP::ExtURI;
-subtype "${PKG}::extURIType" => as => "${PKG}::ExtURI";
-
-#
 use SRS::EPP::Message::EPP::SvcMenu;
-BEGIN {
-	subtype "${PKG}::svcMenuType" => as => "${PKG}::SvcMenu";
-}
-
 use SRS::EPP::Message::EPP::DCP;
-BEGIN {
-	# somewhat arbitrary mapping happens here; there is a rule but
-	# it only works because the particular schema has a naming
-	# convention.  In this instance, I'm mapping everything
-	# DCP-related into one namespace.  To handle this, the
-	# generation would need to be customisable.
-	subtype "${PKG}::dcpType" => as => "${PKG}::DCP";
-	subtype "${PKG}::dcpAccessType" => as => "${PKG}::DCP::Access";
-	subtype "${PKG}::dcpStatementType" => as => "${PKG}::DCP::Statement";
-	subtype "${PKG}::dcpPurposeType" => as => "${PKG}::DCP::Purpose";
-	subtype "${PKG}::dcpRecipientType" => as => "${PKG}::DCP::Recipient";
-	subtype "${PKG}::dcpOursType" => as => "${PKG}::DCP::Ours";
-
-	subtype "${PKG}::dcpRecDescType" =>
-		as => "PRANG::XMLSchema::token",
-			where {
-				length($_) >= 1 and length($_) <= 255;
-			};
-	subtype "${PKG}::dcpRetentionType" => as => "${PKG}::DCP::Retention";
-	subtype "${PKG}::dcpExpiryType" => as => "${PKG}::DCP::Expiry";
-}
-
 use SRS::EPP::Message::EPP::Greeting;
-BEGIN {
-	subtype "${PKG}::greetingType" => as => "${PKG}::Greeting";
-}
-
 use SRS::EPP::Message::EPP::CredsOptions;
 use SRS::EPP::Message::EPP::RequestedSvcs;
-BEGIN {
-	subtype "${PKG}::credsOptionsType" => as => "${PKG}::CredsOptions";
-	subtype "${PKG}::loginSvcType" => as => "${PKG}::RequestedSvcs";
-}
 use SRS::EPP::Message::EPP::Login;
-BEGIN {
-	subtype "${PKG}::loginType" => as => "${PKG}::Login";
-}
-
-BEGIN {
-	subtype "${PKG}::pollOpType" =>
-		as => "PRANG::XMLSchema::token",
-			where {
-				$_ =~ m{^(ack|req)$};
-			};
-}
 use SRS::EPP::Message::EPP::Poll;
-BEGIN {
-	subtype "${PKG}::loginType" => as => "${PKG}::Poll";
-}
-
 use SRS::EPP::Message::EPP::Object;
-BEGIN {
-	subtype "${PKG}::readWriteType" => as => "${PKG}::Object";
-}
-
-BEGIN {
-	subtype "${PKG}::transferOpType" =>
-		as => "PRANG::XMLSchema::token",
-			where {
-				m{^(approve|cancel|query|reject|request)$};
-			};
-}
 use SRS::EPP::Message::EPP::Transfer;
-BEGIN {
-	subtype "${PKG}::transferType" => as => "${PKG}::Transfer";
-}
-
 
 # first rule: map complexTypes to classes.  Where types are only used
 # in one place, the name of the class is the name of the *element* in
 # which it is used.
 use SRS::EPP::Message::EPP::Command;
-BEGIN {
-	subtype "${PKG}::commandType" => as => "${PKG}::Command";
-}
-
 use SRS::EPP::Message::EPP::TrID;
-BEGIN {
-	subtype "${PKG}::trIDType" => as => "${PKG}::TrID";
-}
-
 use SRS::EPP::Message::EPP::Extension;
-BEGIN {
-	subtype "${PKG}::extAnyType" => as => "${PKG}::Extension";
-}
-
 use SRS::EPP::Message::EPP::Msg;
-BEGIN {
-	subtype "${PKG}::msgType" => as => "${PKG}::Msg";
-	our %valid_result_codes = map { $_ => 1 }
-		qw( 1000 1001 1300 1301 1500 2000 2001 2002 2003 2004
-		    2005 2100 2101 2102 2103 2104 2105 2106 2200 2201
-		    2202 2300 2301 2302 2303 2304 2305 2306 2307 2308
-		    2400 2500 2501 2502 );
-	subtype "${PKG}::resultCodeType" =>
-		as => "Int",
-			where {
-				$_ >= 1000 and $_ <= 2502 and
-					exists $result_codes{$_};
-			};
-}
 use SRS::EPP::Message::EPP::Result;
-BEGIN {
-	subtype "${PKG}::resultType" => as => "${PKG}::Result";
-}
-
 use SRS::EPP::Message::EPP::Response;
-BEGIN {
-	subtype "${PKG}::responseType" => as => "${PKG}::Response";
-}
 
 #=====================================================================
 #  'epp' node definition

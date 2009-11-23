@@ -2,19 +2,20 @@
 package SRS::EPP::Message::EPP::Command;
 
 use Moose;
-with 'SRS::EPP::Message::EPP::Node';
 use MooseX::Method::Signatures;
-
 use Moose::Util::TypeConstraints;
+our $SCHEMA_PKG = "SRS::EPP::Message::EPP";
+
+use SRS::EPP::Message::EPP::Object;
+use SRS::EPP::Message::EPP::Login;
 
 our $PKG = __PACKAGE__;
-our $SCHEMA_PKG = $SRS::EPP::Message::EPP::PKG;
 
 # ok so this one is a bit different to the parent; we can't tell the
 # name of the node just from the type of it.  We'll need to store it
 # separately.
-subtype "${PKG}::choice0" =>
-	as => join("|", map { "${SCHEMA_PKG}::$_" }
+subtype "${PKG}::choice0"
+	=> as join("|", map { "${SCHEMA_PKG}::$_" }
 			   qw(readWriteType loginType Logout
 			      pollType transferType)),
 	;
@@ -62,5 +63,10 @@ method elements() {
 		  ? ([ undef, "clTRID", $self->clTRID ]) : () ),
 	);
 }
+
+with 'SRS::EPP::Message::EPP::Node';
+
+subtype "${SCHEMA_PKG}::commandType"
+	=> as __PACKAGE__;
 
 1;

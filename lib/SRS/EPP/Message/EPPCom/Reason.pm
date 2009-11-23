@@ -3,7 +3,8 @@ package SRS::EPP::Message::EPPCom::Reason;
 
 use Moose;
 use MooseX::Method::Signatures;
-with 'SRS::EPP::Message::EPPCom::Node';
+use Moose::Util::TypeConstraints;
+our $SCHEMA_PKG = "SRS::EPP::Message::EPPCom";
 
 has 'lang' =>
 	is => "rw",
@@ -13,7 +14,7 @@ has 'lang' =>
 
 has 'content' =>
 	is => "rw",
-	isa => "SRS::EPP::Message::EPPCom::reasonBaseType",
+	isa => "${SCHEMA_PKG}::reasonBaseType",
 	;
 
 method elements() {
@@ -26,5 +27,10 @@ method attributes() {
 	( ( $self->has_lang
 		? ([ undef, "lang", $self->lang ]) : () ) );
 }
+
+with "${SCHEMA_PKG}::Node";
+
+subtype "${SCHEMA_PKG}::reasonType"
+	=> as __PACKAGE__;
 
 1;

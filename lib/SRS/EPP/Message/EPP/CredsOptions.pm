@@ -3,11 +3,12 @@ package SRS::EPP::Message::EPP::CredsOptions;
 
 use Moose;
 use MooseX::Method::Signatures;
-with 'SRS::EPP::Message::EPP::Node';
+
+our $SCHEMA_PKG = "SRS::EPP::Message::EPP";
 
 has 'version' =>
 	is => "rw",
-	isa => "SRS::EPP::Message::EPP::versionType",
+	isa => "${SCHEMA_PKG}::versionType",
 	;
 
 has 'lang' =>
@@ -21,5 +22,12 @@ method elements() {
 
 method attributes() {
 }
+
+with "${SCHEMA_PKG}::Node";
+
+use Moose::Util::TypeConstraints;
+
+subtype "${SCHEMA_PKG}::credsOptionsType" =>
+	as __PACKAGE__;
 
 1;

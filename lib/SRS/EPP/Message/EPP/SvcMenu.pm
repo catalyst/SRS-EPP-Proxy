@@ -3,11 +3,12 @@ package SRS::EPP::Message::EPP::SvcMenu;
 
 use Moose;
 use MooseX::Method::Signatures;
-with 'SRS::EPP::Message::EPP::Node';
+use Moose::Util::TypeConstraints;
+our $SCHEMA_PKG = "SRS::EPP::Message::EPP";
 
 has 'version' =>
 	is => "rw",
-	isa => "ArrayRef[SRS::EPP::Message::EPP::versionType]",
+	isa => "ArrayRef[${SCHEMA_PKG}::versionType]",
 	;
 
 has 'lang' =>
@@ -22,7 +23,7 @@ has 'objURI' =>
 
 has 'svcExtension' =>
 	is => "rw",
-	isa => "SRS::EPP::Message::EPP::ExtURI",
+	isa => "${SCHEMA_PKG}::ExtURI",
 	predicate => "has_svcExtension",
 	;
 
@@ -39,5 +40,10 @@ method elements() {
 
 method attributes() {
 }
+
+with 'SRS::EPP::Message::EPP::Node';
+
+subtype "${SCHEMA_PKG}::svcMenuType"
+	=> as __PACKAGE__;
 
 1;

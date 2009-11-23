@@ -2,14 +2,13 @@
 package SRS::EPP::Message::EPP::Login;
 
 use Moose;
-with 'SRS::EPP::Message::EPP::Node';
 use MooseX::Method::Signatures;
 
 # based on epp-1.0.xsd:greetingType
 use Moose::Util::TypeConstraints;
 
 our $PKG = "SRS::EPP::Message::EPP::Login";
-our $SCHEMA_PKG = $SRS::EPP::Message::EPP::PKG;
+our $SCHEMA_PKG = "SRS::EPP::Message::EPP";
 
 use SRS::EPP::Message::EPPCom;
 
@@ -48,5 +47,12 @@ method elements() {
 
 method attributes() {
 }
+
+with 'SRS::EPP::Message::EPP::Node';
+
+use Moose::Util::TypeConstraints;
+
+subtype "${SCHEMA_PKG}::loginType" =>
+	as __PACKAGE__;
 
 1;

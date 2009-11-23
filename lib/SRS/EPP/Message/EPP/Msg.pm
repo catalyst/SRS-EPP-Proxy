@@ -3,7 +3,8 @@ package SRS::EPP::Message::EPP::Msg;
 
 use Moose;
 use MooseX::Method::Signatures;
-with 'SRS::EPP::Message::EPP::Node';
+use Moose::Util::TypeConstraints;
+our $SCHEMA_PKG = "SRS::EPP::Message::EPP";
 
 has 'content' =>
 	is => "rw",
@@ -16,6 +17,7 @@ has 'lang' =>
 	default => sub { "en" },  # imperialists!!
 	;
 
+
 method elements() {
 	qw(content);
 }
@@ -23,5 +25,10 @@ method elements() {
 method attributes() {
 	qw(lang);
 }
+
+with 'SRS::EPP::Message::EPP::Node';
+
+subtype "${SCHEMA_PKG}::msgType"
+	=> as __PACKAGE__;
 
 1;

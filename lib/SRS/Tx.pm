@@ -10,4 +10,7 @@ has 'parts' =>
 	isa => "ArrayRef[SRS::EPP::Message]",
 	;
 
+sub marshaller {
+}
+
 1;

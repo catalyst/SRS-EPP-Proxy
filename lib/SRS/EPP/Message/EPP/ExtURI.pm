@@ -3,7 +3,8 @@ package SRS::EPP::Message::EPP::ExtURI;
 
 use Moose;
 use MooseX::Method::Signatures;
-with 'SRS::EPP::Message::EPP::Node';
+use Moose::Util::TypeConstraints;
+our $SCHEMA_PKG = "SRS::EPP::Message::EPP";
 
 has 'extURI' =>
 	is => "rw",
@@ -19,5 +20,10 @@ method elements() {
 
 method attributes() {
 }
+
+with 'SRS::EPP::Message::EPP::Node';
+
+subtype "${SCHEMA_PKG}::extURIType"
+	=> as __PACKAGE__;
 
 1;

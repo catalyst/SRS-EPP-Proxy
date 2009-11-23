@@ -10,4 +10,8 @@ with 'SRS::EPP::MessageNode';
 # like the ResultData module, this is really here to keep the type
 # heirarchy well-organized.
 
+use Moose::Util::TypeConstraints;
+subtype "SRS::EPP::Message::EPP::readWriteType"
+	=> as __PACKAGE__;
+
 1;

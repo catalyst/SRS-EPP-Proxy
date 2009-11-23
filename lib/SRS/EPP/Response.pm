@@ -10,11 +10,8 @@ use strict;
 use warnings;
 
 package SRS::EPP::Response;
-use Moose;
-extends 'SRS::EPP::Message';
-
-no Moose;
-__PACKAGE__->meta->make_immutable;
+use Moose::Role;
+with 'SRS::EPP::Message';
 
 1;
 

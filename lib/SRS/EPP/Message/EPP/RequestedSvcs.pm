@@ -5,7 +5,8 @@ package SRS::EPP::Message::EPP::RequestedSvcs;
 
 use Moose;
 use MooseX::Method::Signatures;
-with 'SRS::EPP::Message::EPP::Node';
+use Moose::Util::TypeConstraints;
+our $SCHEMA_PKG = "SRS::EPP::Message::EPP";
 
 has 'objURI' =>
 	is => "rw",
@@ -29,5 +30,12 @@ method elements() {
 
 method attributes() {
 }
+
+with 'SRS::EPP::Message::EPP::Node';
+
+use Moose::Util::TypeConstraints;
+
+subtype "${SCHEMA_PKG}::loginSvcType"
+	=> as __PACKAGE__;
 
 1;

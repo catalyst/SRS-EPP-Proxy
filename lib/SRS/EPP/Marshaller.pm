@@ -15,5 +15,6 @@ has 'xmlns' =>
 sub parse {
 	my $self = shift;
 	my $document = shift;
-	
 }
+
+1;

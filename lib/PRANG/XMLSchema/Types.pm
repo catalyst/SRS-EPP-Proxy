@@ -4,35 +4,33 @@ package PRANG::XMLSchema::Types;
 use strict;
 use Moose::Util::TypeConstraints;
 
-subtype "PRANG::XMLSchema::normalizedString" =>
-	as => "Str",
-	where {
-		!m{[\n\r\t]};
-	};
+subtype "PRANG::XMLSchema::normalizedString"
+	=> as "Str"
+	=> where { !m{[\n\r\t]} };
 
-subtype "PRANG::XMLSchema::token" =>
-	as "Str" =>
-	where {
+subtype "PRANG::XMLSchema::token"
+	=> as "Str"
+	=> where {
 		!m{[\t\r\n]|^\s|\s$|\s\s};
 	};
 
 use Regexp::Common qw /URI/;
-subtype "PRANG::XMLSchema::anyURI" =>
-	as "Str" =>
-	where {
+subtype "PRANG::XMLSchema::anyURI"
+	=> as "Str"
+	=> where {
 		m{$RE{URI}}o;
 	};
 
 use I18N::LangTags qw(is_language_tag);
-subtype "PRANG::XMLSchema::language" =>
-	as "Str" =>
-	where {
+subtype "PRANG::XMLSchema::language"
+	=> as "Str"
+	=> where {
 		is_language_tag($_);
 	};
 
-subtype "PRANG::XMLSchema::dateTime" =>
-	as "Str" =>
-	where {
+subtype "PRANG::XMLSchema::dateTime"
+	=> as "Str"
+	=> where {
 		# from the XMLSchema spec... it'll do for now ;)
 		m{
 -?([1-9][0-9]{3,}|0[0-9]{3})

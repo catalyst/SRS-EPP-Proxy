@@ -27,11 +27,9 @@ our $PKG = "SRS::EPP::Message::EPPCom";
 # "AuthInfo" is usually introduced with a <pw> tag, so we'll call it
 # Password
 use SRS::EPP::Message::EPPCom::Password;
-subtype "${PKG}::pwAuthInfoType" => as => "${PKG}::Password";
 
 # <ext>, but it's basically still a password.
 use SRS::EPP::Message::EPPCom::ExtPassword;
-subtype "${PKG}::extAuthInfoType" => as => "${PKG}::ExtPassword";
 
 subtype "${PKG}::reasonBaseType" =>
 	as => "PRANG::XMLSchema::token",

@@ -1,8 +1,8 @@
 
 package SRS::Response;
 
-use Moose;
+use Moose::Role;
 
-extends 'SRS::EPP::Message';
+with 'SRS::EPP::Message';
 
 1;

@@ -2,13 +2,11 @@
 package SRS::EPP::Message::EPP::Response;
 
 use Moose;
-with 'SRS::EPP::Message::EPP::Node';
 use MooseX::Method::Signatures;
-
 use Moose::Util::TypeConstraints;
+our $SCHEMA_PKG = "SRS::EPP::Message::EPP";
 
 our $PKG = __PACKAGE__;
-our $SCHEMA_PKG = $SRS::EPP::Message::EPP::PKG;
 
 has 'result' =>
 	is => "rw",
@@ -39,5 +37,10 @@ method attributes() { }
 method elements() {
 	qw( result msgQ resData extension trID );
 }
+
+with 'SRS::EPP::Message::EPP::Node';
+
+subtype "${SCHEMA_PKG}::responseType"
+	=> as __PACKAGE__;
 
 1;

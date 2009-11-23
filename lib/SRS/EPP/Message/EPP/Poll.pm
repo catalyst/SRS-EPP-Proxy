@@ -2,15 +2,19 @@
 package SRS::EPP::Message::EPP::Poll;
 
 use Moose;
-with 'SRS::EPP::Message::EPP::Node';
 use MooseX::Method::Signatures;
+use Moose::Util::TypeConstraints;
+our $SCHEMA_PKG = "SRS::EPP::Message::EPP";
 
 # based on epp-1.0.xsd:greetingType
 use Moose::Util::TypeConstraints;
 
+enum "${SCHEMA_PKG}::pollOpType" =>
+	qw(ack req);
+
 has 'op' =>
 	is => "rw",
-	isa => "SRS::EPP::Message::EPP::pollOpType",
+	isa => "${SCHEMA_PKG}::pollOpType",
 	required => 1,
 	;
 
@@ -25,8 +29,13 @@ method elements() {
 
 method attributes() {
 	("op",
-	 ($self->has_msgID ? ("msgID") : (),
+	 ($self->has_msgID ? ("msgID") : ()),
 	 );
 }
+
+with "${SCHEMA_PKG}::Node";
+
+subtype "${SCHEMA_PKG}::pollType"
+	=> as __PACKAGE__;
 
 1;
