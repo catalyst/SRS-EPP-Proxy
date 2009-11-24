@@ -11,7 +11,7 @@ use warnings;
 
 package SRS::EPP::Response::Error;
 use Moose;
-extends 'SRS::EPP::Response';
+with 'SRS::EPP::Response';
 
 has 'id'    => ( is => 'ro', );
 has 'extra' => ( is => 'ro', );
