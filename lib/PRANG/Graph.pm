@@ -42,7 +42,7 @@ method to_xml() {
 
 =head1 NAME
 
-PRANG::Graph - validator and marshaller for XML
+PRANG::Graph - XML mapping by peppering Moose attributes
 
 =head1 SYNOPSIS
 
@@ -59,11 +59,17 @@ PRANG::Graph - validator and marshaller for XML
 
  package main;
 
+ # now for free!  Use PRANG::Marshaller to convert
  my $parsed = My::XML::Language->parse($xml);
-
  print $parsed->to_xml;
 
 =head1 DESCRIPTION
+
+PRANG::Graph allows you to mark attributes on your L<Moose> classes as
+corresponding to XML attributes and child elements.  This allows your
+class structure to function as an I<XML graph> (a generalized form of
+an specification for the shape of an XML document; ie, what nodes and
+attributes are allowed at which point).
 
 
 
