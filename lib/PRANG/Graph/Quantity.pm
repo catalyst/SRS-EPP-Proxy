@@ -20,7 +20,32 @@ has 'max' =>
 has 'child' =>
 	is => "ro",
 	isa => "PRANG::Graph::Node",
+	required => 1,
 	;
+
+method accept( XML::LibXML::Node $node, PRANG::Graph::Context $ctx ) {
+	my $found = $ctx->quant_found;
+	my ($key, $value, $x) = $self->child->accept($node, $ctx);
+	$found++;
+	$ctx->quant_found($found);
+	if ( $self->has_max and $found > $self->max ) {
+		$ctx->exception("node appears too many times", $node);
+	}
+	($key, $value, $x);
+}
+
+method complete( PRANG::Graph::Context $ctx ) {
+	my $found = $ctx->quant_found;
+	return !( $self->has_min and $found < $self->min );
+}
+
+method expected {
+	# ...
+}
+
+1;
+
+__END__
 
 method textnode_ok( Int $pos ) {
 	if ( $self->has_max and $pos > $self->max ) {
@@ -36,14 +61,20 @@ method element_ok( Str $xmlns?, Str $nodename, Int $pos ) {
 	return $self->child->element_ok($xmlns, $nodename, 1);
 }
 
-method pop_ok( Int $pos ) {
-	if ( $self->has_min and $pos < $self->min ) {
+method skip_ok( Int $pos, Int $found ) {
+	if ( $self->has_min and $found < $self->min ) {
 		return 0;
 	}
-	1;
+	else {
+		return 1;
+	}
 }
 
-method element_class( Str $xmlns?, Str $nodename, Int $pos ) {
+method pos_inc( Int $pos ) {
+	return 0;
+}
+
+method att_what( Int $pos ) {
 	return $self->child->element_class($xmlns, $nodename, 1);
 }
 

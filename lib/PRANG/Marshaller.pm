@@ -12,6 +12,16 @@ has 'class' =>
 	required => 1,
 	;
 
+our %marshallers;  # could use MooseX::NaturalKey?
+method get($inv: Str $class) {
+	if ( ref $inv ) {
+		$inv = ref $inv;
+	}
+	$marshallers{$class} ||= do {
+		$inv->new( class => $class->meta );
+	}
+}
+
 has 'attributes' =>
 	isa => "HashRef[HashRef[PRANG::Graph::Meta::Attr]]",
 	is => "ro",
@@ -64,8 +74,15 @@ has 'elements' =>
 			} 0..$#elements ];
 	};
 
-method to_xml( Object $item ) {
-}
+has 'acceptor' =>
+	is => "rw",
+	isa => "PRANG::Graph::Node",
+	lazy => 1,
+	required => 1,
+	default => sub {
+		$_[0]->build_acceptor;
+	},
+	;
 
 method parse( Str $xml ) {
 
@@ -83,14 +100,17 @@ method parse( Str $xml ) {
 		}
 	}
 	my $xsi = {};
-	my $rv = $self->marshall_in_element($rootNode, $xsi);
+	my $rv = $self->marshall_in_element(
+		$rootNode,
+		$xsi,
+		"/".$rootName->nodeName,
+	       );
+	$rv;
 }
 
-method marshall_in_element( XML::LibXML::Node $node, HashRef $xsi ) returns PRANG::Graph::Node {
+method marshall_in_element( XML::LibXML::Node $node, HashRef $xsi, Str $xpath ) {
 
 	my $attributes = $self->attributes;
-	my @elements = @{ $self->elements };
-
 	my @node_attr = grep { $_->isa("XML::LibXML::Attr") }
 		$node->attributes;
 	my @ns_attr = $node->getNamespaces;
@@ -117,7 +137,8 @@ method marshall_in_element( XML::LibXML::Node $node, HashRef $xsi ) returns PRAN
 
 		if ( $meta_att ) {
 			# sweet, it's ok
-			push @init_args, $attr->name, $attr->value;
+			my $att_name = $meta_att->name;
+			push @init_args, $att_name, $attr->value;
 		}
 		else {
 			# fail.
@@ -125,65 +146,214 @@ method marshall_in_element( XML::LibXML::Node $node, HashRef $xsi ) returns PRAN
 				$node->nodeName." (input line "
 					.$node->line_number.")";
 		}
-	}
+	};
 
 	# now process elements
 	my @childNodes = $node->nonBlankChildNodes;
-	my ($expected, $expect_type, $expect_many, $expect_one);
-	my ($expect_bool, $expect_str, $expect_obj, $expect_union);
-	my $shift_expected = sub {
-		$expected = shift @$expected;
-		if ( $expected->has_xml_required ) {
-			$expect_one = $expected->xml_required;
+	if ( !$self->has_acceptor ) {
+		$self->acceptor($self->build_acceptor);
+	}
+
+	my $acceptor = $self->acceptor;
+	my $context = PRANG::Graph::Context->new(
+		base => $self,
+		xpath => $xpath,
+		xsi => $xsi,
+		prefix => ($node->prefix||""),
+	       );
+
+	my (%init_args, %init_arg_names);
+	while ( my $input_node = shift @childNodes ) {
+		if ( my ($key, $value, $name) =
+			     $acceptor->accept($input_node, $context) ) {
+			my $meta_att;
+			if ( exists $init_args{$key} ) {
+				if ( !ref $init_args{$key} or
+					     ref $init_args{$key} ne "ARRAY" ) {
+					$init_args{$key} = [$init_args{$key}];
+					$init_arg_names{$key} = [$init_arg_names{$key}]
+						if exists $init_arg_names{$key};
+				}
+				push @{$init_args{$key}}, $value;
+				if (defined $name) {
+					my $idx = $#{$init_args{$key}};
+					$init_arg_names{$key}[$idx] = $name;
+				}
+			}
+			else {
+				$init_args{$key} = $value;
+				$init_arg_names{$key} = $name
+					if defined $name;
+			}
 		}
-		elsif ( $expected->has_predicate ) {
-			$expect_one = 0;
+	}
+
+
+	if ( !$acceptor->complete($context) ) {
+		my (@what) = $acceptor->expected($context);
+		$context->exception(
+			"Node incomplete; expecting: @what",
+			$node,
+			);
+	}
+	# now, we have to take all the values we just got and
+	# collapse them to init args
+	for my $element ( @{ $self->elements } ) {
+		my $key = $element->name;
+		next unless exists $init_args{$key};
+		if ( $element->has_xml_max and $element->xml_max == 1 ) {
+			# expect item
+			if ( $element->has_xml_nodeName_attr and
+				     exists $init_arg_names{$key} ) {
+				push @init_args, $element->xml_nodeName_attr =>
+					delete $init_arg_names{$key};
+			}
+			if (ref $init_args{$key} and
+				    $init_args{$key} eq "ARRAY" ) {
+				$context->exception(
+"internal error: we ended up multiple values set for '$key' attribute",
+					$node);
+			}
+			push @init_args, $key => delete $init_args{$key}
 		}
 		else {
-			$expect_one = 1;
+			# expect list
+			if ( !ref $init_args{$key} or
+				     $init_args{$key} ne "ARRAY" ) {
+				$init_args{$key} = [$init_args{$key}];
+				$init_arg_names{$key} = [$init_arg_names{$key}]
+					if exists $init_arg_names{$key};
+			}
+			if ( $element->has_xml_nodeName_attr and
+				     exists $init_arg_names{$key} ) {
+				push @init_args,
+					$element->xml_nodeName_attr =>
+						delete $init_arg_names{$key}
+			}
+			push @init_args, $key => delete $init_args{$key};
 		}
-		$expect_type = $expected->type_constraint
-			or die "no type constraint on element "
-				.$self->class->name."::".$expected->name;
-		if ( $expect_type->is_a_type_of("ArrayRef") ) {
-			$expect_type->isa("Moose::Meta::TypeConstraint::Parameterized")
-				or die "ArrayRef, but not Parameterized on "
-					.$self->class->name."::".$expected->name;
-			$expect_many = 1;
-			$expect_type = $expect_type->type_parameter;
-		}
-		else {
-			$expect_many = 0;
-		}
-		undef($_) for ($expect_bool, $expect_str, $expect_obj, $expect_union);
-		if ( $expect_type->is_a_type_of("Bool") ) {
-			$expect_bool = 1;
-		}
-		if ( $expect_type->is_a_type_of("Str") or
-			     $expect_type->is_a_type_of("Int") ) {
-			$expect_str = 1;
-		}
-		if ( $expect_type->is_a_type_of("Object") ) {
-			$expect_obj = 1;
-		}
-		my $types = $expect_obj + $expect_str + $expect_bool;
-		if ( $types == 0 ) {
-			die "don't know what to expect with $expect_type "
-				.($self->class->name."::".$expected->name);
-		}
-		elsif ( $types > 1 or $expect) {
-			$expect_union 
-		}
-	};
-	my $t_c = $expected->type_constraint;
-	my $got_count;
-	while ( @childNodes ) {
-		my $found = shift @childNodes;
-		my $elementName = $found->localname;
-		if ( $expected->type_constraint->is_subtype_of("ArrayRef") ) {
-			
-		}
+	}
+	if (keys %init_args) {
+		$context->exception(
+		"internal error: init args left over (@{[ keys %init_args ]})",
+			$node,
+		       );
+	}
+	my $value = eval { $self->class->name->new( @init_args ) };
+	if ( !$value ) {
+		die "Validation error during processing of $xpath ("
+			.$self->class->name." constructor returned "
+				."error: $@)";
+	}
+	else {
+		return $value;
 	}
 }
 
+method build_acceptor( Moose::Meta::Class $class ) {
+	my @nodes = map { $_->graph_node } @{ $self->elements };
+	if ( @nodes > 1 ) {
+		PRANG::Graph::Seq->new(
+			members => \@nodes,
+		       );
+	}
+	elsif ( @nodes ) {
+		$nodes[0];
+	}
+	else {
+		PRANG::Graph::Empty->new;
+	}
+}
+
+method to_xml( Object $item ) {
+}
+
+
 1;
+
+__END__
+
+		my $nodeType = $input_node->nodeType;
+		my $node_xpath = $xpath."/".$input_node->nodeName;
+		next if $nodeType == XML_COMMENT_NODE;
+		my $ok_node;
+		if ( $is_text->($nodeType) ) {
+			$ok_node = $acceptor->textnode_ok($pos, $found);
+		}
+		elsif ( $nodeType == XML_ELEMENT_NODE ) {
+			my $node_prefix = $input_node->prefix;
+			my $xmlns;
+			if ( $node->prefix ne $node_prefix ) {
+				$xmlns = $xsi->{$node_prefix};
+			}
+			$ok_node = $acceptor->element_ok(
+				$xmlns, $input_node->localname,
+				$pos, $found,
+			       );
+		}
+		if ( !$is_ok and $acceptor->skip_ok($pos, $found) ) {
+			$pos++;
+			$found = 0;
+			unshift @childNodes, $input_node;
+			next;
+		}
+		if ( $is_ok ) {
+			my ($attName, $attClass) = $ok_node->att_what($pos);
+			my $full_att_name = $self->class->name."->".$attName;
+			my $pos_inc = $acceptor->pos_inc($pos);
+			if ( $pos_inc ) {
+				$pos++;
+				$found = 0;
+			}
+			else {
+				$found++;
+			}
+			if ( $attClass eq "Str" or $attClass eq "Bool" ) {
+				# must be XML data
+				$if ($input_node->hasAttributes) {
+					die "Superfluous attributes on "
+			."XML data node: $node_xpath ($full_att_name)";
+				}
+			}
+			if ( $attClass eq "Bool" ) {
+				if ( $input_node->hasChildNodes ) {
+					die "Superfluous child nodes on "
+			."XML data node: $node_xpath ($full_att_name)";
+				}
+				push @init_args, $attName => 1;
+			}
+			elsif ( $attClass eq "Str" ) {
+				my @childNodes =
+					$input_node->nonBlankChildNodes;
+				if ( @childNodes > 1 ) {
+					# we could maybe merge CDATA nodes...
+					die "Too many child nodes for "
+				."XML data: $node_xpath ($full_att_name)";
+				}
+				if ( !@childNodes ) {
+					push @init_args, $attName => "";
+				}
+				elsif ( $is_text->($childNodes[0]->nodeType)
+				       ) {
+					push @init_args, $attName =>
+						$childNodes[0]->data;
+				}
+				else {
+					die "Wrong child node type for "
+."XML data; expected TextNode or CDATA Section: $node_xpath ($full_att_name)";
+				}
+			}
+			else {
+				# recurse!
+				my $subm = (ref $self)->get( $attClass );
+				my $value = $subm->marshall_in_element(
+					$input_node,
+					$xsi,
+					($xpath."/".$input_node->nodeName),
+				       );
+				push @init_args, $attname => $value;
+			}
+		}
+		else {
+			# we've run out of options.  die.
+		}

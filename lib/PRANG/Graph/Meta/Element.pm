@@ -3,6 +3,7 @@ package PRANG::Graph::Meta::Element;
 
 use Moose;
 extends 'Moose::Meta::Attribute';
+use MooseX::Method::Signatures;
 
 has 'xmlns' =>
 	is => "rw",
@@ -12,7 +13,7 @@ has 'xmlns' =>
 
 has 'xml_nodeName' =>
 	is => "rw",
-	isa => "Str|CodeRef|HashRef|ScalarRef",
+	isa => "Str|HashRef",
 	predicate => "has_nodeName",
 	;
 
@@ -22,12 +23,242 @@ has 'xml_required' =>
 	predicate => "has_xml_required",
 	;
 
+has 'xml_min' =>
+	is => "rw",
+	isa => "Int",
+	predicate => "has_xml_min",
+	;
+
+has 'xml_max' =>
+	is => "rw",
+	isa => "Int",
+	predicate => "has_xml_max",
+	;
+
 has '+isa' =>
 	required => 1,
 	;
 
-sub BUILD {
-	
+has 'graph_node' =>
+	is => "rw",
+	isa => "PRANG::Graph::Node",
+	lazy => 1,
+	required => 1,
+	default => sub {
+		my $self = shift;
+		$self->build_graph_node;
+	},
+	;
+
+use constant HIGHER_ORDER_TYPE =>
+	"Moose::Meta::TypeConstraint::Parameterized";
+
+method build_graph_node() {
+	my ($expect_one, $expect_many);
+
+	if ( $self->has_xml_required ) {
+		$expect_one = $self->xml_required;
+	}
+	elsif ( $self->has_predicate ) {
+		$expect_one = 0;
+	}
+	else {
+		$expect_one = 1;
+	}
+
+	my $t_c = $self->type_constraint;
+
+	# check to see whether ArrayRef was specified
+	if ( $t_c->is_a_type_ok("ArrayRef") ) {
+		my $is_paramd;
+		until ( $t_c->equals("ArrayRef") ) {
+			if ( $t_c->isa(HIGHER_ORDER_TYPE) ) {
+				$is_paramd = 1;
+				last;
+			}
+			else {
+				$t_c = $t_c->parent;
+			}
+		}
+		if (not $is_paramd) {
+			die "ArrayRef, but not Parameterized on "
+				.$self->name;
+		}
+		$expect_many = 1;
+
+		$t_c = $t_c->type_parameter;
+	}
+
+	# ok.  now let's walk the type constraint tree, and look for
+	# types
+	my ($expect_bool, $expect_simple, @expect_type, @expect_role);
+
+	my @st = $t_c;
+	my %t_c;
+	while ( my $x = shift @st ) {
+		$t_c{$x} = $x;
+		if ( $x->isa("Moose::Meta::TypeConstraint::Class") ) {
+			push @expect_type, $x->class;
+		}
+		elsif ( $x->isa("Moose::Meta::TypeConstraint::Union") ) {
+			push @st, @{ $x->parents };
+		}
+		elsif ( $x->isa("Moose::Meta::TypeConstraint") ) {
+			if ( $x->equals("Bool") ) {
+				$expect_bool = 1;
+			}
+			elsif ( $x->equals("Value") ) {
+				$expect_simple = 1;
+			}
+			else {
+				push @st, $x->parent;
+			}
+		}
+		elsif ( $x->isa("Moose::Meta::TypeConstraint::Enum") ) {
+			$expect_simple = 1;
+		}
+		elsif ( $x->isa("Moose::Meta::TypeConstraint::Role") ) {
+			# likely to be a wildcard.
+			push @expect_role, $x->role;
+		}
+		else {
+			die "Sorry, I don't know how to map a ".ref($x).
+				" in attribute ".$self->name;
+		}
+	}
+
+	my $node;
+	my $nodeName = $self->has_xml_nodeName ?
+		$self->xml_nodeName : $self->name;
+
+	if ( $expect_bool + $expect_simple + @expect_type > 1
+		     or @expect_role ) {
+		# multiple or ambiguous types are specified; we *need*
+		# to know
+		if ( ! ref $nodeName ) {
+			die "type union specified, but no nodename map"
+				." given for attr ".$self->name;
+		}
+		while ( my ($nodeName, $type) = each %$nodeName ) {
+			if ( not exists $t_c{$type} ) {
+				die "nodeName to type map specifies "
+." $nodeName => '$type', but $type is not an acceptable type for attr "
+	.$self->name;
+			}
+		}
+	}
+	if ( !ref $nodeName ) {
+		my $expected = $expect_bool ? "Bool" :
+			$expect_simple ? "Str" : $expect_type[0];
+		$nodeName = { $nodeName => $expected };
+	}
+
+	my @expect;
+	for my $class ( @expect_type ) {
+		my @xmlns;
+		# XXX - this isn't quite right... it should be
+		# $class->xmlns;
+		if ( $self->has_xmlns ) {
+			push @xmlns, (xmlns => $self->xmlns);
+		}
+		my (@names) = grep { $nodeName->{$_} eq $class }
+			keys %$nodeName;
+
+		if ( !@names ) {
+			die "type '$class' specified as allowed, but "
+				."which node names indicate that type?"
+					." for attr ".$self->name;
+		}
+
+		for my $name ( @names ) {
+			push @expect, PRANG::Graph::Element->new(
+				@xmlns,
+				attName => $self->name,
+				attIsArray => $expect_many,
+				nodeClass => $class,
+				nodeName => $name,
+			       );
+			delete $nodeName->{$name};
+		}
+	}
+
+	if ( $expect_bool ) {
+		my (@names) = grep {
+			!$t_c{$nodeName->{$_}}->is_a_type_of("Object")
+		} keys %$nodeName;
+
+		# 'Bool' elements are a shorthand for the element
+		# 'maybe' being there.
+		for my $name ( @names ) {
+			push @expect, PRANG::Graph::Element->new(
+				attName => $self->name,
+				attIsArray => $expect_many,
+				nodeClass => $class,
+				nodeName => $name,
+				contents => PRANG::Graph::Empty->new,
+			       );
+			delete $nodeName->{$name};
+		}
+	}
+	if ( $expect_simple ) {
+		my (@names) = grep {
+			!$t_c{$nodeName->{$_}}->is_a_type_of("Object")
+		} keys %$nodeName;
+		for my $name ( @names ) {
+			# 'Str', 'Int', etc element attributes: this
+			# means an XML data type: <attr>value</attr>
+			if ( !length($name) ) {
+				# this is for 'mixed' data
+				push @expect, PRANG::Graph::Text->new(
+					attName => $self->name,
+					attIsArray => $expect_many,
+				       );
+			}
+			else {
+				# regular XML data style
+				push @expect, PRANG::Graph::Element->new(
+					attName => $self->name,
+					attIsArray => $expect_many,
+					nodeClass => "Str",
+					nodeName => $name,
+					contents => PRANG::Graph::Text->new,
+				       );
+			}
+			delete $nodeName->{$name};
+		}
+	}
+
+	if ( @expect > 1 ) {
+		$node = PRANG::Graph::Choice->new(
+			choices => \@expect,
+		       );
+	}
+	elsif ( $expect_bool ) {
+		$expect_one = 0;
+	}
+
+	# deal with limits
+	if ( !$expect_one or $expect_many) {
+		my @min_max;
+		if ( $expect_one and !$self->has_xml_min ) {
+			$self->xml_min(1);
+		}
+		if ( $self->has_xml_min ) {
+			push @min_max, min => $self->xml_min;
+		}
+		if ( !$expect_many and !$self->has_xml_max ) {
+			$self->xml_max(1);
+		}
+		if ( $self->has_xml_max ) {
+			push @min_max, max => $self->xml_max;
+		}
+		$node = PRANG::Graph::Quantity->new(
+			@min_max,
+			child => $node,
+		       );
+	}
+
+	return $node;
 }
 
 package Moose::Meta::Attribute::Custom::PRANG::Element;
@@ -211,7 +442,7 @@ another attribute which records the names of the node.
           "somenode" => "TypeB",
           "someother" => "TypeB",
       },
-      xml_nodeName_attr => "message_names",
+      xml_nodeName_attr => "message_name",
       ;
 
 If any node name is allowed, then you can simply pass in C<*> as an

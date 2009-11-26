@@ -11,6 +11,30 @@ has 'members' =>
 	default => sub { [] },
 	;
 
+method accept( XML::LibXML::Node $node, PRANG::Graph::Context $ctx ) {
+	my $pos = $ctx->seq_pos;
+	my ($key, $val, $x);
+	do {
+		my $member = $self->members->[$pos-1]
+			or $ctx->exception("unexpected element", $node);
+		($key, $val, $x) = $member->accept($node, $ctx);
+		$pos++;
+	} until ($key);
+	$ctx->seq_pos($pos);
+	($key, $val, $x);
+}
+
+method complete( PRANG::Graph::Context $ctx ) {
+	return ( $ctx->seq_pos-1 == @{$self->members});
+}
+
+method expected( PRANG::Graph::Context $ctx ) {
+	#...
+}
+
+1;
+
+__END__
 method textnode_ok( Int $pos ) {
 	my $member = $self->members->[$pos-1];
 	return ( $member and $member->textnode_ok(1) );
@@ -21,8 +45,9 @@ method element_ok( Str $xmlns?, Str $nodename, Int $pos ) {
 	return ( $member and $member->element_ok($xmlns, $nodename, 1) );
 }
 
-method pop_ok( Int $pos ) {
-	return ( $pos == scalar(@{ $self->members }) );
+method skip_ok( Int $pos ) {
+	my $member = $self->members->[$pos-1];
+	return ( $member and $member->skip_ok(1) );
 }
 
 method element_class( Str $xmlns?, Str $nodename, Int $pos ) {
@@ -30,4 +55,3 @@ method element_class( Str $xmlns?, Str $nodename, Int $pos ) {
 	return ( $member->element_class($xmlns, $nodename, 1) );
 }
 
-1;

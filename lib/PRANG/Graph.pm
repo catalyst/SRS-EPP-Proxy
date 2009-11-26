@@ -19,14 +19,11 @@ use MooseX::Attributes::Curried (
 requires 'xmlns';
 requires 'root_element';
 
-our %marshallers;
-
 method marshaller($inv:) returns PRANG::Marshaller {
 	if ( ref $inv ) {
 		$inv = ref $inv;
 	}
-	$marshallers{$inv} ||=
-		PRANG::Marshaller->new( class => $inv->meta );
+	PRANG::Marshaller->get( $inv );
 }
 
 method parse($class: Str $xml) {
