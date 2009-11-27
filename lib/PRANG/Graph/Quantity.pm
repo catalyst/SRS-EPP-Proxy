@@ -44,38 +44,3 @@ method expected {
 }
 
 1;
-
-__END__
-
-method textnode_ok( Int $pos ) {
-	if ( $self->has_max and $pos > $self->max ) {
-		return 0;
-	}
-	return $self->child->textnode_ok;
-}
-
-method element_ok( Str $xmlns?, Str $nodename, Int $pos ) {
-	if ( $self->has_max and $pos > $self->max ) {
-		return 0;
-	}
-	return $self->child->element_ok($xmlns, $nodename, 1);
-}
-
-method skip_ok( Int $pos, Int $found ) {
-	if ( $self->has_min and $found < $self->min ) {
-		return 0;
-	}
-	else {
-		return 1;
-	}
-}
-
-method pos_inc( Int $pos ) {
-	return 0;
-}
-
-method att_what( Int $pos ) {
-	return $self->child->element_class($xmlns, $nodename, 1);
-}
-
-1;

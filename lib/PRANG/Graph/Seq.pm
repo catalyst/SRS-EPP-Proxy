@@ -33,25 +33,3 @@ method expected( PRANG::Graph::Context $ctx ) {
 }
 
 1;
-
-__END__
-method textnode_ok( Int $pos ) {
-	my $member = $self->members->[$pos-1];
-	return ( $member and $member->textnode_ok(1) );
-}
-
-method element_ok( Str $xmlns?, Str $nodename, Int $pos ) {
-	my $member = $self->members->[$pos-1];
-	return ( $member and $member->element_ok($xmlns, $nodename, 1) );
-}
-
-method skip_ok( Int $pos ) {
-	my $member = $self->members->[$pos-1];
-	return ( $member and $member->skip_ok(1) );
-}
-
-method element_class( Str $xmlns?, Str $nodename, Int $pos ) {
-	my $member = $self->members->[$pos-1];
-	return ( $member->element_class($xmlns, $nodename, 1) );
-}
-

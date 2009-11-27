@@ -107,29 +107,3 @@ method expected( PRANG::Graph::Context $ctx ) {
 }
 
 1;
-
-__END__
-
-method textnode_ok( Int $pos, Int $found ) { 0 }
-method element_ok( Str $xmlns?, Str $nodename, Int $pos, Int $found ) {
-	if ( $xmlns and !$self->has_xmlns ) {
-		# not expected to change namespaces here!
-		return 0;
-	}
-	elsif ( !$xmlns and $self->has_xmlns ) {
-		# must change namespaces here..
-		return 0
-	}
-	if ( $pos == 1 and $nodename eq $self->nodeName ) {
-		return 1;
-	}
-	else {
-		return 0;
-	}
-}
-
-method att_what {
-	( $self->attrName, $self->nodeClass, $self->nodeName );
-}
-
-1;
