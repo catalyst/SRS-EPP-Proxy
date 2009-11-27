@@ -15,4 +15,7 @@ requires 'complete';
 #  returns (@Str) 
 requires 'expected';
 
+# method output ( Object $item, XML::LibXML::Element $node, HashRef $xsi ) returns XML::LibXML::Element
+requires 'output';
+
 1;

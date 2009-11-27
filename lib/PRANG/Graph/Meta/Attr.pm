@@ -16,6 +16,12 @@ has 'xml_name' =>
 	predicate => "has_xml_name",
 	;
 
+has 'xml_required' =>
+	is => "rw",
+	isa => "Bool",
+	predicate => "has_xml_required",
+	;
+
 package Moose::Meta::Attribute::Custom::PRANG::Attr;
 sub register_implementation {
 	"PRANGE::Graph::Meta::Attr";

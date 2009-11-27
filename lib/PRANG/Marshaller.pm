@@ -265,6 +265,149 @@ method build_acceptor( Moose::Meta::Class $class ) {
 	}
 }
 
+method xml_version { "1.0" };
+method encoding { "UTF-8" };
+
+# nothing to see here ... move along please ...
+our $zok;
+our %zok_seen;
+our @zok_themes = (qw( tmnt octothorpe quantum pokemon hhgg pasta
+		       phonetic sins punctuation discworld lotr
+		       loremipsum batman tld garbage python pooh
+		       norse_mythology ));
+our $zok_theme;
+
+our $gen_prefix;
+method generate_prefix( Str $xmlns ) returns Str {
+	if ( $zok or eval { require Acme::MetaSyntactic; 1 } ) {
+		my $name;
+		do {
+			$zok ||= do {
+				%zok_seen=();
+				if ( defined $zok_theme ) {
+					$zok_theme++;
+					if ( $zok_theme > $#zok_themes ) {
+						$zok_theme = 0;
+					}
+				}
+				else {
+					$zok_theme = int(time / 86400)
+						% scalar(@zok_themes);
+				}
+				Acme::MetaSyntactic->new(
+					$zok_themes[$zok_theme],
+				       );
+			};
+			do {
+				$name = $zok->name;
+				if ($zok_seen{$name}++) {
+					undef($zok);
+					undef($name);
+					goto next_theme;
+				};
+			} while ( length($name) > 10 or
+					  $name !~ m{^[A-Za-z]\w+$} );
+			next_theme:
+		}
+			until ($name);
+		return $name;
+	}
+	else {
+		# revert to a more boring prefix :)
+		$gen_prefix ||= "a";
+		$prefix++;
+	}
+}
+
+method to_xml_doc( PRANG::Graph $item ) returns XML::LibXML::Document {
+	my $xmlns = $item->xmlns;
+	my $xsi = { "" => $xmlns, "()" => sub {
+			    my $thing = shift;
+			    my $xmlns = shift;
+			    if ( $thing->can("preferred_prefix") ) {
+				    $thing->preferred_prefix($xmlns);
+			    }
+			    elsif ( $item->can("xmlns_prefix") ) {
+				    $item->xmlns_prefix($xmlns);
+			    }
+			    else {
+				    $self->generate_prefix($xmlns);
+			    }
+		    } };
+	%zok_seen=();
+	undef($gen_prefix);
+	my $doc = XML::LibXML::Document->new(
+		$self->xml_version, $self->encoding,
+	       );
+	$doc->setDocumentElement( $root );
+	my $root = $self->to_libxml( $item, $doc, $xsi );
+	$doc;
+}
+
+method to_xml( Object $item ) returns Str {
+	$self->to_xml_doc($item)->toString;
+}
+
+method to_libxml( Object $item, XML::LibXML::Element $node, HashRef $xsi ) returns XML::LibXML::Element {
+
+	my %rxsi = ( reverse %$xsi );
+	my $attributes = $self->attributes;
+	my $XSI = $xsi;
+	my $node_prefix = $node->prefix;
+	#my $doc = $node->getOwner;
+	my $get_prefix = sub {
+		my $xmlns = shift;
+		if ( !exists $rxsi{$xmlns} ) {
+			my $prefix = $xsi->{"()"}->($item, $xmlns);
+			if ( $XSI == $xsi ) {
+				$XSI = { %$xsi };
+			}
+			$XSI->{$prefix} = $xmlns;
+			$rxsi{$xmlns} = $prefix;
+			$node->setAttribute("xmlns:".$prefix, $xmlns);
+		}
+		$rxsi{$xmlns};
+	};
+	# do attributes
+	while ( my ($xmlns, $att) = each %$attributes ) {
+		my $prefix = $get_prefix->{$xmlns};
+		if ( $prefix ne "" ) {
+			$prefix .= ":";
+		}
+		while ( my ($attName, $meta_att) = each %$att ) {
+			my $is_optional;
+			my $obj_att_name = $meta_att->name;
+			if ( $meta_att->has_xml_required ) {
+				$is_optional = !$meta_att->xml_required;
+			}
+			elsif ( $meta_att->has_predicate ) {
+				# it's optional
+				$is_optional = 1;
+			}
+			# we /could/ use $meta_att->get_value($item)
+			# here, but I consider that to break
+			# encapsulation
+			my $value = $item->$obj_att_name;
+			if ( !defined $value ) {
+				die "could not serialize $item; slot "
+					.$meta_att->name." empty"
+						unless $is_optional;
+			}
+			else {
+				$node->setAttribute(
+					$prefix.$attName,
+					$value,
+				       );
+			}
+		}
+	}
+
+	# now child elements - let the graph do the work.
+	my $graph = $self->acceptor;
+	$graph->output($item, $node, $xsi);
+
+	$node;
+}
 
 1;
 
