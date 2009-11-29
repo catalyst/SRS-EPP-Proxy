@@ -318,6 +318,9 @@ module knows about sub-typing, and so if you specify a sub-type of one
 of these types, then the behaviour will be as for the type on this
 list.
 
+B<note:> this man page is I<B<U<OUT OF DATE>>> in subtle ways.  Use
+the source, Luke - until it is corrected.
+
 =over 4
 
 =item B<Bool  sub-type>
