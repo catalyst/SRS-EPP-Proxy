@@ -193,9 +193,7 @@ method build_graph_node() {
 			push @expect, PRANG::Graph::Element->new(
 				attName => $self->name,
 				attIsArray => $expect_many,
-				nodeClass => $class,
 				nodeName => $name,
-				contents => PRANG::Graph::Empty->new,
 			       );
 			delete $nodeName->{$name};
 		}
@@ -263,7 +261,7 @@ method build_graph_node() {
 
 package Moose::Meta::Attribute::Custom::PRANG::Element;
 sub register_implementation {
-	"PRANGE::Graph::Meta::Element";
+	"PRANG::Graph::Meta::Element";
 };
 
 1;

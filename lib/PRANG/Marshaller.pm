@@ -3,8 +3,15 @@ package PRANG::Marshaller;
 
 use Moose;
 use MooseX::Method::Signatures;
+use Moose::Util::TypeConstraints;
 
 use XML::LibXML 1.70;
+
+BEGIN {
+	class_type 'Moose::Meta::Class';
+	class_type "PRANG::Graph";
+	class_type "XML::LibXML::Element";
+ };
 
 has 'class' =>
 	isa => "Moose::Meta::Class",
@@ -103,7 +110,7 @@ method parse( Str $xml ) {
 	my $rv = $self->marshall_in_element(
 		$rootNode,
 		$xsi,
-		"/".$rootName->nodeName,
+		"/".$rootNode->nodeName,
 	       );
 	$rv;
 }
@@ -143,7 +150,7 @@ method marshall_in_element( XML::LibXML::Node $node, HashRef $xsi, Str $xpath ) 
 		else {
 			# fail.
 			die "invalid attribute '".$attr->name."' on "
-				$node->nodeName." (input line "
+				.$node->nodeName." (input line "
 					.$node->line_number.")";
 		}
 	};
@@ -315,40 +322,54 @@ method generate_prefix( Str $xmlns ) returns Str {
 	else {
 		# revert to a more boring prefix :)
 		$gen_prefix ||= "a";
-		$prefix++;
+		$gen_prefix++;
 	}
 }
 
-method to_xml_doc( PRANG::Graph $item ) returns XML::LibXML::Document {
+method to_xml_doc( PRANG::Graph $item ) {
 	my $xmlns = $item->xmlns;
-	my $xsi = { "" => $xmlns, "()" => sub {
+	my $prefix = "";
+	if ( $item->can("preferred_prefix") ) {
+		$prefix = $item->preferred_prefix;
+	}
+	my $xsi = { $prefix => $xmlns, "()" => sub {
 			    my $thing = shift;
-			    my $xmlns = shift;
+			    my $ns = shift;
 			    if ( $thing->can("preferred_prefix") ) {
-				    $thing->preferred_prefix($xmlns);
+				    $thing->preferred_prefix($ns);
 			    }
 			    elsif ( $item->can("xmlns_prefix") ) {
-				    $item->xmlns_prefix($xmlns);
+				    $item->xmlns_prefix($ns);
 			    }
 			    else {
-				    $self->generate_prefix($xmlns);
+				    $self->generate_prefix($ns);
 			    }
 		    } };
+	# whoops, this is non-reentrant
 	%zok_seen=();
 	undef($gen_prefix);
 	my $doc = XML::LibXML::Document->new(
 		$self->xml_version, $self->encoding,
 	       );
+	my $root = $doc->createElement(
+		($prefix ? "$prefix:" : "" ) .$item->root_element,
+	       );
+	if ( $xmlns ) {
+		$root->setAttribute(
+			"xmlns".($prefix?":$prefix":""),
+			$xmlns,
+		       );
+	}
 	$doc->setDocumentElement( $root );
-	my $root = $self->to_libxml( $item, $doc, $xsi );
+	$self->to_libxml( $item, $root, $xsi );
 	$doc;
 }
 
-method to_xml( Object $item ) returns Str {
+method to_xml( Object $item ) {
 	$self->to_xml_doc($item)->toString;
 }
 
-method to_libxml( Object $item, XML::LibXML::Element $node, HashRef $xsi ) returns XML::LibXML::Element {
+method to_libxml( Object $item, XML::LibXML::Element $node, HashRef $xsi ) {
 
 	my %rxsi = ( reverse %$xsi );
 	my $attributes = $self->attributes;

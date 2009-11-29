@@ -3,6 +3,7 @@ package PRANG::Graph::Context;
 
 use Moose;
 use MooseX::Method::Signatures;
+use Moose::Util::TypeConstraints;
 
 # this is a data class, it basically is like a loop counter for
 # parsing.  Except instead of walking over a list, it 'walks' over a
@@ -46,7 +47,7 @@ has 'chosen' =>
 	isa => "Bool",
 	clearer => "clear_chosen",
 	trigger => sub {
-		$self->clear_element_ok;
+		$_[0]->clear_element_ok;
 	}
 	;
 
@@ -78,6 +79,8 @@ has 'prefix' =>
 	isa => "Str",
 	;
 
+BEGIN { class_type "XML::LibXML::Node" };
+
 # this is a very convenient class to put a rich and useful exception
 # method on; all important methods use it, and it has just the
 # information to make the error message very useful.
@@ -98,7 +101,7 @@ method exception( Str $message, XML::LibXML::Node $node? ) {
 					     @nodes ) {
 				$extra .= ">(mixed context)";
 			}
-			elseif ($nodes[0]->isa("XML::LibXML::Element")) {
+			elsif ($nodes[0]->isa("XML::LibXML::Element")) {
 				$extra .= "><!-- ".@nodes
 					." child XML nodes -->";
 			}
@@ -125,7 +128,7 @@ method exception( Str $message, XML::LibXML::Node $node? ) {
 		$type =~ s{XML::LibXML::}{};
 		$extra .= " (bogon? $type node)";
 	}
-	die "$message at $xpath$extra";  # XXX - add exception object
+	die "$message at ".$self->xpath."$extra";
 }
 
 1;
