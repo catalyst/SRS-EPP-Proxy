@@ -3,7 +3,6 @@ package PRANG::Graph::Seq;
 
 use Moose;
 use MooseX::Method::Signatures;
-with 'PRANG::Graph::Node';
 
 has 'members' =>
 	is => "ro",
@@ -31,5 +30,9 @@ method complete( PRANG::Graph::Context $ctx ) {
 method expected( PRANG::Graph::Context $ctx ) {
 	#...
 }
+
+method output {}
+
+with 'PRANG::Graph::Node';
 
 1;

@@ -17,6 +17,12 @@ has 'xml_nodeName' =>
 	predicate => "has_nodeName",
 	;
 
+has 'xml_nodeName_attr' =>
+	is => "rw",
+	isa => "Str",
+	predicate => "has_nodeName_attr",
+	;
+
 has 'xml_required' =>
 	is => "rw",
 	isa => "Bool",

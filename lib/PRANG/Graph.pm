@@ -3,23 +3,23 @@ package PRANG::Graph;
 
 use Moose::Role;
 
-use PRANG::Graph::Meta::Attribute;
+use PRANG::Graph::Meta::Attr;
 use PRANG::Graph::Meta::Element;
 use MooseX::Method::Signatures;
 
 use MooseX::Attributes::Curried (
 	has_attr => {
-		metaclass => "PRANG::Attribute",
+		metaclass => "PRANG::Attr",
 	},
 	has_element => {
 		metaclass => "PRANG::Element",
 	},
-	;
+       );
 
 requires 'xmlns';
 requires 'root_element';
 
-method marshaller($inv:) returns PRANG::Marshaller {
+method marshaller($inv:) { #returns PRANG::Marshaller {
 	if ( ref $inv ) {
 		$inv = ref $inv;
 	}

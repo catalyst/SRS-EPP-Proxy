@@ -24,7 +24,7 @@ has 'xml_required' =>
 
 package Moose::Meta::Attribute::Custom::PRANG::Attr;
 sub register_implementation {
-	"PRANGE::Graph::Meta::Attr";
+	"PRANG::Graph::Meta::Attr";
 };
 
 1;

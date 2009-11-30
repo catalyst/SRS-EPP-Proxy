@@ -3,7 +3,6 @@ package PRANG::Graph::Element;
 
 use Moose;
 use MooseX::Method::Signatures;
-with 'PRANG::Graph::Node';
 
 has 'xmlns' =>
 	is => "ro",
@@ -45,7 +44,7 @@ method accept( XML::LibXML::Node $node, PRANG::Graph::Context $ctx ) {
 	# this is bad for processContents=skip + namespace="##other"
 	my $ret_nodeName = $self->nodeName eq "*" ?
 		$node->localname : undef;
-	if ( !$ret_nodeName and $node->localname ne $self->nodeName )
+	if ( !$ret_nodeName and $node->localname ne $self->nodeName ) {
 		$ctx->exception("invalid element; expected '"
 					.$node->localname."'");
 	}
@@ -105,5 +104,12 @@ method complete( PRANG::Graph::Context $ctx ) {
 method expected( PRANG::Graph::Context $ctx ) {
 	#...
 }
+
+method output ( Object $item, XML::LibXML::Element $node, HashRef $xsi ) {
+	no strict 'refs';
+	&{"..."}();
+}
+
+with 'PRANG::Graph::Node';
 
 1;

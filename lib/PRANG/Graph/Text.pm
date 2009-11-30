@@ -3,7 +3,7 @@ package PRANG::Graph::Text;
 
 use Moose;
 use MooseX::Method::Signatures;
-with 'PRANG::Graph::Node';
+use XML::LibXML;
 
 method accept( XML::LibXML::Node $node, PRANG::Graph::Context $ctx ) {
 	if ( $node->nodeType == XML_TEXT_NODE ) {
@@ -24,5 +24,10 @@ method complete( PRANG::Graph::Context $ctx ) {
 method expected( PRANG::Graph::Context $ctx ) {
 	#...
 }
+
+method output {
+}
+
+with 'PRANG::Graph::Node';
 
 1;

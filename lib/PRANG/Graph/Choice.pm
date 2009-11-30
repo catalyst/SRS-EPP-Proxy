@@ -3,7 +3,6 @@ package PRANG::Graph::Choice;
 
 use Moose;
 use MooseX::Method::Signatures;
-with 'PRANG::Graph::Node';
 
 has 'choices' =>
 	is => "ro",
@@ -28,5 +27,11 @@ method complete( PRANG::Graph::Context $ctx ) {
 method expected( PRANG::Graph::Context $ctx ) {
 	#...
 }
+
+method output ( Object $item, XML::LibXML::Element $node, HashRef $xsi ) {
+	# FIXME - need the meta-attribute, dammit!
+}
+
+with 'PRANG::Graph::Node';
 
 1;

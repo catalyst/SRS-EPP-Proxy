@@ -3,7 +3,6 @@ package PRANG::Graph::Quantity;
 
 use Moose;
 use MooseX::Method::Signatures;
-with 'PRANG::Graph::Node';
 
 has 'min' =>
 	is => "ro",
@@ -42,5 +41,9 @@ method complete( PRANG::Graph::Context $ctx ) {
 method expected {
 	# ...
 }
+
+method output {}
+
+with 'PRANG::Graph::Node';
 
 1;
