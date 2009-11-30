@@ -60,10 +60,13 @@ package PRANG::XMLSchema::Whatever;
 
 use Moose;
 use MooseX::Method::Signatures;
+use PRANG::Graph;
 
-has 'contents' =>
+has_element 'contents' =>
 	is => "rw",
 	isa => "ArrayRef[PRANG::XMLSchema::Whatever|Str]",
+	xml_nodeName => "*",
+	xml_nodeName_attr => "names",
 	;
 
 has 'names' =>
@@ -71,44 +74,17 @@ has 'names' =>
 	isa => "ArrayRef[Maybe[Str]]",
 	;
 
-has '_attributes' =>
+has_attr 'attributes' =>
 	is => "rw",
 	isa => "HashRef[Str]",
+	xml_name => "*",
 	;
-
-# here's a new meta-type method; specify a function which accepts
-# _all_ of the attributes given.  This would also be required for the
-# <anyAttribute> wildcard
-method all_attributes(HashRef $attribs) {
-	$self->_attributes($attribs);
-}
-
-method attributes() {
-	$self->_attributes;
-}
 
 method xmlns() {
 	# ... meep?
 	"";
 }
 
-# we don't need to specify 'attributes'; so long as the generator is
-# happy to find a hashref returned and DTRT.
-
-method elements() {
-	my @rv;
-	return unless $self->contents;
-	for (my $i = 0; defined $self->contents->[$i]; $i++ ) {
-		my $item = $self->contents->[$i];
-		if ( ref $item ) {
-			push @rv, [ undef, $self->names->[$i], $item ];
-		}
-		else {
-			push @rv, [ $item ];
-		}
-	}
-}
-
-with 'SRS::EPP::MessageNode'; # XXX - should pull these into PRANG
+with 'PRANG::Graph::Class';
 
 1;

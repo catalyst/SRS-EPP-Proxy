@@ -1,20 +1,20 @@
 
-package SRS::EPP::Message::EPP;
+package XML::EPP;
 
 use Moose;
 use MooseX::Method::Signatures;
 
 # this class implements a Message format - ie, a root of a schema - as
 # well as a node - the documentRoot
-with "SRS::EPP::Message", "SRS::EPP::Message::EPP::Node";
+with "PRANG::Graph", "PRANG::Graph::Class";
 
 use constant XSI_XMLNS => "http://www.w3.org/2001/XMLSchema-instance";
 
-use SRS::EPP::Message::EPPCom;
+use XML::EPP::Common;
 
 use Moose::Util::TypeConstraints;
 
-our $PKG = "SRS::EPP::Message::EPP";
+our $PKG = "XML::EPP";
 
 #=====================================================================
 #  epp-1.0.xsd mapping to types
@@ -54,30 +54,30 @@ BEGIN {
 
 # rule 2.  ALL elements get converted to MessageNode types, with
 # classes preferably named after the name of the element
-use SRS::EPP::Message::EPP::Hello;
+use XML::EPP::Hello;
 
 # however, as 'extURIType' is used in multiple places, with different
 # element names, it gets a name based on its type.
-use SRS::EPP::Message::EPP::ExtURI;
-use SRS::EPP::Message::EPP::SvcMenu;
-use SRS::EPP::Message::EPP::DCP;
-use SRS::EPP::Message::EPP::Greeting;
-use SRS::EPP::Message::EPP::CredsOptions;
-use SRS::EPP::Message::EPP::RequestedSvcs;
-use SRS::EPP::Message::EPP::Login;
-use SRS::EPP::Message::EPP::Poll;
-use SRS::EPP::Message::EPP::Object;
-use SRS::EPP::Message::EPP::Transfer;
+use XML::EPP::ExtURI;
+use XML::EPP::SvcMenu;
+use XML::EPP::DCP;
+use XML::EPP::Greeting;
+use XML::EPP::CredsOptions;
+use XML::EPP::RequestedSvcs;
+use XML::EPP::Login;
+use XML::EPP::Poll;
+use XML::EPP::Object;
+use XML::EPP::Transfer;
 
 # first rule: map complexTypes to classes.  Where types are only used
 # in one place, the name of the class is the name of the *element* in
 # which it is used.
-use SRS::EPP::Message::EPP::Command;
-use SRS::EPP::Message::EPP::TrID;
-use SRS::EPP::Message::EPP::Extension;
-use SRS::EPP::Message::EPP::Msg;
-use SRS::EPP::Message::EPP::Result;
-use SRS::EPP::Message::EPP::Response;
+use XML::EPP::Command;
+use XML::EPP::TrID;
+use XML::EPP::Extension;
+use XML::EPP::Msg;
+use XML::EPP::Result;
+use XML::EPP::Response;
 
 #=====================================================================
 #  'epp' node definition
@@ -95,48 +95,25 @@ subtype "${PKG}::choice0" =>
 
 # but we map it to the object property 'message'; again this comes
 # under 'schema customisation'
-has 'message' =>
+has_element 'message' =>
 	is => "rw",
 	isa => "${PKG}::choice0",
+	xml_nodeName => {
+		"greeting" => "${PKG}::greetingType",
+		"command" => "${PKG}::commandType",
+		"response" => "${PKG}::responseType",
+		"extension" => "${PKG}::extAnyType",
+		"hello" => "${PKG}::Hello",
+	       },
+	handles => "is_response",
 	;
 
-# to build XML, we need to return the attributes in the node.  This
-# would normally be automatically generated, although the root node is
-# somewhat special as it contains XML namespaces.
-method attributes() {
-	( [ undef, "xmlns", __PACKAGE__->xmlns ],
-	  [ undef, "xmlns:xsi", XSI_XMLNS ],
-	  [ XSI_XMLNS, "schemaLocation", __PACKAGE__->xmlns."\n"
-		    .'epp-1.0.xsd' ],
-	 );
+method is_request() {
+	! $self->is_response;
 }
 
-# we need to be able to go from the type of the 'message' element to
-# the node name to use; this should be generated.
-method choice0_element( SRS::EPP::Message::EPP::choice0 $message )
-	returns (Str) {
-	if ( $message->isa("${PKG}::greetingType") ) {
-		"greeting";
-	}
-	elsif ( $message->isa("${PKG}::commandType") ) {
-		"command"
-	}
-	elsif ( $message->isa("${PKG}::responseType") ) {
-		"response"
-	}
-	elsif ( $message->isa("${PKG}::extAnyType") ) {
-		"extension"
-	}
-	elsif ( $message->isa("${PKG}::Hello") ) {
-		"hello";
-	}
-}
-
-# returns the child elements, in order.
-#  [ namespace URI, element name, object ]
-method elements() {
-	( [ undef, $self->choice0_element($self->message), $self->message ],
-	 );
+method is_response() {
+	$self->message->is_response;
 }
 
 1;

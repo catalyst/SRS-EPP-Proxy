@@ -1,17 +1,17 @@
 
-package SRS::EPP::Message::EPPCom;
+package XML::EPP::Common;
 
 use Moose;
 use MooseX::Method::Signatures;
 
 # this file does not implement a document format or a node, so it
-# doesn't consume the SRS::EPP::Message role.
+# doesn't consume the XML::EPP role.
 
 use constant XSI_XMLNS => "http://www.w3.org/2001/XMLSchema-instance";
 
 use Moose::Util::TypeConstraints;
 
-our $PKG = "SRS::EPP::Message::EPPCom";
+our $PKG = "XML::EPP::Common";
 
 #=====================================================================
 #  eppcom-1.0.xsd mapping to types
@@ -26,10 +26,10 @@ our $PKG = "SRS::EPP::Message::EPPCom";
 
 # "AuthInfo" is usually introduced with a <pw> tag, so we'll call it
 # Password
-use SRS::EPP::Message::EPPCom::Password;
+use XML::EPP::Common::Password;
 
 # <ext>, but it's basically still a password.
-use SRS::EPP::Message::EPPCom::ExtPassword;
+use XML::EPP::Common::ExtPassword;
 
 subtype "${PKG}::reasonBaseType" =>
 	as => "PRANG::XMLSchema::token",
@@ -37,7 +37,7 @@ subtype "${PKG}::reasonBaseType" =>
 		length($_) >= 1 and length($_) <= 32;
 	};
 
-use SRS::EPP::Message::EPPCom::Reason;
+use XML::EPP::Common::Reason;
 subtype "${PKG}::reasonType" => as => "${PKG}::Reason";
 
 subtype "${PKG}::clIDType" =>

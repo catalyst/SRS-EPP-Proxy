@@ -1,12 +1,12 @@
 
-package SRS::EPP::Message::EPP::Transfer;
+package XML::EPP::Transfer;
 
 # based on epp-1.0.xsd:greetingType
 
 use Moose;
 use Moose::Util::TypeConstraints;
 use MooseX::Method::Signatures;
-our $SCHEMA_PKG = "SRS::EPP::Message::EPP";
+our $SCHEMA_PKG = "XML::EPP";
 
 has 'object_name' =>
 	is => "rw",
@@ -15,29 +15,22 @@ has 'object_name' =>
 
 has 'object' =>
 	is => "rw",
-	isa => "SRS::EPP::Message::EPP::Object",
+	isa => "XML::EPP::Object",
+	xmlns => "*",
+	xml_nodeName => "*",
+	xml_nodeName_attr => "object_name",
 	;
 
 enum "${SCHEMA_PKG}::transferOpType" =>
 	qw(approve cancel query reject request);
 
-has 'op' =>
+has_attr 'op' =>
 	is => "rw",
-	isa => "SRS::EPP::Message::EPP::transferOpType",
+	isa => "XML::EPP::transferOpType",
 	required => 1,
 	;
 
-method elements() {
-	([ undef, $self->object_name, $self->object ],
-	 );
-}
-
-method attributes() {
-	("op",
-	);
-}
-
-with 'SRS::EPP::Message::EPP::Node';
+with 'XML::EPP::Node';
 
 subtype "${SCHEMA_PKG}::transferType"
 	=> as __PACKAGE__;

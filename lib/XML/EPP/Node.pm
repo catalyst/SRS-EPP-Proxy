@@ -1,8 +1,8 @@
 
-package SRS::EPP::Message::EPP::Node;
+package XML::EPP::Node;
 
 use Moose::Role;
-with 'SRS::EPP::MessageNode';
+with 'PRANG::Graph::Class';
 
 sub xmlns {
 	"urn:ietf:params:xml:ns:epp-1.0";

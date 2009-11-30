@@ -1,44 +1,36 @@
 
-package SRS::EPP::Message::EPP::Greeting;
+package XML::EPP::Greeting;
 
 # based on epp-1.0.xsd:greetingType
 
 use Moose;
 use MooseX::Method::Signatures;
 use Moose::Util::TypeConstraints;
-our $PKG = "SRS::EPP::Message::EPP::Greeting";
-our $SCHEMA_PKG = "SRS::EPP::Message::EPP";
+use PRANG::Graph;
+our $PKG = "XML::EPP::Greeting";
+our $SCHEMA_PKG = "XML::EPP";
 
-has 'svID' =>
+has_element 'svID' =>
 	is => "rw",
 	isa => "${SCHEMA_PKG}::sIDType",
 	;
 
-has 'svDate' =>
+has_element 'svDate' =>
 	is => "rw",
 	isa => "PRANG::XMLSchema::dateTime",
 	;
 
-has 'svcMenu' =>
+has_element 'svcMenu' =>
 	is => "rw",
 	isa => "${SCHEMA_PKG}::SvcMenu",
 	;
 
-has 'dcp' =>
+has_element 'dcp' =>
 	is => "rw",
 	isa => "${SCHEMA_PKG}::DCP",
 	;
 
-method attributes() {
-
-}
-
-method elements() {
-	# something like this should be possible too as a shorthand
-	qw( svID svDate svcMenu dcp );
-}
-
-with 'SRS::EPP::Message::EPP::Node';
+with 'XML::EPP::Node';
 
 subtype "${SCHEMA_PKG}::greetingType"
 	=> as __PACKAGE__;

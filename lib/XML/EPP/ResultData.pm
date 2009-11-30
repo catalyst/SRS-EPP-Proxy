@@ -1,11 +1,11 @@
 
-package SRS::EPP::Message::EPP::ResultData;
+package XML::EPP::ResultData;
 
 use Moose::Role;
 use MooseX::Method::Signatures;
 
 # <any namespace="##other"> maps to MessageNode; it's a free for all!
-with 'SRS::EPP::MessageNode';
+with 'PRANG::Graph::Class';
 
 # in principal we could use Extension, but that could be confusing.
 

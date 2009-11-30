@@ -1,16 +1,17 @@
 
-package SRS::EPP::Message::EPP::Result;
+package XML::EPP::Result;
 
 use Moose;
 use MooseX::Method::Signatures;
 use Moose::Util::TypeConstraints;
-our $SCHEMA_PKG = "SRS::EPP::Message::EPP";
+use PRANG::Graph;
 
-use SRS::EPP::Message::EPP::ErrValue;
+use XML::EPP::ErrValue;
 
+our $SCHEMA_PKG = "XML::EPP";
 our $PKG = __PACKAGE__;
 
-has 'msg' =>
+has_element 'msg' =>
 	is => "rw",
 	isa => "${SCHEMA_PKG}::msgType",
 	;
@@ -20,9 +21,13 @@ subtype "${PKG}::choice0"
 			   qw(errValueType extErrValueType)),
 	;
 
-has 'errs' =>
+has_element 'errs' =>
 	is => "rw",
 	isa => "ArrayRef[${PKG}::choice0]",
+	xml_nodeName => {
+		"value" => "${SCHEMA_PKG}::errValueType",
+		"extValue" => "${SCHEMA_PKG}::extErrValueType",
+	},
 	;
 
 our %valid_result_codes = map { $_ => 1 }
@@ -38,12 +43,12 @@ subtype "${PKG}::resultCodeType"
 			exists $valid_result_codes{$_};
 	};
 
-has 'code' =>
+has_attr 'code' =>
 	is => "rw",
 	isa => "${SCHEMA_PKG}::resultCodeType",
 	;
 
-with 'SRS::EPP::Message::EPP::Node';
+with 'XML::EPP::Node';
 
 subtype "${SCHEMA_PKG}::resultType"
 	=> as __PACKAGE__;

@@ -1,13 +1,14 @@
 
-package SRS::EPP::Message::EPP::Command;
+package XML::EPP::Command;
 
 use Moose;
 use MooseX::Method::Signatures;
 use Moose::Util::TypeConstraints;
-our $SCHEMA_PKG = "SRS::EPP::Message::EPP";
+use PRANG::Graph;
+our $SCHEMA_PKG = "XML::EPP";
 
-use SRS::EPP::Message::EPP::Object;
-use SRS::EPP::Message::EPP::Login;
+use XML::EPP::Object;
+use XML::EPP::Login;
 
 our $PKG = __PACKAGE__;
 
@@ -32,39 +33,38 @@ has 'action' =>
 
 # these are all maxOccurs = 1 (the default), so we don't need to worry
 # about keeping multiple of them.
-has 'object' =>
+has_element 'object' =>
 	is => "rw",
 	isa => "${PKG}::choice0",
 	predicate => "has_object",
+	xml_nodeName => {
+		check => "${SCHEMA_PKG}::readWriteType",
+		create => "${SCHEMA_PKG}::readWriteType",
+		delete => "${SCHEMA_PKG}::readWriteType",
+		info => "${SCHEMA_PKG}::readWriteType",
+		renew => "${SCHEMA_PKG}::readWriteType",
+		update => "${SCHEMA_PKG}::readWriteType",
+
+		login => "${SCHEMA_PKG}::loginType",
+		logout => "Bool",
+		transfer => "${SCHEMA_PKG}::transferType",
+	},
+	xml_nodeName_name => "action",
 	;
 
-has 'extension' =>
+has_element 'extension' =>
 	is => "rw",
 	isa => "${SCHEMA_PKG}::extAnyType",
 	predicate => "has_extension",
 	;
 
-has 'clTRID' =>
+has_element 'clTRID' =>
 	is => "rw",
 	isa => "${SCHEMA_PKG}::trIDStringType",
 	predicate => "has_clTRID",
 	;
 
-# conversion details
-method attributes() { }
-method elements() {
-	unless ($self->has_action and $self->has_object) {
-		die "command incomplete";
-	}
-	([ undef, $self->action, $self->object ],
-	 ($self->has_extension
-		  ? ([ undef, "extension", $self->extension ]) : () ),
-	 ($self->has_clTRID
-		  ? ([ undef, "clTRID", $self->clTRID ]) : () ),
-	);
-}
-
-with 'SRS::EPP::Message::EPP::Node';
+with 'XML::EPP::Node';
 
 subtype "${SCHEMA_PKG}::commandType"
 	=> as __PACKAGE__;

@@ -1,31 +1,26 @@
 
-package SRS::EPP::Message::EPP::CredsOptions;
+package XML::EPP::CredsOptions;
 
 use Moose;
 use MooseX::Method::Signatures;
+use Moose::Util::TypeConstraints;
+use PRANG::Graph;
 
-our $SCHEMA_PKG = "SRS::EPP::Message::EPP";
+our $SCHEMA_PKG = "XML::EPP";
 
-has 'version' =>
+has_element 'version' =>
 	is => "rw",
 	isa => "${SCHEMA_PKG}::versionType",
+	default => "1.0",
 	;
 
-has 'lang' =>
+has_element 'lang' =>
 	is => "rw",
 	isa => "PRANG::XMLSchema::language",
+	default => "en",
 	;
 
-method elements() {
-	qw(version lang);
-}
-
-method attributes() {
-}
-
 with "${SCHEMA_PKG}::Node";
-
-use Moose::Util::TypeConstraints;
 
 subtype "${SCHEMA_PKG}::credsOptionsType" =>
 	as __PACKAGE__;
