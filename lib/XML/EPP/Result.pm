@@ -6,7 +6,7 @@ use MooseX::Method::Signatures;
 use Moose::Util::TypeConstraints;
 use PRANG::Graph;
 
-use XML::EPP::ErrValue;
+use XML::EPP::Error;
 
 our $SCHEMA_PKG = "XML::EPP";
 our $PKG = __PACKAGE__;

@@ -4,6 +4,8 @@ package XML::EPP::SvcMenu;
 use Moose;
 use MooseX::Method::Signatures;
 use Moose::Util::TypeConstraints;
+use PRANG::Graph;
+
 our $SCHEMA_PKG = "XML::EPP";
 
 has_element 'version' =>

@@ -13,7 +13,6 @@ use strict;
 use warnings;
 
 use XML::LibXML;
-use SRS::EPP::Response::Error;
 
 use Moose;
 with 'SRS::EPP::Message';
@@ -27,17 +26,15 @@ __END__
 
 =head1 NAME
 
-SRS::EPP::Command - base class for EPP commands (requests)
+SRS::EPP::Command - class for EPP command
 
 =head1 SYNOPSIS
 
   # 'artificially' create a message (useful for testing)
-  my $cmd = SRS::EPP::Command::SubClass->new
-            (
-            );
+  my $cmd = SRS::EPP::Command->create("hello");
 
-  # create a message from 
-
+  my $cmd = SRS::EPP::Command->create("info");
+  
   my $response = $cmd->process;
 
 =head1 DESCRIPTION

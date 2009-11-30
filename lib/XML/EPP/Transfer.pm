@@ -6,6 +6,8 @@ package XML::EPP::Transfer;
 use Moose;
 use Moose::Util::TypeConstraints;
 use MooseX::Method::Signatures;
+use PRANG::Graph;
+
 our $SCHEMA_PKG = "XML::EPP";
 
 has 'object_name' =>
@@ -13,7 +15,7 @@ has 'object_name' =>
 	isa => "Str",
 	;
 
-has 'object' =>
+has_element 'object' =>
 	is => "rw",
 	isa => "XML::EPP::Object",
 	xmlns => "*",

@@ -3,18 +3,14 @@ package XML::EPP;
 
 use Moose;
 use MooseX::Method::Signatures;
-
-# this class implements a Message format - ie, a root of a schema - as
-# well as a node - the documentRoot
-with "PRANG::Graph", "PRANG::Graph::Class";
+use Moose::Util::TypeConstraints;
 
 use constant XSI_XMLNS => "http://www.w3.org/2001/XMLSchema-instance";
 
 use XML::EPP::Common;
 
-use Moose::Util::TypeConstraints;
-
-our $PKG = "XML::EPP";
+our $PKG;
+BEGIN{ $PKG = "XML::EPP" };
 
 #=====================================================================
 #  epp-1.0.xsd mapping to types
@@ -33,23 +29,23 @@ our $PKG = "XML::EPP";
 use PRANG::XMLSchema::Types;
 
 BEGIN {
-	subtype "${PKG}::sIDType" =>
-		as => "PRANG::XMLSchema::normalizedString",
-			where {
-				length($_) >= 3 and length($_) <= 64;
-			};
+	subtype "${PKG}::sIDType"
+		=> as "PRANG::XMLSchema::normalizedString"
+		=> where {
+			length($_) >= 3 and length($_) <= 64;
+		};
 
-	subtype "${PKG}::versionType" =>
-		as => "PRANG::XMLSchema::token",
-			where {
-				m{^[1-9]+\.[0-9]+$} and $_ eq "1.0";
-			};
+	subtype "${PKG}::versionType"
+		=> as "PRANG::XMLSchema::token"
+		=> where {
+			m{^[1-9]+\.[0-9]+$} and $_ eq "1.0";
+		};
 
-	subtype "${PKG}::trIDStringType" =>
-		as => "PRANG::XMLSchema::token",
-			where {
-				length($_) >= 3 and length($_) <= 64;
-			};
+	subtype "${PKG}::trIDStringType"
+		=> as "PRANG::XMLSchema::token"
+		=> where {
+			length($_) >= 3 and length($_) <= 64;
+		};
 }
 
 # rule 2.  ALL elements get converted to MessageNode types, with
@@ -82,6 +78,7 @@ use XML::EPP::Response;
 #=====================================================================
 #  'epp' node definition
 #=====================================================================
+use PRANG::Graph;
 
 # Now we have all of the type constraints from the XMLSchema
 # definition defined, we can implement the 'epp' node.
@@ -89,7 +86,7 @@ use XML::EPP::Response;
 # there is a 'choice' - this item has no name in the schema to use, so
 # we call it 'choice0'
 subtype "${PKG}::choice0" =>
-	as => join("|", map { "${PKG}::$_" }
+	=> as join("|", map { "${PKG}::$_" }
 			   qw(greetingType Hello commandType
 			      responseType extAnyType) );
 
@@ -105,8 +102,14 @@ has_element 'message' =>
 		"extension" => "${PKG}::extAnyType",
 		"hello" => "${PKG}::Hello",
 	       },
-	handles => "is_response",
+	handles => ["is_response"],
 	;
+
+method root_element { "epp" }
+
+# this class implements a Message format - ie, a root of a schema - as
+# well as a node - the documentRoot
+with "PRANG::Graph", "XML::EPP::Node";
 
 method is_request() {
 	! $self->is_response;

@@ -5,6 +5,8 @@ use Moose;
 use MooseX::Method::Signatures;
 use Moose::Util::TypeConstraints;
 use PRANG::Graph;
+use PRANG::XMLSchema::Types;
+
 our $SCHEMA_PKG = "XML::EPP";
 
 # hmm, choice with simpleTypes can't be mapped quite the same..
@@ -132,7 +134,7 @@ has 'access' =>
 has_element 'access_node' =>
 	is => "rw",
 	isa => "Bool",
-	xml_nodeName => { map { $_ => Bool } @dcpAccessType },
+	xml_nodeName => { map { $_ => "Bool" } @access_enum },
 	xml_nodeName_attr => "access",
 	;
 

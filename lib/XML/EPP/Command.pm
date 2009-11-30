@@ -16,20 +16,20 @@ our $PKG = __PACKAGE__;
 # name of the node just from the type of it.  We'll need to store it
 # separately.
 subtype "${PKG}::choice0"
-	=> as join("|", map { "${SCHEMA_PKG}::$_" }
-			   qw(readWriteType loginType Logout
+	=> as join("|", "Bool", map { "${SCHEMA_PKG}::$_" }
+			   qw(readWriteType loginType
 			      pollType transferType)),
 	;
+
+enum "${PKG}::actions" => qw( check create delete info login logout
+			      poll renew transfer update);
 
 # and here is the extra field
 has 'action' =>
 	is => "rw",
-	isa => "Str",
+	isa => "${PKG}::actions",
 	predicate => "has_action",
-	where  {
-		m{^(check|create|delete|info|login|
-			  logout|poll|renew|transfer|update)$}x;
-	};
+	;
 
 # these are all maxOccurs = 1 (the default), so we don't need to worry
 # about keeping multiple of them.
@@ -49,7 +49,7 @@ has_element 'object' =>
 		logout => "Bool",
 		transfer => "${SCHEMA_PKG}::transferType",
 	},
-	xml_nodeName_name => "action",
+	xml_nodeName_attr => "action",
 	;
 
 has_element 'extension' =>
