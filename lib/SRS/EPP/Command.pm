@@ -18,10 +18,6 @@ use SRS::EPP::Response::Error;
 use Moose;
 with 'SRS::EPP::Message';
 
-sub marshaller {
-	
-}
-
 no Moose;
 __PACKAGE__->meta->make_immutable;
 

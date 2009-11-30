@@ -10,6 +10,7 @@ use strict;
 use warnings;
 
 package SRS::EPP::Response;
+
 use Moose::Role;
 with 'SRS::EPP::Message';
 

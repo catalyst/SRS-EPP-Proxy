@@ -15,17 +15,23 @@ package SRS::EPP::Message;
 use Moose::Role;
 use MooseX::Method::Signatures;
 
-requires 'marshaller';
+has 'epp' =>
+	is => "rw",
+	isa => "XML::EPP",
+	handles => [ qw(to_xml) ],
+	;
 
 method to_xml() {
-	$self->marshaller->to_xml($self);
+	$self->epp->marshaller->to_xml($self);
 }
 
 sub parse {
 	my $class = shift;
 	my $xml = shift;
-	my $instance = $class->marshaller->parse($xml);
-	return $instance;
+	my $epp = $class->marshaller->parse($xml);
+	my $subclass = $epp->is_request ?
+		"SRS::EPP::Request" : "SRS::EPP::Command";
+	return $subclass->new( epp => $epp );
 }
 
 1;
@@ -39,24 +45,19 @@ SRS::EPP::Message - EPP XML
 =head1 SYNOPSIS
 
  # convert a message to XML
- my $xml = $message->as_xml;
+ my $xml = $message->to_xml;
 
- # sub-classes of the message class must define marshallers
- SRS::EPP::Message::Consumer->parse( $xml );
+ # parse a message, see what we get!
+ my $object = SRS::EPP::Message->parse( $xml );
 
 =head1 DESCRIPTION
 
 This class is a role digested by message classes - EPP commands and
-responses, as well as SRS requests and responses.
+responses.
 
 =head1 SEE ALSO
 
 L<SRS::EPP::Command>, L<SRS::EPP::Response>
-
-=for thought
-
-What space should we stick SRS messages under?  I reckon maybe plain
-SRS::Request:: and SRS::Response::, and subclass them...
 
 =cut
 
