@@ -1,8 +1,8 @@
 #!/usr/bin/perl -w
 #
 # test script for validation and load/dump between Perl/Moose and XML
-# for complete messages and fragments described in RFC4930 (EPP and
-# EPP common)
+# for complete messages and fragments described in RFC37^H^H49^H^H5730
+# (EPP and EPP common)
 
 use Test::More no_plan;
 use strict;

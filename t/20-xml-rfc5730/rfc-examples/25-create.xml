@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<epp xmlns="urn:ietf:params:xml:ns:epp-1.0">
+  <command>
+    <create>
+      <obj:create xmlns:obj="urn:ietf:params:xml:ns:obj">
+        <!-- Object-specific elements. -->
+      </obj:create>
+    </create>
+    <clTRID>ABC-12345</clTRID>
+  </command>
+</epp>

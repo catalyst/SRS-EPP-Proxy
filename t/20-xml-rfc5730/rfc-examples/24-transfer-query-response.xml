@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<epp xmlns="urn:ietf:params:xml:ns:epp-1.0">
+  <response>
+    <result code="1000">
+      <msg>Command completed successfully</msg>
+    </result>
+    <resData>
+      <obj:trnData xmlns:obj="urn:ietf:params:xml:ns:obj">
+        <obj:name>example</obj:name>
+        <obj:trStatus>pending</obj:trStatus>
+        <obj:reID>ClientX</obj:reID>
+        <obj:reDate>2000-06-08T22:00:00.0Z</obj:reDate>
+        <obj:acID>ClientY</obj:acID>
+        <obj:acDate>2000-06-13T22:00:00.0Z</obj:acDate>
+        <obj:exDate>2002-09-08T22:00:00.0Z</obj:exDate>
+      </obj:trnData>
+    </resData>
+    <trID>
+      <clTRID>ABC-12346</clTRID>
+      <svTRID>54322-XYZ</svTRID>
+    </trID>
+  </response>
+</epp>

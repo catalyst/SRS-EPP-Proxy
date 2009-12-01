@@ -1,0 +1,8 @@
+<epp>
+  <extension>
+    <!-- One or more extension elements. -->
+    <ext:foo xmlns:ext="urn:ietf:params:xml:ns:ext">
+      <!-- One or more extension child elements. -->
+    </ext:foo>
+  </extension>
+</epp>
