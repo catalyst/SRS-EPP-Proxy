@@ -11,7 +11,8 @@ BEGIN {
 	class_type 'Moose::Meta::Class';
 	class_type "PRANG::Graph";
 	class_type "XML::LibXML::Element";
- };
+	class_type "XML::LibXML::Node";
+};
 
 has 'class' =>
 	isa => "Moose::Meta::Class",
@@ -76,8 +77,8 @@ has 'elements' =>
 		}
 		[ map { $elements[$_] } sort {
 			$e_c_does{$e_c[$a]}{$e_c[$b]} or
-				($e_c[$a]->insertion_order
-					 <=> $e_c[$b]->insertion_order)
+				($elements[$a]->insertion_order
+					 <=> $elements[$b]->insertion_order)
 			} 0..$#elements ];
 	};
 
@@ -99,7 +100,7 @@ method parse( Str $xml ) {
 
 	my $rootNode = $dom->documentElement;
 	my $rootNodeNS = $rootNode->namespaceURI;
-	my $expected_ns = $self->class->xmlns;
+	my $expected_ns = $self->class->name->xmlns;
 
 	if ( $rootNodeNS and $expected_ns ) {
 		if ( $rootNodeNS ne $expected_ns ) {
@@ -116,7 +117,6 @@ method parse( Str $xml ) {
 }
 
 method marshall_in_element( XML::LibXML::Node $node, HashRef $xsi, Str $xpath ) {
-
 	my $attributes = $self->attributes;
 	my @node_attr = grep { $_->isa("XML::LibXML::Attr") }
 		$node->attributes;
@@ -157,9 +157,6 @@ method marshall_in_element( XML::LibXML::Node $node, HashRef $xsi, Str $xpath ) 
 
 	# now process elements
 	my @childNodes = $node->nonBlankChildNodes;
-	if ( !$self->has_acceptor ) {
-		$self->acceptor($self->build_acceptor);
-	}
 
 	my $acceptor = $self->acceptor;
 	my $context = PRANG::Graph::Context->new(
@@ -173,6 +170,10 @@ method marshall_in_element( XML::LibXML::Node $node, HashRef $xsi, Str $xpath ) 
 	while ( my $input_node = shift @childNodes ) {
 		if ( my ($key, $value, $name) =
 			     $acceptor->accept($input_node, $context) ) {
+			$context->exception(
+				"internal error: missing key",
+				$input_node,
+			       ) unless $key;
 			my $meta_att;
 			if ( exists $init_args{$key} ) {
 				if ( !ref $init_args{$key} or
@@ -195,7 +196,6 @@ method marshall_in_element( XML::LibXML::Node $node, HashRef $xsi, Str $xpath ) 
 		}
 	}
 
-
 	if ( !$acceptor->complete($context) ) {
 		my (@what) = $acceptor->expected($context);
 		$context->exception(
@@ -216,7 +216,7 @@ method marshall_in_element( XML::LibXML::Node $node, HashRef $xsi, Str $xpath ) 
 					delete $init_arg_names{$key};
 			}
 			if (ref $init_args{$key} and
-				    $init_args{$key} eq "ARRAY" ) {
+				    ref $init_args{$key} eq "ARRAY" ) {
 				$context->exception(
 "internal error: we ended up multiple values set for '$key' attribute",
 					$node);
@@ -226,7 +226,7 @@ method marshall_in_element( XML::LibXML::Node $node, HashRef $xsi, Str $xpath ) 
 		else {
 			# expect list
 			if ( !ref $init_args{$key} or
-				     $init_args{$key} ne "ARRAY" ) {
+				     ref $init_args{$key} ne "ARRAY" ) {
 				$init_args{$key} = [$init_args{$key}];
 				$init_arg_names{$key} = [$init_arg_names{$key}]
 					if exists $init_arg_names{$key};
@@ -240,9 +240,10 @@ method marshall_in_element( XML::LibXML::Node $node, HashRef $xsi, Str $xpath ) 
 			push @init_args, $key => delete $init_args{$key};
 		}
 	}
-	if (keys %init_args) {
+	if (my @leftovers = keys %init_args) {
 		$context->exception(
-		"internal error: init args left over (@{[ keys %init_args ]})",
+		"internal error: ".@leftovers
+			." init arg(s) left over (@leftovers)",
 			$node,
 		       );
 	}
@@ -257,7 +258,7 @@ method marshall_in_element( XML::LibXML::Node $node, HashRef $xsi, Str $xpath ) 
 	}
 }
 
-method build_acceptor( Moose::Meta::Class $class ) {
+method build_acceptor( ) {
 	my @nodes = map { $_->graph_node } @{ $self->elements };
 	if ( @nodes > 1 ) {
 		PRANG::Graph::Seq->new(
@@ -285,7 +286,8 @@ our @zok_themes = (qw( tmnt octothorpe quantum pokemon hhgg pasta
 our $zok_theme;
 
 our $gen_prefix;
-method generate_prefix( Str $xmlns ) returns Str {
+
+method generate_prefix( Str $xmlns ) {
 	if ( $zok or eval { require Acme::MetaSyntactic; 1 } ) {
 		my $name;
 		do {

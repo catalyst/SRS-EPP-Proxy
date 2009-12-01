@@ -14,13 +14,13 @@ has 'xmlns' =>
 has 'xml_nodeName' =>
 	is => "rw",
 	isa => "Str|HashRef",
-	predicate => "has_nodeName",
+	predicate => "has_xml_nodeName",
 	;
 
 has 'xml_nodeName_attr' =>
 	is => "rw",
 	isa => "Str",
-	predicate => "has_nodeName_attr",
+	predicate => "has_xml_nodeName_attr",
 	;
 
 has 'xml_required' =>
@@ -75,7 +75,7 @@ method build_graph_node() {
 	my $t_c = $self->type_constraint;
 
 	# check to see whether ArrayRef was specified
-	if ( $t_c->is_a_type_ok("ArrayRef") ) {
+	if ( $t_c->is_a_type_of("ArrayRef") ) {
 		my $is_paramd;
 		until ( $t_c->equals("ArrayRef") ) {
 			if ( $t_c->isa(HIGHER_ORDER_TYPE) ) {
@@ -109,7 +109,14 @@ method build_graph_node() {
 		elsif ( $x->isa("Moose::Meta::TypeConstraint::Union") ) {
 			push @st, @{ $x->parents };
 		}
-		elsif ( $x->isa("Moose::Meta::TypeConstraint") ) {
+		elsif ( $x->isa("Moose::Meta::TypeConstraint::Enum") ) {
+			$expect_simple = 1;
+		}
+		elsif ( $x->isa("Moose::Meta::TypeConstraint::Role") ) {
+			# likely to be a wildcard.
+			push @expect_role, $x->role;
+		}
+		elsif ( ref $x eq "Moose::Meta::TypeConstraint" ) {
 			if ( $x->equals("Bool") ) {
 				$expect_bool = 1;
 			}
@@ -119,13 +126,6 @@ method build_graph_node() {
 			else {
 				push @st, $x->parent;
 			}
-		}
-		elsif ( $x->isa("Moose::Meta::TypeConstraint::Enum") ) {
-			$expect_simple = 1;
-		}
-		elsif ( $x->isa("Moose::Meta::TypeConstraint::Role") ) {
-			# likely to be a wildcard.
-			push @expect_role, $x->role;
 		}
 		else {
 			die "Sorry, I don't know how to map a ".ref($x).
@@ -137,7 +137,7 @@ method build_graph_node() {
 	my $nodeName = $self->has_xml_nodeName ?
 		$self->xml_nodeName : $self->name;
 
-	if ( $expect_bool + $expect_simple + @expect_type > 1
+	if ( ($expect_bool||0) + ($expect_simple||0) + @expect_type > 1
 		     or @expect_role ) {
 		# multiple or ambiguous types are specified; we *need*
 		# to know
@@ -171,16 +171,16 @@ method build_graph_node() {
 			keys %$nodeName;
 
 		if ( !@names ) {
-			die "type '$class' specified as allowed, but "
-				."which node names indicate that type?"
-					." for attr ".$self->name;
+			die "type '$class' specified as allowed on '"
+	.$self->name."' element of ".$self->associated_class->name
+	.", but which node names indicate that type?  You've defined: "
+		."@{[ values %$nodeName ]}";
 		}
 
 		for my $name ( @names ) {
 			push @expect, PRANG::Graph::Element->new(
 				@xmlns,
-				attName => $self->name,
-				attIsArray => $expect_many,
+				attrName => $self->name,
 				nodeClass => $class,
 				nodeName => $name,
 			       );
@@ -197,7 +197,7 @@ method build_graph_node() {
 		# 'maybe' being there.
 		for my $name ( @names ) {
 			push @expect, PRANG::Graph::Element->new(
-				attName => $self->name,
+				attrName => $self->name,
 				attIsArray => $expect_many,
 				nodeName => $name,
 			       );
@@ -214,16 +214,13 @@ method build_graph_node() {
 			if ( !length($name) ) {
 				# this is for 'mixed' data
 				push @expect, PRANG::Graph::Text->new(
-					attName => $self->name,
-					attIsArray => $expect_many,
+					attrName => $self->name,
 				       );
 			}
 			else {
 				# regular XML data style
 				push @expect, PRANG::Graph::Element->new(
-					attName => $self->name,
-					attIsArray => $expect_many,
-					nodeClass => "Str",
+					attrName => $self->name,
 					nodeName => $name,
 					contents => PRANG::Graph::Text->new,
 				       );
@@ -237,7 +234,11 @@ method build_graph_node() {
 			choices => \@expect,
 		       );
 	}
-	elsif ( $expect_bool ) {
+	else {
+		$node = $expect[0];
+	}
+
+	if ( $expect_bool ) {
 		$expect_one = 0;
 	}
 
@@ -256,10 +257,15 @@ method build_graph_node() {
 		if ( $self->has_xml_max ) {
 			push @min_max, max => $self->xml_max;
 		}
+		die "no node!  fail!  processing ".$self->associated_class->name.", element ".$self->name unless $node;
 		$node = PRANG::Graph::Quantity->new(
 			@min_max,
 			child => $node,
 		       );
+	}
+	else {
+		$self->xml_min(1);
+		$self->xml_max(1);
 	}
 
 	return $node;

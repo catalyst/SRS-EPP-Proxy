@@ -12,23 +12,47 @@ has 'members' =>
 
 method accept( XML::LibXML::Node $node, PRANG::Graph::Context $ctx ) {
 	my $pos = $ctx->seq_pos;
-	my ($key, $val, $x);
+	my ($key, $val, $x, $member);
 	do {
-		my $member = $self->members->[$pos-1]
+		$member = $self->members->[$pos-1]
 			or $ctx->exception("unexpected element", $node);
 		($key, $val, $x) = $member->accept($node, $ctx);
-		$pos++;
+		if (!$key or !$member->accept_many ) {
+			$ctx->seq_pos(++$pos);
+		}
 	} until ($key);
-	$ctx->seq_pos($pos);
 	($key, $val, $x);
 }
 
 method complete( PRANG::Graph::Context $ctx ) {
-	return ( $ctx->seq_pos-1 == @{$self->members});
+	my $pos = $ctx->seq_pos;
+	my $member;
+	my $done;
+	while ( !$done ) {
+		$member = $self->members->[$pos-1];
+		if ( $member and $member->complete($ctx) ) {
+			$ctx->seq_pos(++$pos);
+		}
+		else {
+			$done = 1;
+		}
+	}
+	my $cmp = $pos-1 <=> @{$self->members};
+	if ( $cmp == 1 ) {
+		warn "Accepted too much!!";
+	}
+	return ( $cmp != -1 );
 }
 
 method expected( PRANG::Graph::Context $ctx ) {
-	#...
+	my $pos = $ctx->seq_pos;
+	my $member = $self->members->[$pos];
+	if ( $member ) {
+		return $member->expected($ctx);
+	}
+	else {
+		return "er... nothing?";
+	}
 }
 
 method output {}

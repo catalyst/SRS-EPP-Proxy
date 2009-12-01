@@ -5,24 +5,29 @@ use Moose;
 use MooseX::Method::Signatures;
 use XML::LibXML;
 
+has 'attrName' =>
+	is => "ro",
+	isa => "Str",
+	;
+
 method accept( XML::LibXML::Node $node, PRANG::Graph::Context $ctx ) {
 	if ( $node->nodeType == XML_TEXT_NODE ) {
-		(undef, $node->value);
+		($self->attrName, $node->data);
 	}
 	elsif ( $node->nodeType == XML_CDATA_SECTION_NODE ) {
-		(undef, $node->value);
+		($self->attrName, $node->data);
 	}
 	else {
-		$ctx->exception("expected text node");
+		$ctx->exception("expected text node", $node);
 	}
 }
 
 method complete( PRANG::Graph::Context $ctx ) {
-	# ...
+	1;
 }
 
 method expected( PRANG::Graph::Context $ctx ) {
-	#...
+	"TextNode";
 }
 
 method output {

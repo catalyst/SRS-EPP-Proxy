@@ -44,7 +44,7 @@ has 'quant_found' =>
 
 has 'chosen' =>
 	is => "rw",
-	isa => "Bool",
+	isa => "Int",
 	clearer => "clear_chosen",
 	trigger => sub {
 		$_[0]->clear_element_ok;
@@ -60,7 +60,7 @@ has 'element_ok' =>
 # For recursion, we need to know a couple of extra things.
 has 'base' =>
 	is => "ro",
-	isa => 'PRANG::Graph::Marshaller',
+	isa => 'PRANG::Marshaller',
 	;
 
 has 'xpath' =>
@@ -84,9 +84,47 @@ BEGIN { class_type "XML::LibXML::Node" };
 # this is a very convenient class to put a rich and useful exception
 # method on; all important methods use it, and it has just the
 # information to make the error message very useful.
-method exception( Str $message, XML::LibXML::Node $node? ) {
+method exception( Str $message, XML::LibXML::Node $node?, Bool $skip_ok? ) {
+	my $error = PRANG::Graph::Context::Error->new(
+		($node ? (node => $node) : ()),
+		message => $message,
+		xpath => $self->xpath,
+		($skip_ok ? (skip_ok => 1) : ()),
+	       );
+	die $error;
+}
+
+package PRANG::Graph::Context::Error;
+
+use Moose;
+use MooseX::Method::Signatures;
+
+has 'node' =>
+	is => "ro",
+	isa => "XML::LibXML::Node",
+	predicate => "has_node",
+	;
+
+has 'message' =>
+	is => "ro",
+	isa => "Str",
+	;
+
+has 'xpath' =>
+	is => "ro",
+	isa => "Str",
+	;
+
+has 'skip_ok' =>
+	is => "ro",
+	isa => "Bool",
+	;
+
+method show_node {
+	return "" unless $self->has_node;
 	my $extra = "";
-	if ( $node and $node->isa("XML::LibXML::Element") ) {
+	my $node = $self->node;
+	if ( $node->isa("XML::LibXML::Element") ) {
 		$extra = " (parsing: <".$node->nodeName;
 		if ( $node->hasAttributes ) {
 			$extra .= join(" ", map {
@@ -115,8 +153,8 @@ method exception( Str $message, XML::LibXML::Node $node? ) {
 		}
 		$extra .= ")";
 	}
-	elsif ( $node and $node->isa("XML::LibXML::Text") ) {
-		my $val = $node->value;
+	elsif ( $node->isa("XML::LibXML::Text") ) {
+		my $val = $node->data;
 		if ( length($val) > 15 ) {
 			$val = substr($val, 0, 13);
 			$val .= "...";
@@ -128,7 +166,16 @@ method exception( Str $message, XML::LibXML::Node $node? ) {
 		$type =~ s{XML::LibXML::}{};
 		$extra .= " (bogon? $type node)";
 	}
-	die "$message at ".$self->xpath."$extra";
+	$extra;
 }
+
+sub build_error {
+	my $self = shift;
+	my $message = $self->message;
+	my $extra = $self->show_node;
+	return "$message at ".$self->xpath."$extra\n";
+}
+
+use overload '""' => \&build_error;
 
 1;

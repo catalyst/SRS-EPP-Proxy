@@ -3,6 +3,16 @@ package PRANG::Graph;
 
 use Moose::Role;
 
+use PRANG::Graph::Context;
+
+use PRANG::Graph::Node;
+use PRANG::Graph::Class;
+use PRANG::Graph::Element;
+use PRANG::Graph::Text;
+use PRANG::Graph::Seq;
+use PRANG::Graph::Choice;
+use PRANG::Graph::Quantity;
+
 use PRANG::Graph::Meta::Attr;
 use PRANG::Graph::Meta::Element;
 use MooseX::Method::Signatures;
