@@ -4,7 +4,7 @@
 # for complete messages and fragments described in RFC4930 (EPP and
 # EPP common)
 
-use Test::More skip_all => "TODO";
+use Test::More no_plan;
 use strict;
 
 # of particular note: these stateful EPP messages are never converted
@@ -15,8 +15,7 @@ use strict;
 #    - logout
 
 BEGIN {
-	use_ok("SRS::EPP::Command::Login");
-	use_ok("SRS::EPP::Response::Greeting");
+	use_ok("SRS::EPP::Command");
 }
 
 # an example minimal-ish login message (minimal as in, no XML
@@ -31,7 +30,7 @@ my $login_request = <<XML;
       <pw>SecureThis! orz</pw>
       <options>
         <version>1.0</version>
-        <lang>en_NZ</lang>
+        <lang>en-NZ</lang>
       </options>
       <svcs>
         <objURI>urn:ietf:params:xml:ns:epp-1.0</objURI>
@@ -43,12 +42,28 @@ my $login_request = <<XML;
 </epp>
 XML
 
-my $login_object = SRS::EPP::Message::Command->new(
-	xmlstring => $login_request,
+my $login_object = SRS::EPP::Message->parse(
+	$login_request,
        );
 
-isa_ok($login_object, "SRS::EPP::Message::Command",
+isa_ok($login_object, "SRS::EPP::Command",
        "new login request");
+
+use YAML;
+
+diag(Dump $login_object);
+use Scriptalicious;
+
+use Time::HiRes qw(time);
+my $start = time;
+my $count;
+while ( time - $start < 1 ) {
+	SRS::EPP::Message->parse($login_request);
+	$count++;
+}
+my $elapsed = time - $start;
+diag("Parsed $count login requests in ".Scriptalicious::time_unit($elapsed)
+	     ." (".sprintf("%.1f", $count/$elapsed)." per second)");
 
 # Copyright (C) 2009  NZ Registry Services
 #

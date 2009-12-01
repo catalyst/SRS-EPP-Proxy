@@ -18,13 +18,13 @@ has_element 'clID' =>
 
 has_element 'pw' =>
 	is => "rw",
-	isa => "${SCHEMA_PKG}::Password",
+	isa => "XML::EPP::Common::Password",
 	;
 
 has_element 'newPW' =>
 	is => "rw",
 	predicate => "has_newPW",
-	isa => "${SCHEMA_PKG}::Password",
+	isa => "XML::EPP::Common::Password",
 	;
 
 has_element 'options' =>

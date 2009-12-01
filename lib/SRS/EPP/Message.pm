@@ -15,6 +15,11 @@ package SRS::EPP::Message;
 use Moose::Role;
 use MooseX::Method::Signatures;
 
+use XML::EPP;
+use PRANG::Marshaller;
+use SRS::EPP::Command;
+use SRS::EPP::Response;
+
 has 'epp' =>
 	is => "rw",
 	isa => "XML::EPP",
@@ -28,9 +33,10 @@ method to_xml() {
 sub parse {
 	my $class = shift;
 	my $xml = shift;
-	my $epp = $class->marshaller->parse($xml);
-	my $subclass = $epp->is_request ?
-		"SRS::EPP::Request" : "SRS::EPP::Command";
+	my $epp = PRANG::Marshaller->get("XML::EPP")
+		->parse($xml);
+	my $subclass = $epp->is_command ?
+		"SRS::EPP::Command" : "SRS::EPP::Response";
 	return $subclass->new( epp => $epp );
 }
 

@@ -53,4 +53,6 @@ with 'XML::EPP::Node';
 subtype "${SCHEMA_PKG}::resultType"
 	=> as __PACKAGE__;
 
+sub is_command { 0 }
+
 1;

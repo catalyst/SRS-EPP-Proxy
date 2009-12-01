@@ -7,4 +7,6 @@ use PRANG::Graph;
 
 with 'XML::EPP::Node';
 
+sub is_command { 1 }
+
 1;

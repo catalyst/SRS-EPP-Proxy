@@ -7,6 +7,7 @@ use Moose::Util::TypeConstraints;
 use PRANG::Graph;
 our $SCHEMA_PKG = "XML::EPP";
 
+use XML::EPP::Extension;
 use XML::EPP::Object;
 use XML::EPP::Login;
 
@@ -69,5 +70,7 @@ with 'XML::EPP::Node';
 
 subtype "${SCHEMA_PKG}::commandType"
 	=> as __PACKAGE__;
+
+sub is_command { 1 }
 
 1;

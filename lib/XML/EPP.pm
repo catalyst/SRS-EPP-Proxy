@@ -111,12 +111,12 @@ method root_element { "epp" }
 # well as a node - the documentRoot
 with "PRANG::Graph", "XML::EPP::Node";
 
-method is_request() {
-	! $self->is_response;
+method is_command() {
+	$self->message->is_command;
 }
 
 method is_response() {
-	$self->message->is_response;
+	!$self->message->is_command;
 }
 
 1;
