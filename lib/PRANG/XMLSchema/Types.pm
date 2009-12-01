@@ -14,11 +14,12 @@ subtype "PRANG::XMLSchema::token"
 		!m{[\t\r\n]|^\s|\s$|\s\s};
 	};
 
-use Regexp::Common qw /URI/;
+# See https://rt.cpan.org/Ticket/Display.html?id=52309
+# use Regexp::Common qw/URI/;
 subtype "PRANG::XMLSchema::anyURI"
 	=> as "Str"
 	=> where {
-		m{$RE{URI}}o;
+		m{^\w+:\S+$};  # validate using this instead
 	};
 
 use I18N::LangTags qw(is_language_tag);
