@@ -22,6 +22,12 @@ has 'child' =>
 	required => 1,
 	;
 
+has 'attrName' =>
+	is => "ro",
+	isa => "Str",
+	required => 1,
+	;
+
 sub accept_many { 1 }
 
 method accept( XML::LibXML::Node $node, PRANG::Graph::Context $ctx ) {
@@ -75,7 +81,35 @@ method expected( PRANG::Graph::Context $ctx ) {
 	return("($desc of: ", @expected, ")");
 }
 
-method output {}
+method output ( Object $item, XML::LibXML::Element $node, PRANG::Graph::Context $ctx ) {
+	my $attrName = $self->attrName;
+	my $val = $item->$attrName;
+	if ( $self->has_max and $self->max == 1 ) {
+		# this is an 'optional'-type thingy
+		if ( defined $val ) {
+			$self->child->output($item,$node,$ctx,$val);
+		}
+	}
+	else {
+		# this is an arrayref-type thingy
+		if ( !$val and !$self->has_min ) {
+			# ok, that's fine
+		}
+		elsif ( $val and (ref($val)||"") ne "ARRAY" ) {
+			# that's not
+			die "item $item / slot $attrName is $val, not"
+				."an ArrayRef";
+		}
+		else {
+			for ( my $i = 0; $i <= $#$val; $i++) {
+				$ctx->quant_found($i+1);
+				$self->child->output(
+					$item,$node,$ctx,$val->[$i],$i,
+				       );
+			}
+		}
+	}
+}
 
 with 'PRANG::Graph::Node';
 

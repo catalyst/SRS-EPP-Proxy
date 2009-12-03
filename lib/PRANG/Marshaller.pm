@@ -9,9 +9,9 @@ use XML::LibXML 1.70;
 
 BEGIN {
 	class_type 'Moose::Meta::Class';
-	class_type "PRANG::Graph";
 	class_type "XML::LibXML::Element";
 	class_type "XML::LibXML::Node";
+	role_type "PRANG::Graph";
 };
 
 has 'class' =>
@@ -260,16 +260,13 @@ method marshall_in_element( XML::LibXML::Node $node, HashRef $xsi, Str $xpath ) 
 
 method build_acceptor( ) {
 	my @nodes = map { $_->graph_node } @{ $self->elements };
-	if ( @nodes > 1 ) {
+	if ( @nodes != 1 ) {
 		PRANG::Graph::Seq->new(
 			members => \@nodes,
 		       );
 	}
 	elsif ( @nodes ) {
 		$nodes[0];
-	}
-	else {
-		PRANG::Graph::Empty->new;
 	}
 }
 
@@ -334,19 +331,7 @@ method to_xml_doc( PRANG::Graph $item ) {
 	if ( $item->can("preferred_prefix") ) {
 		$prefix = $item->preferred_prefix;
 	}
-	my $xsi = { $prefix => $xmlns, "()" => sub {
-			    my $thing = shift;
-			    my $ns = shift;
-			    if ( $thing->can("preferred_prefix") ) {
-				    $thing->preferred_prefix($ns);
-			    }
-			    elsif ( $item->can("xmlns_prefix") ) {
-				    $item->xmlns_prefix($ns);
-			    }
-			    else {
-				    $self->generate_prefix($ns);
-			    }
-		    } };
+	my $xsi = { $prefix => ($xmlns||"") };
 	# whoops, this is non-reentrant
 	%zok_seen=();
 	undef($gen_prefix);
@@ -363,40 +348,27 @@ method to_xml_doc( PRANG::Graph $item ) {
 		       );
 	}
 	$doc->setDocumentElement( $root );
-	$self->to_libxml( $item, $root, $xsi );
+	my $ctx = PRANG::Graph::Context->new(
+		xpath => "/".$root->nodeName,
+		base => $self,
+		prefix => $prefix,
+		xsi => $xsi,
+	       );
+	$self->to_libxml( $item, $root, $ctx );
 	$doc;
 }
 
-method to_xml( Object $item ) {
-	$self->to_xml_doc($item)->toString;
+method to_xml( PRANG::Graph $item ) {
+	my $document = $self->to_xml_doc($item);
+	$document->toString;
 }
 
-method to_libxml( Object $item, XML::LibXML::Element $node, HashRef $xsi ) {
+method to_libxml( Object $item, XML::LibXML::Element $node, PRANG::Graph::Context $ctx ) {
 
-	my %rxsi = ( reverse %$xsi );
 	my $attributes = $self->attributes;
-	my $XSI = $xsi;
 	my $node_prefix = $node->prefix;
-	#my $doc = $node->getOwner;
-	my $get_prefix = sub {
-		my $xmlns = shift;
-		if ( !exists $rxsi{$xmlns} ) {
-			my $prefix = $xsi->{"()"}->($item, $xmlns);
-			if ( $XSI == $xsi ) {
-				$XSI = { %$xsi };
-			}
-			$XSI->{$prefix} = $xmlns;
-			$rxsi{$xmlns} = $prefix;
-			$node->setAttribute("xmlns:".$prefix, $xmlns);
-		}
-		$rxsi{$xmlns};
-	};
-	# do attributes
 	while ( my ($xmlns, $att) = each %$attributes ) {
-		my $prefix = $get_prefix->{$xmlns};
-		if ( $prefix ne "" ) {
-			$prefix .= ":";
-		}
+		my $prefix;
 		while ( my ($attName, $meta_att) = each %$att ) {
 			my $is_optional;
 			my $obj_att_name = $meta_att->name;
@@ -417,6 +389,14 @@ method to_libxml( Object $item, XML::LibXML::Element $node, HashRef $xsi ) {
 						unless $is_optional;
 			}
 			else {
+				if ( !defined $prefix ) {
+					$prefix = $ctx->get_prefix(
+						$xmlns, $item, $node,
+					       );
+					if ( $prefix ne "" ) {
+						$prefix .= ":";
+					}
+				}
 				$node->setAttribute(
 					$prefix.$attName,
 					$value,
@@ -427,7 +407,7 @@ method to_libxml( Object $item, XML::LibXML::Element $node, HashRef $xsi ) {
 
 	# now child elements - let the graph do the work.
 	my $graph = $self->acceptor;
-	$graph->output($item, $node, $xsi);
+	$graph->output($item, $node, $ctx);
 
 	$node;
 }

@@ -1,6 +1,7 @@
 
 package PRANG::Graph::Element;
 
+use 5.010;
 use Moose;
 use MooseX::Method::Signatures;
 use Moose::Util::TypeConstraints;
@@ -28,6 +29,12 @@ has 'nodeClass' =>
 	predicate => "has_nodeClass",
 	;
 
+has 'nodeName_attr' =>
+	is => "rw",
+	isa => "Str",
+	predicate => "has_nodeName_attr",
+	;
+
 has 'attrName' =>
 	is => "ro",
 	isa => "Str",
@@ -40,7 +47,7 @@ has 'contents' =>
 	predicate => "has_contents",
 	;
 
-method accept( XML::LibXML::Node $node, PRANG::Graph::Context $ctx ) {
+method node_ok( XML::LibXML::Node $node, PRANG::Graph::Context $ctx ) {
 	if ( ($node->prefix||"") ne ($ctx->prefix||"") ) {
 		my $got_xmlns = ($ctx->xsi->{$node->prefix}||"");
 		my $wanted_xmlns = ($self->xmlns||"");
@@ -51,15 +58,26 @@ method accept( XML::LibXML::Node $node, PRANG::Graph::Context $ctx ) {
 	}
 	# this is bad for processContents=skip + namespace="##other"
 	my $ret_nodeName = $self->nodeName eq "*" ?
-		$node->localname : undef;
+		$node->localname : "";
 	if ( !$ret_nodeName and $node->localname ne $self->nodeName ) {
+		return;
+	}
+	else {
+		return $ret_nodeName;
+	}
+}
+
+method accept( XML::LibXML::Node $node, PRANG::Graph::Context $ctx ) {
+	my $ret_nodeName;
+	if ( !defined ($ret_nodeName = $self->node_ok($node, $ctx)) ) {
 		$ctx->exception(
 		"invalid element; expected '".$self->nodeName."'",
 			$node, 1,
 		       );
 	}
+	undef($ret_nodeName) if !length($ret_nodeName);
 	if ( $self->has_nodeClass ) {
-		# general nested XML support
+		# genkral nested XML support
 		my $marshaller = $ctx->base->get($self->nodeClass);
 		my $value = $marshaller->marshall_in_element(
 			$node,
@@ -136,10 +154,66 @@ method expected( PRANG::Graph::Context $ctx ) {
 		.">";
 }
 
-method output ( Object $item, XML::LibXML::Element $node, HashRef $xsi ) {
-	no strict 'refs';
-	&{"..."}();
-}
+method output ( Object $item, XML::LibXML::Element $node, PRANG::Graph::Context $ctx, Item $value?, Int $slot?, Str $name? ) {
+	$value //= do {
+		my $accessor = $self->attrName;
+		$item->$accessor;
+	};
+	if ( ref $value and ref $value eq "ARRAY" and defined $slot ) {
+		$value = $value->[$slot];
+	}
+	$name //= do {
+		if ( $self->has_nodeName_attr ) {
+			my $attr = $self->nodeName_attr;
+			$item->$attr;
+		}
+		else {
+			$self->nodeName;
+		}
+	};
+	if ( ref $name ) {
+		$name = $name->[$slot];
+	}
+
+	my $nn;
+	my $doc = $node->ownerDocument;
+	if ( length $name ) {
+		my ($xmlns, $prefix, $new_prefix);
+		if ( $self->has_xmlns ) {
+			$xmlns = $item->xmlns;
+			if ( !exists $ctx->rxsi->{$xmlns} ) {
+				$new_prefix = 1;
+			}
+			$prefix = $ctx->get_prefix($xmlns);
+		}
+		else {
+			$prefix = $ctx->prefix;
+		}
+		$nn = $doc->createElement(
+			($prefix ? "$prefix:" : "") . $name,
+		       );
+		if ( $new_prefix ) {
+			$nn->setAttribute(
+				"xmlns".($prefix?":$prefix":""),
+				$xmlns,
+			       );
+		}
+		$node->appendChild($nn);
+		# now proceed with contents...
+		if ( my $class = $self->nodeClass ) {
+			my $m = PRANG::Marshaller->get($class);
+			$m->to_libxml($value, $nn, $ctx);
+		}
+		elsif ( $self->has_contents ) {
+			my $tn = $doc->createTextNode($value);
+			$nn->appendChild($tn);
+		}
+	}
+	else {
+		$nn = $doc->createTextNode($value);
+		$node->appendChild($nn);
+	}
+};
 
 with 'PRANG::Graph::Node';
 

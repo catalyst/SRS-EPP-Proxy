@@ -55,7 +55,11 @@ method expected( PRANG::Graph::Context $ctx ) {
 	}
 }
 
-method output {}
+method output ( Item $item, XML::LibXML::Element $node, PRANG::Graph::Context $ctx ) {
+	for my $member ( @{ $self->members } ) {
+		$member->output($item,$node,$ctx);
+	}
+}
 
 with 'PRANG::Graph::Node';
 

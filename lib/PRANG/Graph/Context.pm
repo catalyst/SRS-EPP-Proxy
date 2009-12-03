@@ -5,9 +5,13 @@ use Moose;
 use MooseX::Method::Signatures;
 use Moose::Util::TypeConstraints;
 
+BEGIN {
+	class_type "XML::LibXML::Element";
+}
+
 # this is a data class, it basically is like a loop counter for
-# parsing.  Except instead of walking over a list, it 'walks' over a
-# tree of a certain, bound shape.
+# parsing (or emitting).  Except instead of walking over a list, it
+# 'walks' over a tree of a certain, bound shape.
 
 # The shape of the XML Graph at each node is limited to:
 #
@@ -69,8 +73,25 @@ has 'xpath' =>
 	;
 
 has 'xsi' =>
-	is => "ro",
+	is => "rw",
 	isa => "HashRef",
+	default => sub { {} },
+	;
+
+has 'rxsi' =>
+	is => "rw",
+	isa => "HashRef",
+	lazy => 1,
+	default => sub {
+		my $self = shift;
+		{ reverse %{ $self->xsi } };
+	},
+	;
+
+has 'xsi_virgin' =>
+	is => "rw",
+	isa => "Bool",
+	default => 1,
 	;
 
 # this one is to know if the prefix was different to the parent type.
@@ -80,6 +101,42 @@ has 'prefix' =>
 	;
 
 BEGIN { class_type "XML::LibXML::Node" };
+
+method get_prefix( Str $xmlns, Object $thing?, XML::LibXML::Element $victim? ) {
+	if ( my $prefix = $self->rxsi->{$xmlns} ) {
+		$prefix;
+	}
+	elsif ( $thing and $thing->can("preferred_prefix") ) {
+		$thing->preferred_prefix($xmlns);
+	}
+	elsif ( $thing and $thing->can("xmlns_prefix") ) {
+		$thing->xmlns_prefix($xmlns);
+	}
+	else {
+		my $new_prefix = $self->base->generate_prefix($xmlns);
+		$self->add_xmlns($new_prefix, $xmlns);
+		if ( $victim ) {
+			$victim->setAttribute(
+				"xmlns:".$new_prefix,
+				$xmlns,
+			       );
+		}
+		$new_prefix;
+	}
+}
+
+method add_xmlns( Str $prefix, Str $xmlns ) {
+	if ( $self->xsi_virgin ) {
+		$self->xsi({ %{$self->xsi}, $prefix => $xmlns });
+		if ( $self->rxsi ) {
+			$self->rxsi({ %{$self->rxsi}, $xmlns => $prefix });
+		}
+	}
+}
+
+method get_xmlns( Str $prefix ) {
+	$self->xsi->{$prefix};
+}
 
 # this is a very convenient class to put a rich and useful exception
 # method on; all important methods use it, and it has just the

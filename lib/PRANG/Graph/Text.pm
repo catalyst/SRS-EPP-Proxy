@@ -30,7 +30,17 @@ method expected( PRANG::Graph::Context $ctx ) {
 	"TextNode";
 }
 
-method output {
+method output ( Object $item, XML::LibXML::Element $node, PRANG::Graph::Context $ctx, Item $value?, Int $slot?, Str $name? ) {
+	$value //= do {
+		my $attrName = $self->attrName;
+		$item->$attrName;
+	};
+	if ( ref $value ) {
+		$value = $value->[$slot];
+	}
+	my $doc = $node->ownerDocument;
+	my $tn = $doc->createTextNode($value);
+	$node->appendChild($tn);
 }
 
 with 'PRANG::Graph::Node';

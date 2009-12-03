@@ -15,7 +15,7 @@ use strict;
 #    - logout
 
 BEGIN {
-	use_ok("SRS::EPP::Command");
+	use_ok("SRS::EPP::Message");
 }
 
 # an example minimal-ish login message (minimal as in, no XML
@@ -42,18 +42,46 @@ my $login_request = <<XML;
 </epp>
 XML
 
+use Scriptalicious;
+
+start_timer;
 my $login_object = SRS::EPP::Message->parse(
 	$login_request,
        );
+diag("That took ".show_elapsed);
 
 isa_ok($login_object, "SRS::EPP::Command",
        "new login request");
 
+diag("Login request is:".Dump($login_object));
+
+is(eval{$login_object->epp->message->object->pw->content}, "SecureThis! orz",
+   "Seemed to parse the object OK");
+diag($@) if $@;
+
+my $xml = $login_object->to_xml;
+use FindBin qw($Bin);
+
+# Couldn't get XML::LibXML::Schema to work with a schema in two parts
+#my $schema = XML::LibXML::Schema->new( location => "$Bin/../lib/XML/EPP/epp-1.0.xsd" );
+#my $parser = XML::LibXML->new;
+#my $document = $parser->parse_string($xml);
+diag("serialized to xml: ".$xml);
+
+my $login_object_2 = SRS::EPP::Message->parse(
+	$xml,
+       );
+
+is_deeply($login_object, $login_object_2,
+	  "round-trip to XML and back yielded no difference")
+	or do {
+		diag("We saw back: ".Dump($login_object_2));
+	};
+
 use YAML;
 
-diag(Dump $login_object);
-use Scriptalicious;
-
+my @mcs = Class::MOP::get_all_metaclass_instances;
+#for (@mcs) { $_->make_immutable if $_->can("make_immutable") }
 use Time::HiRes qw(time);
 my $start = time;
 my $count;

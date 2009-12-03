@@ -158,6 +158,9 @@ method build_graph_node() {
 			$expect_simple ? "Str" : $expect_type[0];
 		$nodeName = { $nodeName => $expected };
 	}
+	else {
+		$nodeName = { %$nodeName };
+	}
 
 	my @expect;
 	for my $class ( @expect_type ) {
@@ -229,13 +232,25 @@ method build_graph_node() {
 		}
 	}
 
+	my @name_attr =
+		(($self->has_xml_nodeName_attr ? 
+			  ( name_attr => $self->xml_nodeName_attr ) : ()),
+		 (($self->has_xml_nodeName and ref $self->xml_nodeName) ?
+			  ( type_map => $self->xml_nodeName ) : ()),
+		);
+
 	if ( @expect > 1 ) {
 		$node = PRANG::Graph::Choice->new(
 			choices => \@expect,
+			attrName => $self->name,
+			@name_attr,
 		       );
 	}
 	else {
 		$node = $expect[0];
+		if ( $self->has_xml_nodeName_attr ) {
+			$node->nodeName_attr($self->xml_nodeName_attr);
+		}
 	}
 
 	if ( $expect_bool ) {
@@ -260,6 +275,7 @@ method build_graph_node() {
 		die "no node!  fail!  processing ".$self->associated_class->name.", element ".$self->name unless $node;
 		$node = PRANG::Graph::Quantity->new(
 			@min_max,
+			attrName => $self->name,
 			child => $node,
 		       );
 	}

@@ -42,7 +42,8 @@ method parse($class: Str $xml) {
 }
 
 method to_xml() {
-	$self->marshaller->to_xml($self);
+	my $marshaller = $self->marshaller;
+	$marshaller->to_xml($self);
 }
 
 1;
