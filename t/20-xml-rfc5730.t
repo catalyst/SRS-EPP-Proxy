@@ -38,6 +38,9 @@ for my $test ( sort @tests ) {
 	my $time = show_elapsed;
 	ok($object&&$object->epp, "$test_name - parsed OK ($time)")
 		or diag("exception: $@");
+	if ($VERBOSE>0) {
+		diag("read: ".Dump($object->epp));
+	}
  SKIP: {
 		skip "didn't parse", 2 unless $object;
 		start_timer;
@@ -48,6 +51,9 @@ for my $test ( sort @tests ) {
 				diag("exception: $@");
 				skip "got an exception", 1;
 			};
+		if ($VERBOSE>0) {
+			diag("xml: ".$r_xml);
+		}
 		my $recycled = eval { SRS::EPP::Message->parse($r_xml) };
 		is_deeply($recycled, $object,
 			  "round-tripped to XML and back")
