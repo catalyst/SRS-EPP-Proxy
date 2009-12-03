@@ -32,20 +32,13 @@ sub accept_many { 1 }
 
 method accept( XML::LibXML::Node $node, PRANG::Graph::Context $ctx ) {
 	my $found = $ctx->quant_found;
-	my ($key, $value, $x) = eval { $self->child->accept($node, $ctx) };
-	if ( !$key ) {
-		my $X = $@;
-		my $skip_ok = not $X;
-		# XXX - exceptions are not flow control.
-		$skip_ok ||= (ref $X and $X->has_node and
-				      $X->node == $node and $X->skip_ok);
-		if ( $skip_ok and $self->complete($ctx) ) {
-			return();
-		}
-		else {
-			die $X;
-		}
-	}
+	my $ok = defined $self->child->node_ok($node, $ctx);
+	return if not $ok;
+	my ($key, $value, $x) = $self->child->accept($node, $ctx)
+		or $ctx->exception(
+			"internal error: node ok, but then not accepted?",
+			$node,
+		       );
 	$found++;
 	$ctx->quant_found($found);
 	if ( $self->has_max and $found > $self->max ) {

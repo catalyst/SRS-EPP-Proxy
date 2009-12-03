@@ -30,6 +30,15 @@ has 'name_attr' =>
 	predicate => "has_name_attr",
 	;
 
+method node_ok( XML::LibXML::Node $node, PRANG::Graph::Context $ctx ) {
+	for my $choice ( @{ $self->choices } ) {
+		if ( defined $choice->node_ok($node, $ctx) ) {
+			return 1;
+		}
+	}
+	return;
+}
+
 method accept( XML::LibXML::Node $node, PRANG::Graph::Context $ctx ) {
 	my $num;
 	my $name = $node->isa("XML::LibXML::Text") ? ""
