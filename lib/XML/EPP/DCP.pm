@@ -172,7 +172,7 @@ with "${SCHEMA_PKG}::Node";
 subtype "${SCHEMA_PKG}::dcpType"
 	=> as __PACKAGE__;
 
-package XML::EPP::DCP::Statement;
+package XML::EPP::DCP::Purpose;
 
 use Moose;
 our $SCHEMA_PKG = "XML::EPP";
@@ -180,8 +180,54 @@ use Moose::Util::TypeConstraints;
 use MooseX::Method::Signatures;
 use PRANG::Graph;
 
-enum "${SCHEMA_PKG}::dcpPurposeType"
-	=> qw(admin contact other prov);
+has_element $_ =>
+	is => "rw",
+	isa => "Bool"
+	for qw(admin contact other prov);
+
+with "${SCHEMA_PKG}::Node";
+
+subtype "${SCHEMA_PKG}::dcpPurposeType"
+	=> as __PACKAGE__;
+
+package XML::EPP::DCP::Retention;
+
+use Moose;
+our $SCHEMA_PKG = "XML::EPP";
+use Moose::Util::TypeConstraints;
+use MooseX::Method::Signatures;
+use PRANG::Graph;
+
+my @retention_types = qw(business indefinite legal none stated);
+enum "${SCHEMA_PKG}::dcpRetentionType::enum"
+	=> @retention_types;
+
+with "${SCHEMA_PKG}::Node";
+
+has 'retention' =>
+	is => "rw",
+	isa => "${SCHEMA_PKG}::dcpRetentionType::enum",
+	trigger => sub {
+		$_[0]->has_retention(1);
+	};
+
+has_element 'has_retention' =>
+	is => "rw",
+	isa => "Bool",
+	xml_nodeName => { map { $_ => "Bool" } @retention_types },
+	xml_nodeName_attr => "retention",
+	;
+
+subtype "${SCHEMA_PKG}::dcpRetentionType"
+	=> as __PACKAGE__;
+
+package XML::EPP::DCP::Statement;
+
+use Moose;
+our $SCHEMA_PKG = "XML::EPP";
+use Moose::Util::TypeConstraints;
+use MooseX::Method::Signatures;
+use PRANG::Graph;
 
 has_element 'purpose' =>
 	is => "rw",
@@ -192,9 +238,6 @@ has_element 'recipient' =>
 	is => "rw",
 	isa => "${SCHEMA_PKG}::dcpRecipientType",
 	;
-
-enum "${SCHEMA_PKG}::dcpRetentionType"
-	=> qw(business indefinite legal none stated);
 
 has_element 'retention' =>
 	is => "rw",
