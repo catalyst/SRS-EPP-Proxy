@@ -4,94 +4,59 @@
 # for complete messages and fragments described in RFC37^H^H49^H^H5730
 # (EPP and EPP common)
 
-use Test::More no_plan;
+use Test::More;
 use strict;
-
-# of particular note: these stateful EPP messages are never converted
-# to the stateless SRS protocol; so they will not be covered by later
-# tests and tests must be particularly thorough.
-
-#    - Hello / Greeting
-#    - logout
-
-BEGIN {
-	use_ok("SRS::EPP::Message");
-}
-
-# an example minimal-ish login message (minimal as in, no XML
-# namespaces, etc).  presumably if they supply
-# <objURI>urn:ietf:params:xml:ns:host-1.0</objURI> as a svcs we have
-# to put an error/warning in the response.
-my $login_request = <<XML;
-<epp>
-  <command>
-    <login>
-      <clID>123</clID>
-      <pw>SecureThis! orz</pw>
-      <options>
-        <version>1.0</version>
-        <lang>en-NZ</lang>
-      </options>
-      <svcs>
-        <objURI>urn:ietf:params:xml:ns:epp-1.0</objURI>
-        <objURI>urn:ietf:params:xml:ns:contact-1.0</objURI>
-        <objURI>urn:ietf:params:xml:ns:domain-1.0</objURI>
-      </svcs>
-    </login>
-  </command>
-</epp>
-XML
-
+use FindBin qw($Bin $Script);
+use File::Find;
 use Scriptalicious;
-
-start_timer;
-my $login_object = SRS::EPP::Message->parse(
-	$login_request,
-       );
-diag("That took ".show_elapsed);
-
-isa_ok($login_object, "SRS::EPP::Command",
-       "new login request");
-
-diag("Login request is:".Dump($login_object));
-
-is(eval{$login_object->epp->message->object->pw->content}, "SecureThis! orz",
-   "Seemed to parse the object OK");
-diag($@) if $@;
-
-my $xml = $login_object->to_xml;
-use FindBin qw($Bin);
-
-# Couldn't get XML::LibXML::Schema to work with a schema in two parts
-#my $schema = XML::LibXML::Schema->new( location => "$Bin/../lib/XML/EPP/epp-1.0.xsd" );
-#my $parser = XML::LibXML->new;
-#my $document = $parser->parse_string($xml);
-diag("serialized to xml: ".$xml);
-
-my $login_object_2 = SRS::EPP::Message->parse(
-	$xml,
-       );
-
-is_deeply($login_object, $login_object_2,
-	  "round-trip to XML and back yielded no difference")
-	or do {
-		diag("We saw back: ".Dump($login_object_2));
-	};
-
+use SRS::EPP::Message;
 use YAML;
 
-my @mcs = Class::MOP::get_all_metaclass_instances;
-#for (@mcs) { $_->make_immutable if $_->can("make_immutable") }
-use Time::HiRes qw(time);
-my $start = time;
-my $count;
-while ( time - $start < 1 ) {
-	SRS::EPP::Message->parse($login_request);
-	$count++;
+(my $test_dir = "$Bin/$Script") =~ s{\.t$}{};
+my @tests;
+my $grep;
+getopt("test-grep|t=s" => \$grep );
+find(sub {
+	     if ( m{\.xml$} && (!$grep||m{$grep}) ) {
+		     push @tests, $File::Find::name;
+	     }
+     }, $test_dir);
+
+plan tests => @tests * 3;
+
+for my $test ( sort @tests ) {
+	(my $test_name = $test) =~ s{.*\.t/}{};
+	open XML, "<$test";
+	binmode XML, ":utf8";
+	my $xml = do {
+		local($/);
+		<XML>;
+	};
+	close XML;
+	start_timer;
+	my $object = eval { SRS::EPP::Message->parse( $xml ) };
+	my $time = show_elapsed;
+	ok($object&&$object->epp, "$test_name - parsed OK ($time)")
+		or diag("exception: $@");
+ SKIP: {
+		skip "didn't parse", 2 unless $object;
+		start_timer;
+		my $r_xml = eval { $object->to_xml };
+		$time = show_elapsed;
+		ok($r_xml, "$test_name - emitted OK ($time)")
+			or do {
+				diag("exception: $@");
+				skip "got an exception", 1;
+			};
+		my $recycled = eval { SRS::EPP::Message->parse($r_xml) };
+		is_deeply($recycled, $object,
+			  "round-tripped to XML and back")
+			or do {
+				diag("First round: ".Dump($object));
+				diag("Second round: ".Dump($recycled));
+			};
+	}
 }
-my $elapsed = time - $start;
-diag("Parsed $count login requests in ".Scriptalicious::time_unit($elapsed)
-	     ." (".sprintf("%.1f", $count/$elapsed)." per second)");
 
 # Copyright (C) 2009  NZ Registry Services
 #

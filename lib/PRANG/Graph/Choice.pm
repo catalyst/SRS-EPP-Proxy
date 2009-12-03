@@ -91,7 +91,9 @@ method output ( Object $item, XML::LibXML::Element $node, PRANG::Graph::Context 
 	}
 	elsif ( $self->has_type_map ) {
 		my $map = $self->type_map;
-		while ( my ($element, $type) = each %$map ) {
+		$DB::single = 1 if $value->isa("XML::EPP::Hello");
+		for my $element ( keys %$map ) {
+			my $type = $map->{$element};
 			if ( ! ref $type ) {
 				$type = $map->{$element} =
 					$REGISTRY->get_type_constraint($type);
@@ -103,6 +105,7 @@ method output ( Object $item, XML::LibXML::Element $node, PRANG::Graph::Context 
 		}
 	}
 	if ( !$name ) {
+		$DB::single = 1;
 		die "epic fail";
 	}
 	for my $choice ( @{ $self->choices } ) {

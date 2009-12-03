@@ -209,7 +209,10 @@ method build_graph_node() {
 	}
 	if ( $expect_simple ) {
 		my (@names) = grep {
-			!$t_c{$nodeName->{$_}}->is_a_type_of("Object")
+			my $t_c = $t_c{$nodeName->{$_}};
+			die "dang, ".$self->name." of ".$self->associated_class->name.", no type constraint called $nodeName->{$_} (element $_)"
+				if !$t_c;
+			!$t_c->is_a_type_of("Object")
 		} keys %$nodeName;
 		for my $name ( @names ) {
 			# 'Str', 'Int', etc element attributes: this
@@ -236,7 +239,7 @@ method build_graph_node() {
 		(($self->has_xml_nodeName_attr ? 
 			  ( name_attr => $self->xml_nodeName_attr ) : ()),
 		 (($self->has_xml_nodeName and ref $self->xml_nodeName) ?
-			  ( type_map => $self->xml_nodeName ) : ()),
+			  ( type_map => {%{$self->xml_nodeName}} ) : ()),
 		);
 
 	if ( @expect > 1 ) {

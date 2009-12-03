@@ -1,0 +1,17 @@
+<epp>
+  <command>
+    <login>
+      <clID>123</clID>
+      <pw>SecureThis! orz</pw>
+      <options>
+        <version>1.0</version>
+        <lang>en-NZ</lang>
+      </options>
+      <svcs>
+        <objURI>urn:ietf:params:xml:ns:epp-1.0</objURI>
+        <objURI>urn:ietf:params:xml:ns:contact-1.0</objURI>
+        <objURI>urn:ietf:params:xml:ns:domain-1.0</objURI>
+      </svcs>
+    </login>
+  </command>
+</epp>
