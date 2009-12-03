@@ -25,7 +25,7 @@ find(sub {
 plan tests => @tests * 3;
 
 for my $test ( sort @tests ) {
-	(my $test_name = $test) =~ s{.*\.t/}{};
+	(my $test_name = $test) =~ s{^\Q$test_dir\E/}{};
 	open XML, "<$test";
 	binmode XML, ":utf8";
 	my $xml = do {
