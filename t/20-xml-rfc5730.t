@@ -36,13 +36,15 @@ for my $test ( sort @tests ) {
 	start_timer;
 	my $object = eval { SRS::EPP::Message->parse( $xml ) };
 	my $time = show_elapsed;
-	ok($object&&$object->epp, "$test_name - parsed OK ($time)")
-		or diag("exception: $@");
-	if ($VERBOSE>0) {
+	my $ok = ok($object&&$object->epp, "$test_name - parsed OK ($time)");
+	if ( !$ok ) {
+		diag("exception: $@");
+	}
+	if ( $ok and $VERBOSE>0) {
 		diag("read: ".Dump($object->epp));
 	}
  SKIP: {
-		skip "didn't parse", 2 unless $object;
+		skip "didn't parse", 2 unless $ok;
 		start_timer;
 		my $r_xml = eval { $object->to_xml };
 		$time = show_elapsed;
