@@ -17,18 +17,12 @@ use MooseX::Method::Signatures;
 
 use XML::EPP;
 use PRANG::Marshaller;
-use SRS::EPP::Command;
-use SRS::EPP::Response;
 
 has 'epp' =>
 	is => "rw",
 	isa => "XML::EPP",
 	handles => [ qw(to_xml) ],
 	;
-
-method to_xml() {
-	$self->epp->marshaller->to_xml($self);
-}
 
 sub parse {
 	my $class = shift;
@@ -37,6 +31,9 @@ sub parse {
 		->parse($xml);
 	my $subclass = $epp->is_command ?
 		"SRS::EPP::Command" : "SRS::EPP::Response";
+	if (! eval{ $subclass->can("new") } ) {
+		eval "use $subclass";
+	}
 	return $subclass->new( epp => $epp );
 }
 
