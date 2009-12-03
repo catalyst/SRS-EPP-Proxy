@@ -1,7 +1,7 @@
 #!/usr/bin/perl -w
 #
 # test script for validation and load/dump between Perl/Moose and XML
-# for complete messages and fragments described in RFC4931 (Domain
+# for complete messages and fragments described in RFC5731 (Domain
 # mapping)
 
 use strict;

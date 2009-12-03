@@ -1,38 +1,34 @@
 #!/usr/bin/perl -w
 #
-# test script for transformation of RFC4930 requests to SRS requests,
-# and SRS responses to RFC4930 responses.
+# test script for transformation of RFC5731 requests to SRS requests,
+# and SRS responses to RFC5731 responses.
 
 use strict;
 use Test::More;
 
 # Includes:
 #
-#  - RFC4930 session management commands:
-#    - Hello / Greeting
-#    - login
-#    - login with newpassword
-#    - logout
-#
-#  - RFC4930 Query commands
+#  - RFC5730 Query commands
 #    - <check>
-#      - host <=> ???
+#      - domain <=> Whois
 #    - <info>
-#      - host <=> ???
+#      - domain <=> DomainDetailsQry
+#      - RFC3915 Grace Period extensions
 #    - <transfer>
-#      - host <=> ???
+#      - domain <=> Whois
 #
-#  - RFC4930 Transform commands
+#  - RFC5730 Transform commands
 #    - <create>
-#      - host <=> (error)
+#      - domain <=> DomainCreate
 #    - <renew>
-#      - host <=> (error)
+#      - domain <=> DomainDetailsQry + DomainUpdate
 #    - <transfer>
-#      - host <=> (error)
+#      - domain <=> DomainUpdate
 #    - <update>
-#      - host <=> (error)
+#      - domain <=> DomainUpdate
+#      - RFC3915 Grace Period extensions
 #    - <delete>
-#      - host <=> (error)
+#      - domain <=> DomainUpdate
 
 plan skip_all => "TODO";
 

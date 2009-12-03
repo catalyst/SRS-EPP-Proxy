@@ -1,15 +1,32 @@
 #!/usr/bin/perl -w
 #
-# test script for validation and load/dump between Perl/Moose and XML
-# for complete messages and fragments described in RFC4932 (Host
-# mapping)
+# test script for transformation of RFC5730 requests to SRS requests,
+# and SRS responses to RFC5730 responses.
 
 use strict;
 use Test::More;
 
-# ... only a portion of this specification will be required.  This
-# should hopefully be discovered as the previous specifications are
-# implemented.  Refer internal project plan for more details.
+# Includes:
+#
+#  - RFC5730 Query commands
+#    - <check>
+#      - contact <=> HandleDetailsQry
+#    - <info>
+#      - contact <=> HandleDetailsQry
+#    - <transfer>
+#      - contact <=> (error)
+#
+#  - RFC5730 Transform commands
+#    - <create>
+#      - contact <=> HandleCreate
+#    - <renew>
+#      - contact <=> HandleUpdate
+#    - <transfer>
+#      - contact <=> (error)
+#    - <update>
+#      - contact <=> HandleUpdate
+#    - <delete>
+#      - contact <=> HandleUpdate
 
 plan skip_all => "TODO";
 
@@ -26,3 +43,4 @@ plan skip_all => "TODO";
 # You should have received a copy of the Artistic License the file
 # COPYING.txt.  If not, see
 # <http://www.perlfoundation.org/artistic_license_2_0>
+1

@@ -6,7 +6,7 @@
 use strict;
 use Test::More;
 
-# - test a basic RFC4934 session flow:
+# - test a basic RFC5734 session flow:
 #   - connect;
 #   - receive and validate greeting
 #   - message queuing/exchange using mocked messages:

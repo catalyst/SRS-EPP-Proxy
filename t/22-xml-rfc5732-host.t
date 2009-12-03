@@ -1,11 +1,15 @@
 #!/usr/bin/perl -w
 #
 # test script for validation and load/dump between Perl/Moose and XML
-# for complete messages and fragments described in RFC4933 (Contact
+# for complete messages and fragments described in RFC5732 (Host
 # mapping)
 
 use strict;
 use Test::More;
+
+# ... only a portion of this specification will be required.  This
+# should hopefully be discovered as the previous specifications are
+# implemented.  Refer internal project plan for more details.
 
 plan skip_all => "TODO";
 
