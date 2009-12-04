@@ -7,20 +7,21 @@ use Moose;
 use Moose::Util::TypeConstraints;
 use MooseX::Method::Signatures;
 use PRANG::Graph;
+use XML::EPP::Plugin;
 
 our $SCHEMA_PKG = "XML::EPP";
 
-has 'object_name' =>
+has 'action' =>
 	is => "rw",
 	isa => "Str",
 	;
 
-has_element 'object' =>
+has_element 'payload' =>
 	is => "rw",
-	isa => "XML::EPP::Object",
+	isa => "XML::EPP::Plugin",
 	xmlns => "*",
 	xml_nodeName => "*",
-	xml_nodeName_attr => "object_name",
+	xml_nodeName_attr => "action",
 	;
 
 enum "${SCHEMA_PKG}::transferOpType" =>

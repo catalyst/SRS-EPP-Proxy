@@ -12,12 +12,11 @@ our $SCHEMA_PKG = "XML::EPP";
 use XML::EPP::Msg;
 use PRANG::XMLSchema::Whatever;
 
-# anything which takes a 'whatever' should by definition be able to
-# have any other node put in which isn't a Whatever object; in fact
-# that is what is intended with this support, to be able to return
-# invalid fragments in an error response.
+# XML::LibXML::Element|PRANG::Graph::Class means that the object
+# within may be parsed (a PRANG::Graph::Class object) or unparsed
+# (XML::LibXML)
 subtype "${SCHEMA_PKG}::errValueType"
-	=> as "PRANG::XMLSchema::Whatever|PRANG::Graph::Class";
+	=> as "XML::LibXML::Element|PRANG::Graph::Class";
 
 has_element 'value' =>
 	is => "rw",

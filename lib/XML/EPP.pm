@@ -62,7 +62,7 @@ use XML::EPP::CredsOptions;
 use XML::EPP::RequestedSvcs;
 use XML::EPP::Login;
 use XML::EPP::Poll;
-use XML::EPP::Object;
+use XML::EPP::SubCommand;
 use XML::EPP::Transfer;
 
 # first rule: map complexTypes to classes.  Where types are only used

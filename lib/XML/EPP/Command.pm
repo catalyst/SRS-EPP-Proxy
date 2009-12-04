@@ -8,7 +8,7 @@ use PRANG::Graph;
 our $SCHEMA_PKG = "XML::EPP";
 
 use XML::EPP::Extension;
-use XML::EPP::Object;
+use XML::EPP::SubCommand;
 use XML::EPP::Login;
 
 our $PKG = __PACKAGE__;
@@ -34,17 +34,17 @@ has 'action' =>
 
 # these are all maxOccurs = 1 (the default), so we don't need to worry
 # about keeping multiple of them.
-has_element 'object' =>
+has_element 'payload' =>
 	is => "rw",
 	isa => "${PKG}::choice0",
-	predicate => "has_object",
+	predicate => "has_argument",
 	xml_nodeName => {
-		check => "${SCHEMA_PKG}::Object",
-		create => "${SCHEMA_PKG}::Object",
-		delete => "${SCHEMA_PKG}::Object",
-		info => "${SCHEMA_PKG}::Object",
-		renew => "${SCHEMA_PKG}::Object",
-		update => "${SCHEMA_PKG}::Object",
+		check => "${SCHEMA_PKG}::SubCommand",
+		create => "${SCHEMA_PKG}::SubCommand",
+		delete => "${SCHEMA_PKG}::SubCommand",
+		info => "${SCHEMA_PKG}::SubCommand",
+		renew => "${SCHEMA_PKG}::SubCommand",
+		update => "${SCHEMA_PKG}::SubCommand",
 
 		login => "${SCHEMA_PKG}::Login",
 		logout => "Bool",

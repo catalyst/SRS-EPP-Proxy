@@ -17,16 +17,19 @@ has_element 'result' =>
 has_element 'msgQ' =>
 	is => "rw",
 	isa => "${SCHEMA_PKG}::msgQType",
+	predicate => "has_msgQ",
 	;
 
 has_element 'resData' =>
 	is => "rw",
-	isa => "${SCHEMA_PKG}::ResultData",
+	isa => "${SCHEMA_PKG}::SubResponse",
+	predicate => "has_resData",
 	;
 
 has_element 'extension' =>
 	is => "rw",
 	isa => "${SCHEMA_PKG}::extAnyType",
+	predicate => "has_extension",
 	;
 
 has_element 'trID' =>

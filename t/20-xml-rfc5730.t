@@ -12,6 +12,9 @@ use Scriptalicious;
 use SRS::EPP::Message;
 use YAML;
 
+use lib $Bin;
+use RFCTypes;
+
 (my $test_dir = "$Bin/$Script") =~ s{\.t$}{};
 my @tests;
 my $grep;
