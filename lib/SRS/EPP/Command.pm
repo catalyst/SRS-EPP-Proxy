@@ -9,9 +9,6 @@
 
 package SRS::EPP::Command;
 
-use strict;
-use warnings;
-
 use XML::LibXML;
 
 use Moose;

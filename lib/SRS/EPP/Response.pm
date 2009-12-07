@@ -6,12 +6,10 @@
 # it under the terms of the Artistic License 2.0 or later.  You should
 # have received a copy of the Artistic License the file COPYING.txt.
 # If not, see <http://www.perlfoundation.org/artistic_license_2_0>
-use strict;
-use warnings;
 
 package SRS::EPP::Response;
 
-use Moose::Role;
+use Moose;
 with 'SRS::EPP::Message';
 
 1;
