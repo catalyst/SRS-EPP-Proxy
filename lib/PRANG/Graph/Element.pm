@@ -138,16 +138,15 @@ method complete( PRANG::Graph::Context $ctx ) {
 }
 
 method expected( PRANG::Graph::Context $ctx ) {
-	my $xsi = $ctx->xsi;
 	my $prefix = "";
 	my $nodename = $self->nodeName;
 	if ( $self->has_xmlns ) {
 		my $xmlns = $self->xmlns;
-		if ( $prefix = $xsi->{$xmlns} ) {
+		if ( $prefix = $ctx->rxsi->{$xmlns} ) {
 			$prefix .= ":";
 		}
 		else {
-			$prefix = $xsi->{"()"}->($xmlns);
+			$prefix = $ctx->get_prefix($xmlns);
 			$nodename .= " xmlns:$prefix='$xmlns'";
 			$prefix .= ":";
 		}
