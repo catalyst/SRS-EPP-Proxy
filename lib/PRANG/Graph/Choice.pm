@@ -91,7 +91,6 @@ method output ( Object $item, XML::LibXML::Element $node, PRANG::Graph::Context 
 	}
 	elsif ( $self->has_type_map ) {
 		my $map = $self->type_map;
-		$DB::single = 1 if $value->isa("XML::EPP::Hello");
 		for my $element ( keys %$map ) {
 			my $type = $map->{$element};
 			if ( ! ref $type ) {
