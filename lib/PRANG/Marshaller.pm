@@ -181,6 +181,7 @@ method marshall_in_element( XML::LibXML::Node $node, HashRef $xsi, Str $xpath ) 
 
 	my (%init_args, %init_arg_names);
 	while ( my $input_node = shift @childNodes ) {
+		next if $input_node->nodeType == XML_COMMENT_NODE;
 		if ( my ($key, $value, $name) =
 			     $acceptor->accept($input_node, $context) ) {
 			$context->exception(
