@@ -141,7 +141,8 @@ method expected( PRANG::Graph::Context $ctx ) {
 	my $prefix = "";
 	my $nodename = $self->nodeName;
 	if ( $self->has_xmlns ) {
-		my $xmlns = $self->xmlns;
+		my $xmlns = eval { $self->nodeClass->xmlns } ||
+			$self->xmlns;
 		if ( $prefix = $ctx->rxsi->{$xmlns} ) {
 			$prefix .= ":";
 		}

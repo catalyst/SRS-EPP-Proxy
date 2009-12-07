@@ -241,25 +241,24 @@ method show_node {
 				$_->name."='".$_->value."'"
 			} $node->attributes);
 		}
-		if ( $node->hasChildNodes ) {
-			my @nodes = grep { !$_->isa("XML::LibXML::Comment") }
-				$node->nonBlankChildNodes;
-			if ( @nodes > 1 and
-				     grep { !$_->isa("XML::LibXML::Element") }
-					     @nodes ) {
-				$extra .= ">(mixed context)";
-			}
-			elsif ($nodes[0]->isa("XML::LibXML::Element")) {
-				$extra .= "><!-- ".@nodes
-					." child XML nodes -->";
-			}
-			else {
-				$extra .= ">(text content)";
-			}
-			$extra .= "</".$node->nodeName.">";
+		my @nodes = grep { !$_->isa("XML::LibXML::Comment") }
+			$node->nonBlankChildNodes;
+		if ( @nodes > 1 and grep { !$_->isa("XML::LibXML::Element") }
+			     @nodes ) {
+			$extra .= ">(mixed context)";
+		}
+		elsif (@nodes and $nodes[0]->isa("XML::LibXML::Element")) {
+			$extra .= "><!-- ".@nodes
+				." child XML nodes -->";
+		}
+		elsif ( @nodes and $nodes[0]->isa("XML::LibXML::Text") ) {
+			$extra .= ">(text content)";
+		}
+		if ( @nodes == 0 ) {
+			$extra .= " />";
 		}
 		else {
-			$extra .= " />";
+			$extra .= "</".$node->nodeName.">";
 		}
 		$extra .= ")";
 	}
