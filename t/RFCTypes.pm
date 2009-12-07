@@ -2,6 +2,11 @@
 # This package contains classes required to get the RFC examples to
 # validate.
 
+package XML::EPP::Obj::Node;
+use Moose::Role;
+sub xmlns { "urn:ietf:params:xml:ns:obj" }
+with 'PRANG::Graph::Class';
+
 package XML::EPP::Obj::info;
 
 use Moose;
@@ -40,7 +45,7 @@ package XML::EPP::Obj::foo;
 #    </ext:foo>
 
 use Moose;
-with 'XML::EPP::Extension::Type';
+with 'XML::EPP::Extension::Type', 'XML::EPP::Obj::Node';
 sub root_element { "foo" }
 sub xmlns { "urn:ietf:params:xml:ns:ext" }
 sub is_command { 1 }
@@ -58,8 +63,51 @@ has_element "name" =>
 	isa => "ArrayRef[Str]",
 	;
 
-with 'XML::EPP::Plugin';
+with 'XML::EPP::Plugin', 'XML::EPP::Obj::Node';
 
+package XML::EPP::Obj::check::RS::cd::name;
+use Moose;
+use PRANG::Graph;
+has_attr 'avail' =>
+	is => "ro",
+	isa => "Bool",
+	;
+has_element 'content' =>
+	is => "ro",
+	isa => "Str",
+	xml_nodeName => "",
+	;
+with 'XML::EPP::Obj::Node';
+
+package XML::EPP::Obj::check::RS::cd;
+
+use Moose;
+use PRANG::Graph;
+
+has_element 'name' =>
+	is => "ro",
+	isa => "XML::EPP::Obj::check::RS::cd::name",
+	;
+has_element 'reason' =>
+	is => "ro",
+	isa => "Str",
+	predicate => "has_reason",
+	;
+with 'XML::EPP::Obj::Node';
+
+package XML::EPP::Obj::check::RS;
+
+use Moose;
+use PRANG::Graph;
+sub root_element { "chkData" }
+sub is_command { 0 }
+
+has_element "cd" =>
+	is => "ro",
+	isa => "ArrayRef[XML::EPP::Obj::check::RS::cd]",
+	;
+
+with 'XML::EPP::Plugin', "XML::EPP::Obj::Node";
 
 1;
 
