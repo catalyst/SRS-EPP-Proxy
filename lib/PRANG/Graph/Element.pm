@@ -5,6 +5,7 @@ use 5.010;
 use Moose;
 use MooseX::Method::Signatures;
 use Moose::Util::TypeConstraints;
+use XML::LibXML;
 
 BEGIN {
 	class_type "XML::LibXML::Node";
@@ -48,12 +49,13 @@ has 'contents' =>
 	;
 
 method node_ok( XML::LibXML::Node $node, PRANG::Graph::Context $ctx ) {
+	return unless $node->nodeType == XML_ELEMENT_NODE;
 	if ( ($node->prefix||"") ne ($ctx->prefix||"") ) {
-		my $got_xmlns = ($ctx->xsi->{$node->prefix}||"");
+		my $got_xmlns = ($ctx->xsi->{$node->prefix||""}||"");
 		my $wanted_xmlns = ($self->xmlns||"");
 		if ( $wanted_xmlns ne "*" and
 			     $got_xmlns ne $wanted_xmlns ) {
-			$ctx->exception("invalid XML namespace", 1);
+			$ctx->exception("invalid XML namespace", $node, 1);
 		}
 	}
 	# this is bad for processContents=skip + namespace="##other"
@@ -79,11 +81,12 @@ method accept( XML::LibXML::Node $node, PRANG::Graph::Context $ctx ) {
 	if ( $self->has_nodeClass ) {
 		# genkral nested XML support
 		my $marshaller = $ctx->base->get($self->nodeClass);
-		my $value = $marshaller->marshall_in_element(
+		my $value = ( $marshaller ? $marshaller->marshall_in_element(
 			$node,
 			$ctx->xsi,
 			$ctx->xpath."/".$node->nodeName,
-		       );
+		       )
+				      : $node );
 		$ctx->element_ok(1);
 		return ($self->attrName => $value, $ret_nodeName);
 	}
@@ -200,7 +203,24 @@ method output ( Object $item, XML::LibXML::Element $node, PRANG::Graph::Context 
 		# now proceed with contents...
 		if ( my $class = $self->nodeClass ) {
 			my $m = PRANG::Marshaller->get($class);
-			$m->to_libxml($value, $nn, $ctx);
+			if ( !$m and blessed $value ) {
+				$m = PRANG::Marshaller->get(ref $value);
+			}
+			if ( !$m and $value->isa("XML::LibXML::Element") ) {
+				for my $att ( $value->attributes ) {
+					$nn->setAttribute(
+						$att->localname,
+						$att->value,
+					       );
+				}
+				for my $child ( $value->childNodes ) {
+					my $nn2 = $child->cloneNode;
+					$nn->appendChild($nn2);
+				}
+			}
+			else {
+				$m->to_libxml($value, $nn, $ctx);
+			}
 		}
 		elsif ( $self->has_contents ) {
 			my $tn = $doc->createTextNode($value);

@@ -65,11 +65,12 @@ use PRANG::Graph;
 has_element 'contents' =>
 	is => "rw",
 	isa => "ArrayRef[PRANG::XMLSchema::Whatever|Str]",
-	xml_nodeName => "*",
-	xml_nodeName_attr => "names",
+	xml_nodeName => { "" => "Str", "*" => "PRANG::XMLSchema::Whatever" },
+	xml_nodeName_attr => "nodenames",
+	xmlns => "*",
 	;
 
-has 'names' =>
+has 'nodenames' =>
 	is => "rw",
 	isa => "ArrayRef[Maybe[Str]]",
 	;
@@ -77,7 +78,9 @@ has 'names' =>
 has_attr 'attributes' =>
 	is => "rw",
 	isa => "HashRef[Str]",
+	xmlns => "*",
 	xml_name => "*",
+	predicate => 'has_attributes',
 	;
 
 method xmlns() {

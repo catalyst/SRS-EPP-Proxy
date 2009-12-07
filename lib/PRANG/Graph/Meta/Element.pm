@@ -59,6 +59,19 @@ has 'graph_node' =>
 use constant HIGHER_ORDER_TYPE =>
 	"Moose::Meta::TypeConstraint::Parameterized";
 
+method error(Str $message) {
+	my $class = $self->associated_class;
+	my $context = " (Element: ";
+	if ( $class ) {
+		$context .= $class->name;
+	}
+	else {
+		$context .= "(unassociated)";
+	}
+	$context .= "/".$self->name.") ";
+	die $message.$context;
+}
+
 method build_graph_node() {
 	my ($expect_one, $expect_many);
 
@@ -87,8 +100,7 @@ method build_graph_node() {
 			}
 		}
 		if (not $is_paramd) {
-			die "ArrayRef, but not Parameterized on "
-				.$self->name;
+			$self->error("ArrayRef, but not Parameterized");
 		}
 		$expect_many = 1;
 
@@ -128,8 +140,8 @@ method build_graph_node() {
 			}
 		}
 		else {
-			die "Sorry, I don't know how to map a ".ref($x).
-				" in attribute ".$self->name;
+			$self->error("Sorry, I don't know how to map a "
+					     .ref($x));
 		}
 	}
 
@@ -144,14 +156,16 @@ method build_graph_node() {
 		# multiple or ambiguous types are specified; we *need*
 		# to know
 		if ( ! ref $nodeName ) {
-			die "type union specified, but no nodename map"
-				." given for attr ".$self->name;
+			$self->error(
+			"type union specified, but no nodename map given"
+				);
 		}
 		while ( my ($nodeName, $type) = each %$nodeName ) {
 			if ( not exists $t_c{$type} ) {
-				die "nodeName to type map specifies "
-." $nodeName => '$type', but $type is not an acceptable type for attr "
-	.$self->name;
+				$self->error(
+"nodeName to type map specifies $nodeName => '$type', but $type is not"
+						." an acceptable type",
+				       );
 			}
 		}
 	}
@@ -171,8 +185,22 @@ method build_graph_node() {
 		}
 		$nodeName = {} if !ref $nodeName;
 		for my $user ( @users ) {
-			my $root_element = $user->root_element;
-			$nodeName->{$root_element} = $user;
+			if ( $user->does("PRANG::Graph") ) {
+				my $root_element = $user->root_element;
+				$nodeName->{$root_element} = $user;
+			}
+			elsif ( $user->does("PRANG::Graph::Class") ) {
+				if ( !$self->has_xml_nodeName_attr ) {
+					$self->error(
+"Can't use role(s) @expect_role; no xml_nodeName_attr",
+					       );
+				}
+			}
+			else {
+				$self->error(
+"Can't use role(s) @expect_role; no mapping",
+					);
+			}
 			push @expect_type, $user;
 		}
 		$self->xml_nodeName({%$nodeName});

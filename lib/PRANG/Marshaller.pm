@@ -25,8 +25,19 @@ method get($inv: Str $class) {
 	if ( ref $inv ) {
 		$inv = ref $inv;
 	}
-	$marshallers{$class} ||= do {
-		$inv->new( class => $class->meta );
+	$class->can("meta") or
+		die "cannot marshall $class; no ->meta";
+	my $meta = $class->meta;
+	if ( $meta->does_role("PRANG::Graph") or
+		     $meta->does_role("PRANG::Graph::Class")
+		    ) {
+		$marshallers{$class} ||= do {
+			$inv->new( class => $class->meta );
+		}
+	}
+	else {
+		die "cannot marshall ".$meta->name
+			."; not a PRANG Class/Node";
 	}
 }
 
@@ -165,6 +176,8 @@ method marshall_in_element( XML::LibXML::Node $node, HashRef $xsi, Str $xpath ) 
 		xsi => $xsi,
 		prefix => ($node->prefix||""),
 	       );
+
+	$DB::single = 1 if $context->xpath eq "/epp/response/result";
 
 	my (%init_args, %init_arg_names);
 	while ( my $input_node = shift @childNodes ) {

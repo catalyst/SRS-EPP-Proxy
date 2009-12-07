@@ -52,7 +52,7 @@ method accept( XML::LibXML::Node $node, PRANG::Graph::Context $ctx ) {
 		}
 		if ( $key ) {
 			$ctx->chosen($num);
-			return ($key, $val, $x||$choice->nodeName||"");
+			return ($key, $val, $x||eval{$choice->nodeName}||"");
 		}
 	}
 	return ();
@@ -103,19 +103,26 @@ method output ( Object $item, XML::LibXML::Element $node, PRANG::Graph::Context 
 			}
 		}
 	}
-	if ( !$name ) {
+	if ( !defined $name ) {
 		$DB::single = 1;
 		die "epic fail";
 	}
-	for my $choice ( @{ $self->choices } ) {
-		if ( $choice->nodeName eq $name or
-			     $choice->nodeName eq "*") {
-			$choice->output(
-				$item,$node,$ctx,
-				$value,$slot,$name,
-			       );
-			last;
+	if ( length $name ) {
+		for my $choice ( @{ $self->choices } ) {
+			if ( $choice->nodeName eq $name or
+				     $choice->nodeName eq "*") {
+				$choice->output(
+					$item,$node,$ctx,
+					$value,$slot,$name,
+				       );
+				last;
+			}
 		}
+	}
+	else {
+		# textnode ... jfdi
+		my $tn = $node->ownerDocument->createTextNode($value);
+		$node->appendChild($tn);
 	}
 }
 

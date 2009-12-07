@@ -10,6 +10,11 @@ has 'attrName' =>
 	isa => "Str",
 	;
 
+method node_ok( XML::LibXML::Node $node, PRANG::Graph::Context $ctx ) {
+	return ( $node->nodeType == XML_TEXT_NODE or
+			 $node->nodeType == XML_CDATA_SECTION_NODE );
+}
+
 method accept( XML::LibXML::Node $node, PRANG::Graph::Context $ctx ) {
 	if ( $node->nodeType == XML_TEXT_NODE ) {
 		($self->attrName, $node->data);
