@@ -12,8 +12,6 @@ package XML::EPP::Obj::info;
 use Moose;
 use PRANG::Graph;
 
-with 'XML::EPP::Plugin';
-
 #      <obj:info xmlns:obj="urn:ietf:params:xml:ns:obj">
 #        <obj:name>example</obj:name>
 #      </obj:info>
@@ -25,7 +23,10 @@ sub root_element {
 has_element 'name' =>
 	is => "ro",
 	isa => "Str",
+	predicate => "has_name",
 	;
+
+with 'XML::EPP::Plugin';
 
 package XML::EPP::Obj::creData;
 
@@ -108,6 +109,25 @@ has_element "cd" =>
 	;
 
 with 'XML::EPP::Plugin', "XML::EPP::Obj::Node";
+
+package XML::EPP::Obj::info::RS;
+use Moose;
+use PRANG::Graph;
+
+#      <obj:info xmlns:obj="urn:ietf:params:xml:ns:obj">
+#        <obj:name>example</obj:name>
+#      </obj:info>
+sub xmlns { "urn:ietf:params:xml:ns:obj" }
+sub root_element {
+	"infData"
+};
+
+has_element 'roid' =>
+	is => "ro",
+	isa => "XML::EPP::Common::roidType",
+	;
+
+with 'XML::EPP::Plugin';
 
 1;
 
