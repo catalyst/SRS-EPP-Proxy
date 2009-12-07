@@ -45,5 +45,21 @@ sub root_element { "foo" }
 sub xmlns { "urn:ietf:params:xml:ns:ext" }
 sub is_command { 1 }
 
+package XML::EPP::Obj::check;
+
+use Moose;
+use PRANG::Graph;
+sub root_element { "check" }
+sub xmlns { "urn:ietf:params:xml:ns:obj" }
+sub is_command { 1 }
+
+has_element "name" =>
+	is => "ro",
+	isa => "ArrayRef[Str]",
+	;
+
+with 'XML::EPP::Plugin';
+
+
 1;
 
