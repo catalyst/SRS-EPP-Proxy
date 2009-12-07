@@ -287,6 +287,9 @@ method build_graph_node() {
 		}
 	}
 
+	# FIXME - sometimes, xml_nodeName_attr is not needed, and
+	# setting it breaks things - it's only needed if the nodeName
+	# map is ambiguous.
 	my @name_attr =
 		(($self->has_xml_nodeName_attr ? 
 			  ( name_attr => $self->xml_nodeName_attr ) : ()),
