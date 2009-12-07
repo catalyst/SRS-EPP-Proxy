@@ -26,6 +26,7 @@ has_element 'name' =>
 	predicate => "has_name",
 	;
 
+sub is_command { 1 }
 with 'XML::EPP::Plugin';
 
 package XML::EPP::Obj::creData;
@@ -122,6 +123,7 @@ has_element 'roid' =>
 	is => "ro",
 	isa => "XML::EPP::Common::roidType",
 	;
+sub is_command { 0 }
 with 'XML::EPP::Plugin';
 
 package XML::EPP::Obj::poll::RS;
@@ -137,6 +139,7 @@ has_element acID => qw(is ro isa PRANG::XMLSchema::token);
 has_element acDate => qw(is ro isa PRANG::XMLSchema::dateTime);
 has_element exDate => qw(is ro isa PRANG::XMLSchema::dateTime);
 sub root_element { "trnData" }
+sub is_command { 0 }
 with 'XML::EPP::Plugin';
 
 1;
