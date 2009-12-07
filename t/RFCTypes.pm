@@ -34,5 +34,16 @@ sub root_element {
 	"creData"
 };
 
+package XML::EPP::Obj::foo;
+#    <ext:foo xmlns:ext="urn:ietf:params:xml:ns:ext">
+#      <!-- One or more extension child elements. -->
+#    </ext:foo>
+
+use Moose;
+with 'XML::EPP::Extension::Type';
+sub root_element { "foo" }
+sub xmlns { "urn:ietf:params:xml:ns:ext" }
+sub is_command { 1 }
+
 1;
 
