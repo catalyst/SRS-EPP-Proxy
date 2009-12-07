@@ -111,22 +111,32 @@ has_element "cd" =>
 with 'XML::EPP::Plugin', "XML::EPP::Obj::Node";
 
 package XML::EPP::Obj::info::RS;
+# see 20-xml-rfc5730/rfc-examples/16-info-response.xml
 use Moose;
 use PRANG::Graph;
-
-#      <obj:info xmlns:obj="urn:ietf:params:xml:ns:obj">
-#        <obj:name>example</obj:name>
-#      </obj:info>
 sub xmlns { "urn:ietf:params:xml:ns:obj" }
 sub root_element {
 	"infData"
 };
-
 has_element 'roid' =>
 	is => "ro",
 	isa => "XML::EPP::Common::roidType",
 	;
+with 'XML::EPP::Plugin';
 
+package XML::EPP::Obj::poll::RS;
+# see 20-xml-rfc5730/rfc-examples/18-poll-response-info.xml
+use Moose;
+use PRANG::Graph;
+sub xmlns { "urn:ietf:params:xml:ns:obj-1.0" }
+has_element name => qw(is ro isa Str);
+has_element trStatus => qw(is ro isa Str);
+has_element reID => qw(is ro isa PRANG::XMLSchema::token);
+has_element reDate => qw(is ro isa PRANG::XMLSchema::dateTime);
+has_element acID => qw(is ro isa PRANG::XMLSchema::token);
+has_element acDate => qw(is ro isa PRANG::XMLSchema::dateTime);
+has_element exDate => qw(is ro isa PRANG::XMLSchema::dateTime);
+sub root_element { "trnData" }
 with 'XML::EPP::Plugin';
 
 1;

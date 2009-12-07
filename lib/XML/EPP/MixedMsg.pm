@@ -15,6 +15,8 @@ has_attr 'lang' =>
 	default => "en",  # imperialists!!
 	;
 
+with 'XML::EPP::Node';
+
 subtype "${SCHEMA_PKG}::mixedMsgType"
 	=> as __PACKAGE__;
 
