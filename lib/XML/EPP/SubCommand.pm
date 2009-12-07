@@ -17,10 +17,8 @@ has 'action' =>
 
 has_element "payload" =>
 	is => "rw",
-	isa => "XML::EPP::Plugin",
 	xmlns => "*",
-	xml_nodeName => "*",
-	xml_nodeName_attr => "action",
+	isa => "XML::EPP::Plugin",
 	;
 
 with "${SCHEMA_PKG}::Node";

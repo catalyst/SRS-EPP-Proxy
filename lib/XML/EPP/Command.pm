@@ -34,7 +34,7 @@ has 'action' =>
 
 # these are all maxOccurs = 1 (the default), so we don't need to worry
 # about keeping multiple of them.
-has_element 'payload' =>
+has_element 'argument' =>
 	is => "rw",
 	isa => "${PKG}::choice0",
 	predicate => "has_argument",

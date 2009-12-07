@@ -7,6 +7,8 @@ use Moose::Util::TypeConstraints;
 use PRANG::Graph;
 use XML::EPP::Plugin;
 
+our $SCHEMA_PKG = "XML::EPP";
+
 has 'response_type' =>
 	is => "rw",
 	isa => "Str",

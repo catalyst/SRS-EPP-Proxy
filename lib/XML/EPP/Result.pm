@@ -25,8 +25,8 @@ has_element 'errs' =>
 	is => "rw",
 	isa => "ArrayRef[${PKG}::choice0]",
 	xml_nodeName => {
-		"value" => "${SCHEMA_PKG}::errValueType",
-		"extValue" => "${SCHEMA_PKG}::extErrValueType",
+		"value" => "XML::LibXML::Element",
+		"extValue" => "${SCHEMA_PKG}::Error",
 	},
 	;
 

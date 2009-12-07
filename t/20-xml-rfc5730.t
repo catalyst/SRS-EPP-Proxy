@@ -63,6 +63,9 @@ for my $test ( sort @tests ) {
 		is_deeply($recycled, $object,
 			  "round-tripped to XML and back")
 			or do {
+				if ( $@ ) {
+					diag("exception: $@");
+				}
 				diag("First round: ".Dump($object));
 				diag("Second round: ".Dump($recycled));
 			};
