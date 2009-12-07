@@ -144,3 +144,53 @@ with 'XML::EPP::Plugin';
 
 1;
 
+package XML::EPP::Obj::transfer;
+# see 20-xml-rfc5730/rfc-examples/23-transfer-query.xml
+use Moose;
+use PRANG::Graph;
+sub root_element { "transfer" }
+sub is_command { 1 }
+with 'XML::EPP::Plugin', 'XML::EPP::Obj::Node';
+
+package XML::EPP::Obj::create;
+# see 20-xml-rfc5730/rfc-examples/25-create.xml
+use Moose;
+use PRANG::Graph;
+sub root_element { "create" }
+sub is_command { 1 }
+with 'XML::EPP::Plugin', 'XML::EPP::Obj::Node';
+
+package XML::EPP::Obj::delete;
+# see 20-xml-rfc5730/rfc-examples/27-delete.xml
+use Moose;
+use PRANG::Graph;
+sub root_element { "delete" }
+sub is_command { 1 }
+with 'XML::EPP::Plugin', 'XML::EPP::Obj::Node';
+
+package XML::EPP::Obj::renew;
+# see 20-xml-rfc5730/rfc-examples/29-renew.xml
+use Moose;
+use PRANG::Graph;
+sub root_element { "renew" }
+sub is_command { 1 }
+with 'XML::EPP::Plugin', 'XML::EPP::Obj::Node';
+
+package XML::EPP::Obj::renData;
+# see 20-xml-rfc5730/rfc-examples/29-renew.xml
+use Moose;
+use PRANG::Graph;
+sub root_element { "renData" }
+sub is_command { 0 }
+with 'XML::EPP::Plugin', 'XML::EPP::Obj::Node';
+
+package XML::EPP::Obj::update;
+# see 20-xml-rfc5730/rfc-examples/33-update.xml
+use Moose;
+use PRANG::Graph;
+sub root_element { "update" }
+sub is_command { 1 }
+with 'XML::EPP::Plugin', 'XML::EPP::Obj::Node';
+
+1;
+
