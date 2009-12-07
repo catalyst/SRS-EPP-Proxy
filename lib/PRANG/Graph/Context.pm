@@ -1,6 +1,7 @@
 
 package PRANG::Graph::Context;
 
+use 5.010;
 use Moose;
 use MooseX::Method::Signatures;
 use Moose::Util::TypeConstraints;
@@ -78,13 +79,19 @@ has 'xsi' =>
 	default => sub { {} },
 	;
 
+has 'old_xsi' =>
+	is => "rw",
+	isa => "HashRef",
+	default => sub { {} },
+	;
+
 has 'rxsi' =>
 	is => "rw",
 	isa => "HashRef",
 	lazy => 1,
 	default => sub {
 		my $self = shift;
-		{ reverse %{ $self->xsi } };
+		+{ reverse %{ $self->xsi } };
 	},
 	;
 
@@ -93,6 +100,51 @@ has 'xsi_virgin' =>
 	isa => "Bool",
 	default => 1,
 	;
+
+sub thing_xmlns {
+	my $thing = shift;
+	return unless blessed $thing;
+	my $xmlns = shift;
+	if ( $thing->can("preferred_prefix") ) {
+		$thing->preferred_prefix($xmlns);
+	}
+	elsif ( $thing->can("xmlns_prefix") ) {
+		$thing->xmlns_prefix($xmlns);
+	}
+}
+
+method next_ctx( Maybe[Str] $xmlns, Str $newnode_name, $thing )  {
+	my $prefix = $self->prefix;
+	my $new_prefix;
+	if ( $xmlns ) {
+		if ( !exists $self->rxsi->{$xmlns} ) {
+			$new_prefix = 1;
+			$prefix = thing_xmlns($thing, $xmlns) //
+				$self->base->generate_prefix($xmlns);
+		}
+		else {
+			$prefix = $self->get_prefix($xmlns);
+		}
+	}
+	my $nodename = ($prefix ? "$prefix:" : "") . $newnode_name;
+
+	my $clone = (ref $self)->new(
+		prefix => $prefix,
+		base => $self->base,
+		xpath => $self->xpath."/".$nodename,
+		xsi => $self->xsi,
+		rxsi => $self->rxsi,
+		@_
+	       );
+	if ( $new_prefix ) {
+		$clone->add_xmlns($prefix, $xmlns);
+	}
+	$clone;
+}
+
+method prefix_new(Str $prefix) {
+	!$self->xsi_virgin and not exists $self->old_xsi->{$prefix};
+}
 
 # this one is to know if the prefix was different to the parent type.
 has 'prefix' =>
@@ -103,17 +155,12 @@ has 'prefix' =>
 BEGIN { class_type "XML::LibXML::Node" };
 
 method get_prefix( Str $xmlns, Object $thing?, XML::LibXML::Element $victim? ) {
-	if ( my $prefix = $self->rxsi->{$xmlns} ) {
+	if ( defined(my $prefix = $self->rxsi->{$xmlns}) ) {
 		$prefix;
 	}
-	elsif ( $thing and $thing->can("preferred_prefix") ) {
-		$thing->preferred_prefix($xmlns);
-	}
-	elsif ( $thing and $thing->can("xmlns_prefix") ) {
-		$thing->xmlns_prefix($xmlns);
-	}
 	else {
-		my $new_prefix = $self->base->generate_prefix($xmlns);
+		my $new_prefix = thing_xmlns($thing, $xmlns)
+			// $self->base->generate_prefix($xmlns);
 		$self->add_xmlns($new_prefix, $xmlns);
 		if ( $victim ) {
 			$victim->setAttribute(
@@ -127,10 +174,16 @@ method get_prefix( Str $xmlns, Object $thing?, XML::LibXML::Element $victim? ) {
 
 method add_xmlns( Str $prefix, Str $xmlns ) {
 	if ( $self->xsi_virgin ) {
+		$self->xsi_virgin(0);
+		$self->old_xsi($self->xsi);
 		$self->xsi({ %{$self->xsi}, $prefix => $xmlns });
 		if ( $self->rxsi ) {
 			$self->rxsi({ %{$self->rxsi}, $xmlns => $prefix });
 		}
+	}
+	else {
+		$self->xsi->{$prefix} = $xmlns;
+		$self->rxsi->{$xmlns} = $prefix;
 	}
 }
 

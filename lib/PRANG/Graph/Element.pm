@@ -177,22 +177,20 @@ method output ( Object $item, XML::LibXML::Element $node, PRANG::Graph::Context 
 
 	my $nn;
 	my $doc = $node->ownerDocument;
+	my $newctx;
 	if ( length $name ) {
 		my ($xmlns, $prefix, $new_prefix);
 		if ( $self->has_xmlns ) {
-			$xmlns = $item->xmlns;
-			if ( !exists $ctx->rxsi->{$xmlns} ) {
-				$new_prefix = 1;
+			$xmlns = $self->xmlns;
+			if ( $xmlns eq "*" ) {
+				$xmlns = $value->xmlns;
 			}
-			$prefix = $ctx->get_prefix($xmlns);
 		}
-		else {
-			$prefix = $ctx->prefix;
-		}
-		$nn = $doc->createElement(
-			($prefix ? "$prefix:" : "") . $name,
-		       );
-		if ( $new_prefix ) {
+		$ctx = $ctx->next_ctx( $xmlns, $name, $value );
+		$prefix = $ctx->prefix;
+		my $new_nodeName = ($prefix ? "$prefix:" : "") . $name;
+		$nn = $doc->createElement( $new_nodeName );
+		if ( $ctx->prefix_new($prefix) ) {
 			$nn->setAttribute(
 				"xmlns".($prefix?":$prefix":""),
 				$xmlns,

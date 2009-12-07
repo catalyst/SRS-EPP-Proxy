@@ -137,8 +137,10 @@ method build_graph_node() {
 	my $nodeName = $self->has_xml_nodeName ?
 		$self->xml_nodeName : $self->name;
 
-	if ( ($expect_bool||0) + ($expect_simple||0) + @expect_type > 1
-		     or @expect_role ) {
+	my $expect_concrete = ($expect_bool||0) +
+		($expect_simple||0) + @expect_type;
+
+	if ( $expect_concrete > 1 ) {
 		# multiple or ambiguous types are specified; we *need*
 		# to know
 		if ( ! ref $nodeName ) {
@@ -153,12 +155,34 @@ method build_graph_node() {
 			}
 		}
 	}
-	if ( !ref $nodeName ) {
+
+	# plug-in type classes.
+	if ( @expect_role ) {
+		my @users;
+		# FIXME:
+		# 12:20 <@mugwump> is there a 'Class::MOP::Class::subclasses' for roles?
+		# 12:20 <@mugwump> I want a list of classes that implement a role
+		# 12:37 <@autarch> mugwump: I'd kind of like to see that in core
+		for my $mc ( Class::MOP::get_all_metaclass_instances ) {
+			next if !$mc->isa("Moose::Meta::Class");
+			if ( grep { $mc->does_role($_) } @expect_role ) {
+				push @users, $mc->name;
+			}
+		}
+		$nodeName = {} if !ref $nodeName;
+		for my $user ( @users ) {
+			my $root_element = $user->root_element;
+			$nodeName->{$root_element} = $user;
+			push @expect_type, $user;
+		}
+		$self->xml_nodeName({%$nodeName});
+	}
+	if ( !ref $nodeName and $expect_concrete ) {
 		my $expected = $expect_bool ? "Bool" :
 			$expect_simple ? "Str" : $expect_type[0];
 		$nodeName = { $nodeName => $expected };
 	}
-	else {
+	elsif ( $expect_concrete ) {
 		$nodeName = { %$nodeName };
 	}
 
