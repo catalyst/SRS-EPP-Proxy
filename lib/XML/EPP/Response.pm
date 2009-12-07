@@ -14,11 +14,14 @@ has_element 'result' =>
 	isa => "ArrayRef[${SCHEMA_PKG}::resultType]",
 	;
 
+use XML::EPP::MsgQ;
 has_element 'msgQ' =>
 	is => "rw",
 	isa => "${SCHEMA_PKG}::msgQType",
 	predicate => "has_msgQ",
 	;
+
+use XML::EPP::SubResponse;
 
 has_element 'resData' =>
 	is => "rw",

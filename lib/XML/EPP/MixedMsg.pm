@@ -16,6 +16,6 @@ has_attr 'lang' =>
 	;
 
 subtype "${SCHEMA_PKG}::mixedMsgType"
-	=> as (__PACKAGE__."|PRANG::Graph::Class");
+	=> as __PACKAGE__;
 
 1;

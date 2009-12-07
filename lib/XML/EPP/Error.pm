@@ -12,11 +12,10 @@ our $SCHEMA_PKG = "XML::EPP";
 use XML::EPP::Msg;
 use PRANG::XMLSchema::Whatever;
 
-# XML::LibXML::Element|PRANG::Graph::Class means that the object
-# within may be parsed (a PRANG::Graph::Class object) or unparsed
-# (XML::LibXML)
+# PRANG::XMLSchema::Whatever means that the object within will
+# effectively be an unparsed XML fragment
 subtype "${SCHEMA_PKG}::errValueType"
-	=> as "XML::LibXML::Element|PRANG::Graph::Class";
+	=> as "PRANG::XMLSchema::Whatever";
 
 has_element 'value' =>
 	is => "rw",
