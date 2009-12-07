@@ -143,7 +143,10 @@ method marshall_in_element( XML::LibXML::Node $node, HashRef $xsi, Str $xpath ) 
 
 	# process attributes
 	for my $attr ( @node_attr ) {
-		my $prefix = $attr->prefix || "";
+		my $prefix = $attr->prefix;
+		if ( !defined $prefix ) {
+			$prefix = $node->prefix||"";
+		}
 		if ( !exists $xsi->{$prefix} ) {
 			die "unknown xmlns prefix '$prefix' on ".
 				$node->nodeName." (input line "
@@ -160,9 +163,11 @@ method marshall_in_element( XML::LibXML::Node $node, HashRef $xsi, Str $xpath ) 
 		}
 		else {
 			# fail.
+			$DB::single = 1;
 			die "invalid attribute '".$attr->name."' on "
-				.$node->nodeName." (input line "
-					.$node->line_number.")";
+				.$node->nodeName.
+					($node->line_number ?
+						 " (input line ".$node->line_number.")" : "");
 		}
 	};
 
@@ -176,8 +181,6 @@ method marshall_in_element( XML::LibXML::Node $node, HashRef $xsi, Str $xpath ) 
 		xsi => $xsi,
 		prefix => ($node->prefix||""),
 	       );
-
-	$DB::single = 1 if $context->xpath eq "/epp/response/result";
 
 	my (%init_args, %init_arg_names);
 	while ( my $input_node = shift @childNodes ) {
@@ -380,7 +383,7 @@ method to_xml( PRANG::Graph $item ) {
 method to_libxml( Object $item, XML::LibXML::Element $node, PRANG::Graph::Context $ctx ) {
 
 	my $attributes = $self->attributes;
-	my $node_prefix = $node->prefix;
+	my $node_prefix = $node->prefix||"";
 	while ( my ($xmlns, $att) = each %$attributes ) {
 		my $prefix;
 		while ( my ($attName, $meta_att) = each %$att ) {
@@ -407,7 +410,10 @@ method to_libxml( Object $item, XML::LibXML::Element $node, PRANG::Graph::Contex
 					$prefix = $ctx->get_prefix(
 						$xmlns, $item, $node,
 					       );
-					if ( $prefix ne "" ) {
+					if ( $prefix eq $node_prefix ) {
+						$prefix = "";
+					}
+					elsif ( $prefix ne "" ) {
 						$prefix .= ":";
 					}
 				}
