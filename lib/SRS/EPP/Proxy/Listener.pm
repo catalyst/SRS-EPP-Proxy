@@ -1,16 +1,21 @@
 
 package SRS::EPP::Proxy::Listener;
 
-use 5.010;  # for (| alternation feature
+use 5.010;  # for (?| alternation feature
 
 use Moose;
 use MooseX::Method::Signatures;
 
 use IO::Select;
+use Net::SSLeay::OO;
+use Socket;
+use IO::Socket::INET;
 
-our $SOCKET_TYPE;
+our ($HAVE_V6, @SOCKET_TYPES);
 BEGIN {
 	my $sock = eval {
+		require Socket6;
+		Socket6->import;
 		require IO::Socket::INET6;
 		IO::Socket::INET6->new(
 			Listen    => 1,
@@ -20,19 +25,39 @@ BEGIN {
 		       );
 	};
 	if ( $sock or $!{EADDRINUSE} ) {
-		$SOCKET_TYPE = "IO::Socket::INET6";
+		$HAVE_V6 = 1;
+		@SOCKET_TYPES = ("IO::Socket::INET6");
+	}
+	push @SOCKET_TYPES, "IO::Socket::INET";
+}
+
+sub resolve {
+	my $hostname = shift;
+	my @addr;
+	$DB::single = 1;
+	if ( $HAVE_V6 ) {
+		my @res = getaddrinfo($hostname, "", AF_UNSPEC);
+		while ( my ($family, $socktype, $proto, $address,
+			    $canonical) = splice @res, 0, 5 ) {
+			my ($addr) = getnameinfo($address, NI_NUMERICHOST);
+			push @addr, $addr unless grep { $_ eq $addr }
+				@addr;
+		}
 	}
 	else {
-		$SOCKET_TYPE = "IO::Socket::INET";
-		require IO::Socket::INET;
+		my $packed_ip = gethostbyname($hostname)
+			or die "fail to resolve host '$hostname'; $!";
+		my $ip_address = inet_ntoa($packed_ip);
+		push @addr, $ip_address;
 	}
+	@addr;
 }
 
 has 'listen' =>
 	is => "ro",
 	isa => "ArrayRef[Str]",
 	required => 1,
-	default => sub { [ $SOCKET_TYPE =~ /6/ ? "[::]" : "0.0.0.0" ] },
+	default => sub { [ ($HAVE_V6 ? "[::]" : "0.0.0.0") ] },
 	;
 
 has 'sockets' =>
@@ -44,7 +69,7 @@ has 'sockets' =>
 use constant EPP_DEFAULT_TCP_PORT => 700;
 use constant EPP_DEFAULT_LOCAL_PORT => "epp(".EPP_DEFAULT_TCP_PORT.")";
 
-method init_listener() {
+method init() {
 
 	my @sockets;
 	for my $addr ( @{ $self->listen } ) {
@@ -52,23 +77,31 @@ method init_listener() {
 		# parse out the hostname and port; I can't see another
 		# way to supply a default port number.
 		my ($hostname, $port) = $addr =~
-			m{^(|\[([^]]+)\]|([^:]+))(?::(\d+))?$}
+			m{^(?|\[([^]]+)\]|([^:]+))(?::(\d+))?$}
 				or die "bad listen address: $addr";
 		$port ||= EPP_DEFAULT_LOCAL_PORT;
 
-		my $socket = $SOCKET_TYPE->new(
-			Listen => 5,
-			LocalAddr => $hostname,
-			LocalPort => $port,
-			Proto => "tcp",
-			ReuseAddr => 1,
-		       );
+		my @addr = resolve($hostname);
 
-		if ( !$socket ) {
-			warn "Failed to listen on $hostname:$port; $!";
+		for my $addr ( @addr ) {
+			my $SOCKET_TYPE = "IO::Socket::INET";
+			if ( $addr =~ /:/ ) {
+				$SOCKET_TYPE .= "6";
+			}
+			my $socket = $SOCKET_TYPE->new(
+				Listen => 5,
+				LocalAddr => $addr,
+				LocalPort => $port,
+				Proto => "tcp",
+				ReuseAddr => 1,
+			       );
+
+			if ( !$socket ) {
+				warn "Failed to listen on $addr:$port; $!";
+			}
+
+			push @sockets, $socket;
 		}
-
-		push @sockets, $socket;
 	}
 
 	if ( !@sockets ) {
@@ -94,6 +127,13 @@ method accept( Int $timeout? ) {
 	$ready[0]->accept;
 }
 
+method close() {
+	for my $socket ( @{ $self->sockets } ) {
+		$socket->close;
+	}
+	@{ $self->sockets } = ();
+}
+
 1;
 
 __END__
@@ -109,7 +149,7 @@ SRS::EPP::Proxy::Listener - socket factory class
      );
 
  # this does the listen part
- $listener->init_listener;
+ $listener->init;
 
  # this normally blocks, and returns a socket.
  # it might return undef, if you pass it a timeout.
@@ -123,15 +163,35 @@ connections waiting.
 
 You don't actually need to supply the port or listen addresses; the
 defaults are to listen on INADDR_ANY (0.0.0.0) or IN6ADDR_ANY (::) on
-port epp(700).
+port C<epp(700)>.
 
-If the L<IO::Socket::INET6> module is installed, then the module tries
-to listen on a random port on the IPv6 loopback address on start-up.
-If that works, then IPv6 is preferred over IPv4 from then on.  IPv6
-addresses (not names) must be passed in square brackets, such as
+If the L<IO::Socket::INET6> module is installed, then at load time the
+module tries to listen on a random port on the IPv6 loopback address.
+If that works (or fails with a particular plausible error, if
+something else happened to be using that port), then IPv6 is
+considered to be available.  This means that the RFC3493-style
+I<getaddrinfo> and such are used instead of C<gethostbyname>.  You
+will end up with a socket for every distinct address returned by
+C<getaddrinfo> on the passed-in list.
+
+IPv6 addresses (not names) must be passed in square brackets, such as
 C<[2404:130:0::42]>.
 
 In general these rules should make this listener behave like any
 normal IPv6-aware daemon.
 
+=head1 SEE ALSO
+
+L<IO::Socket::INET>, L<Socket6>, L<IO::Socket::INET6>
+
+=head1 AUTHOR AND LICENCE
+
+Development commissioned by NZ Registry Services, and carried out by
+Catalyst IT - L<http://www.catalyst.net.nz/>
+
+Copyright 2009, 2010, NZ Registry Services.  This module is licensed
+under the Artistic License v2.0, which permits relicensing under other
+Free Software licenses.
+
 =cut
+
