@@ -15,6 +15,8 @@ has input_buffer =>
 	default => sub { [] },
 	;
 
+use bytes;
+
 method input_buffer_size() {
 	my $size = 0;
 	for ( @{ $self->input_buffer } ) {
@@ -52,7 +54,7 @@ has 'session' =>
 	;
 
 method input_event( Str $data? ) {
-	if ( length $data ) {
+	if ( defined $data and $data ne "") {
 		push @{ $self->input_buffer }, $data;
 	}
 
@@ -67,10 +69,12 @@ method input_event( Str $data? ) {
 	my $got_chunk;
 
 	while ( $self->input_buffer_size >= $expected ) {
-		my $data = $self->input_buffer_read($expected);
+		my $data = $expected
+			? $self->input_buffer_read($expected)
+			: "";
 		if ( $self->input_state eq "expect_length" ) {
 			$self->input_state("expect_data");
-			$self->input_expect(unpack("N", $data));
+			$self->input_expect(unpack("N", $data)-4);
 		}
 		else {
 			$self->input_state("expect_length");
