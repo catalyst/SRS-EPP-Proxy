@@ -72,7 +72,7 @@ is_deeply($test_case->{output}, \@test_packets, "input line discipline worked!")
 	sub read_input {
 		my $self = shift;
 		my $length = shift;
-		my $well_give_them_cackle = rand(1)>1
+		my $well_give_them_cackle = rand(1)>0.2
 			? int(rand($length))
 				: $length;
 		$well_give_them_cackle ||= 1;
