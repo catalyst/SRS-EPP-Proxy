@@ -114,7 +114,7 @@ method process_queue( Int $count = 1 ) {
 			$self->state("Processing Command");
 			last;
 		}
-		my $command = $self->next_command;
+		my $command = $self->next_command or last;
 		if ( $command->simple ) {
 			# "simple" commands include "hello" and "logout"
 			my $response = $command->process($self);

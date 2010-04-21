@@ -146,7 +146,8 @@ SRS::EPP::Session::BackendQ - manage tx queue for back-end processing
 =head1 DESCRIPTION
 
 This class implements a simple FIFO queue, but with small
-customizations to operation to suit the use case of the SRS EPP Proxy.
+customizations to operation to suit the use case of the SRS EPP Proxy
+tracking the requests it sends to the back-end.
 
 =head1 SEE ALSO
 
