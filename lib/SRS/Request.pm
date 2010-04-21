@@ -4,15 +4,12 @@ package SRS::Request;
 use Moose;
 use Moose::Util::TypeConstraints;
 
-subtype 'SRS::ActionID'
-	=> as "Str",
-	;
-
-has 'action_id' =>
-	is => "rw",
-	isa => "SRS::ActionID",
-	;
-
 extends 'SRS::EPP::Message';
+
+use XML::SRS;
+has "+message" =>
+	isa => "XML::SRS::Action|XML::SRS::Query",
+	handles => [ qw(action_id) ],
+	;
 
 1;

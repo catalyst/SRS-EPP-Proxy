@@ -13,6 +13,11 @@ package SRS::EPP::Response;
 use Moose;
 extends 'SRS::EPP::Message';
 
+use XML::EPP;
+has "+message" =>
+	isa => "XML::EPP",
+	;
+
 no Moose;
 __PACKAGE__->meta->make_immutable;
 

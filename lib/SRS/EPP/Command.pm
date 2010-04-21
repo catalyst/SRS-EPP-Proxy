@@ -9,53 +9,15 @@
 
 package SRS::EPP::Command;
 
-use strict;
-use warnings;
-
-use XML::LibXML;
-use SRS::EPP::Response::Error;
-
 use Moose;
+use MooseX::Method::Signatures;
+
 extends 'SRS::EPP::Message';
 
-has 'xmlstring' => ( is => 'ro', );
-
-# XXX - schema is a class data item; it will be the same for many
-# messages, and we only want to load schemata at compile time.
-has 'xmlschema' => ( is => 'ro', );
-
-sub process {
-	my ($self) = @_;
-
-	## validate the XML against the schema
-	my $schema = XML::LibXML::Schema->new( string => $self->xmlschema() );
-	eval { $schema->validate( $self->xmlstring() ); };
-	if ($@) {
-		return SRS::EPP::Response::Error->new(
-			id    => "Failed to validate XML",
-			extra => $@,
-		);
-	}
-
-	## parse the XML,
-	my $parser = XML::LibXML->new();
-	my $doc    = $parser->parse_string( $self->xmlstring() );
-	if ( !$doc ) {
-		return SRS::EPP::Response::Error->new(
-			id    => "Unknown Error",
-			extra => "Failed to parse XML",
-		);
-	}
-
-	## decide what kind of thing we have, process it
-	my $node = $doc->firstChild();
-
-	## Since we don't recognise what we have, it must be an error
-	return SRS::EPP::Response::Error->new(
-		id    => "Unknown Error",
-		extra => "Don't know how to process a $node",
-	);
-}
+use XML::EPP;
+has "+message" =>
+	isa => "XML::EPP",
+	;
 
 no Moose;
 __PACKAGE__->meta->make_immutable;
@@ -66,7 +28,7 @@ __END__
 
 =head1 NAME
 
-SRS::EPP::Command - base class for EPP commands (requests)
+SRS::EPP::Command - encapsulation of received EPP commands
 
 =head1 SYNOPSIS
 

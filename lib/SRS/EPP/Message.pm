@@ -13,9 +13,18 @@ use warnings;
 package SRS::EPP::Message;
 use Moose;
 
-sub as_xml {
-	return "This non XML string is supplied courtesy of " . __PACKAGE__;
-}
+has 'xml' =>
+	is => "rw",
+	;
+
+has 'message' =>
+	is => "ro",
+	handles => [qw(to_xml)],
+	;
+
+has 'error' =>
+	is => "rw",
+	;
 
 no Moose;
 __PACKAGE__->meta->make_immutable;
@@ -26,12 +35,17 @@ __END__
 
 =head1 NAME
 
-SRS::EPP::Message - EPP XML
+SRS::EPP::Message - abstract type for a single message particle
 
 =head1 SYNOPSIS
 
+ my $msg = SRS::EPP::Message->new(
+     message => $object,
+     xml => $xml,
+     error => $message,
+     );
  # convert a message to XML
- $message->as_xml;
+ $message->to_xml;
 
 =head1 DESCRIPTION
 
