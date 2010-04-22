@@ -1,0 +1,33 @@
+#!/usr/bin/perl -w
+
+use 5.010;
+use strict;
+use SRS::EPP::Proxy;
+
+my $daemon = SRS::EPP::Proxy->new_with_options();
+
+my ($command) = @{$daemon->extra_argv}
+	defined $command || die "No command specified";
+
+$daemon->start   if $command eq 'start';
+$daemon->status  if $command eq 'status';
+$daemon->restart if $command eq 'restart';
+$daemon->stop    if $command eq 'stop';
+
+warn($daemon->status_message);
+exit($daemon->exit_code);
+
+=head1 NAME
+
+srs-epp-proxy - 
+
+=head1 SYNOPSIS
+
+
+
+=head1 DESCRIPTION
+
+
+
+=cut
+

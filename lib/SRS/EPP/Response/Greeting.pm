@@ -14,8 +14,14 @@ package SRS::EPP::Response::Greeting;
 use Moose;
 extends 'SRS::EPP::Response';
 
-sub as_xml {
-	return 'This is where we generate the greeting message';
+sub BUILD {
+	my $self = shift;
+	if ( !$self->message ) {
+		my $epp_greeting = XML::EPP::Greeting->new(
+			svID => $CONFIG->
+			);
+	}
+
 }
 
 no Moose;
