@@ -20,6 +20,54 @@ has "+message" =>
 	isa => "XML::EPP",
 	;
 
+use Module::Pluggable search_path => [__PACKAGE__];
+
+sub rebless_class {
+	my $object = shift;
+	our $map;
+	if ( !$map ) {
+		$map = {
+			map {
+				$_->can("match_class") ?
+					( $_->match_class => $_ )
+						: ();
+			} __PACKAGE__->plugins,
+		};
+	}
+	$map->{ref $object};
+}
+
+sub action_class {
+	my $object = shift;
+	our $action_classes;
+	if ( !$action_classes ) {
+		$action_classes = {
+			map {
+				$_->can("action") ?
+					($_->action => $_)
+						: ();
+			} __PACKAGE__->plugins,
+		};
+	}
+	$action_classes->{ $object->action };
+}
+
+sub REBLESS { }
+sub BUILD {
+	my $self = shift;
+	if ( my $epp = $self->message ) {
+		my $class;
+		$class = rebless_class( $epp->message );
+		if ( !$class and $epp->message->can("action") ) {
+			$class = action_class($epp->message);
+		}
+		if ( $class ) {
+			bless $self, $class;
+			$self->REBLESS;
+		}
+	}
+}
+
 method simple() { 0 }
 method authenticated() { 1 }
 
