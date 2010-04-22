@@ -19,6 +19,19 @@ has "+message" =>
 	isa => "XML::EPP",
 	;
 
+method simple() { 0 }
+method authenticated() { 1 }
+
+# process a simple message - the $session is for posting back events
+method process( SRS::EPP::Session $session ) {
+
+	# default handler is to return an unimplemented message
+	return SRS::EPP::Response::Error->new(
+		id => 2101,
+		extra => "Sorry, command not yet implemented.",
+		);
+}
+
 no Moose;
 __PACKAGE__->meta->make_immutable;
 

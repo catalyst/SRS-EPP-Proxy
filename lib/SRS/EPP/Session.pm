@@ -16,6 +16,28 @@ package SRS::EPP::Session;
 use Moose;
 use MooseX::Method::Signatures;
 
+# messages that we use
+# - XML formats
+use XML::EPP;
+use XML::SRS;
+
+# - wrapper classes
+use SRS::EPP::Command;
+use SRS::EPP::Response;
+use SRS::EPP::Response::Error;
+use SRS::Tx;
+use SRS::Request;
+use SRS::Response;
+
+# queue classes and slave components
+use SRS::EPP::Packets;
+use SRS::EPP::Session::CmdQ;
+use SRS::EPP::Session::BackendQ;
+use SRS::EPP::Proxy::UA;
+
+# other includes
+use HTTP::Request::Common qw(POST);
+
 has io =>
 	is => "ro",
 	isa => "Net::SSLeay::OO::SSL",
@@ -26,31 +48,31 @@ has user =>
 	isa => "Str",
 	;
 
+# this "State" is the state according to the chart in RFC3730 and is
+# updated for amusement's sake only
 has state =>
 	is => "rw",
 	isa => "Str",
 	default => "Waiting for Client",
 	;
 
+# this object is billed with providing an Event.pm-like interface.
 has event =>
 	is => "ro",
-	#isa => "Object",
+	isa => "Event",
 	required => 1,
 	;
 
+# 'yield' means to queue an event for running but not run it
+# immediately.
 method yield(Str $method, @args) {
 	$self->event->timer(
+		desc => $method,
 		after => 0,
 		cb => sub {
 			$self->$method(@args);
 		});
 }
-
-use SRS::Tx;
-use SRS::EPP::Response;
-use SRS::EPP::Command;
-use SRS::EPP::Session::CmdQ;
-use SRS::EPP::Session::BackendQ;
 
 #----
 # input packet chunking
@@ -69,8 +91,37 @@ method read_input( Int $how_much where { $_ > 0 } ) {
 #----
 # convert input packets to messages
 method input_packet( Str $data ) {
-	my $cmd = SRS::EPP::Command->parse($data);
-	$self->queue_command($cmd);
+	my $msg = eval { XML::EPP->parse($data) };
+	my $error = ( $msg ? undef : $@ );
+	my $queue_item = SRS::EPP::Command->new(
+		( $msg ? (message => $msg) : () ),
+		xml => $data,
+		( $error ? (error => $error) : () ),
+		);
+	$self->queue_command($queue_item);
+	if ( $error ) {
+		my %details = (extra => "General/non-specific failure");
+		if ( blessed $error and
+			     $error->isa("PRANG::Graph::Context::Error") ) {
+			$details{extra} = "XML Validation error at ".
+				$error->xpath.": ".$error->message;
+			$details{bad} = $error->node;
+		}
+		# insert a dummy command which returns a 2001
+		# response, stall, hang up.
+		$self->add_command_response(
+			$queue_item,
+			SRS::EPP::Response::Error->new(
+				id => 2001,
+				%details,
+				),
+			);
+		$self->yield("send_pending_replies");
+	}
+	else {
+		# 
+		$self->yield("process_queue");
+	}
 }
 
 #----
@@ -81,7 +132,7 @@ has 'processing_queue' =>
 		SRS::EPP::Session::CmdQ->new();
 	},
 	handles => [qw( queue_command next_command
-			add_command_response
+			add_command_response commands_queued
 			response_ready dequeue_response )],
 	;
 
@@ -102,7 +153,6 @@ has 'backend_queue' =>
 #  eg, "login" and "logout" both stall the queue, as will the
 #  <transform><renew> command, if we have to first query the back-end
 #  to determine what the correct renewal message is.
-
 has stalled =>
 	is => "rw",
 	isa => "Bool",
@@ -118,15 +168,15 @@ method process_queue( Int $count = 1 ) {
 		if ( $command->simple ) {
 			# "simple" commands include "hello" and "logout"
 			my $response = $command->process($self);
-			$self->add_command_response($command, $response);
+			$self->add_command_response($response, $command);
 		}
 		elsif ( $command->authenticated and !$self->user ) {
 			$self->add_command_response(
-				$command,
 				SRS::EPP::Response::Error->new(
 					id => 2201,
 					extra => "Not logged in",
 					),
+				$command,
 				);
 		}
 		else {
@@ -157,6 +207,7 @@ method connected() {
 	my $response = SRS::EPP::Response::Greeting->new();
 	my $socket_fd = $self->io->get_fd;
 	$self->event->io(
+		desc => "input_event",
 		fd => $socket_fd,
 		poll => 'r',
 		cb => sub {
@@ -164,6 +215,7 @@ method connected() {
 		},
 		);
 	$self->event->io(
+		desc => "output_event",
 		fd => $socket_fd,
 		poll => 'w',
 		cb => sub {
@@ -185,9 +237,24 @@ has 'backend_tx_max' =>
 
 has 'user_agent' =>
 	is => "rw",
+	lazy => 1,
 	default => sub {
 		my $self = shift;
 		SRS::EPP::Proxy::UA->new($self);
+	},
+	trigger => sub {
+		my $self = shift;
+		$self->event->io(
+			desc => "user_agent",
+			fd => $self->user_agent->read_fh,
+			poll => 'r',
+			cb => sub {
+				$self->backend_response;
+			},
+			);
+	},
+	handles => {
+		"user_agent_busy" => "busy",
 	},
 	;
 
@@ -196,12 +263,17 @@ has 'backend_url' =>
 	is => "rw",
 	;
 
-use HTTP::Request::Common qw(POST);
+has 'active_request' =>
+	is => "rw",
+	isa => "Maybe[SRS::Tx]",
+	;
 
 method send_backend_queue() {
+	return if $self->user_agent_busy;
+
 	my @next = $self->backend_next($self->backend_tx_max);
 
-	my $tx = SRS::Tx->new( messages => \@next );
+	my $tx = SRS::Tx->new( parts => \@next );
 	my $sig = $self->sign_tx($tx);
 	my $reg_id = $self->user;
 
@@ -211,14 +283,18 @@ method send_backend_queue() {
 			r => $tx,
 			s => $sig,
 			n => $reg_id,
-		       ],
-	       );
-
-	$self->user_agent->register( $req );
+			],
+		);
+	$self->active_request( $tx );
+	$self->user_agent->request( $req );
 }
 
 #----
 # Dealing with backend responses
+method get_be_response() {
+	my $request = $self->active_request;
+	my $response = $self->user_agent->get_response;
+}
 
 method be_response( SRS::Tx $rs_tx ) {
 	my @parts = $rs_tx->messages;

@@ -18,7 +18,7 @@ has 'xml' =>
 	;
 
 has 'message' =>
-	is => "ro",
+	is => "rw",
 	handles => [qw(to_xml)],
 	;
 
