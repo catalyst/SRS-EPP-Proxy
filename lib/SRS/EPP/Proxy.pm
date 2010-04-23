@@ -13,13 +13,13 @@ use MooseX::Method::Signatures;
 
 use SRS::EPP::Session;
 
- use Log::Log4perl qw(:easy);
+use Log::Log4perl qw(:easy);
 
 use POSIX ":sys_wait_h";
 
 with 'MooseX::SimpleConfig';
 with 'MooseX::Getopt';
-with 'MooseX::Log::Log4perl::Easy';
+with 'MooseX::Log::Log4Perl';
 with 'MooseX::Daemonize';
 
 has '+configfile' => (
@@ -35,13 +35,44 @@ sub BUILD {
 	# all properties in this master object may be specified there.
 
 	# pass configuration via this method to log4perl
-	if ( $self->logging ) {
-		Log::Log4Perl->init( $self->logging );
-	}
-	else {
-		Log::Log4Perl->easy_init();
+	my $logging = $self->logging;
+
+	if ( !defined $logging ) {
+		$logging = "info";
 	}
 
+	if ( !ref $logging and ! -f $logging ) {
+		# 'default'
+		if ( $self->is_daemon ) {
+			$logging = {
+		rootLogger => "$logging, Syslog",
+		"appender.Syslog" => "Log::Log4perl::JavaMap::SyslogAppender",
+		"appender.Syslog.logopt" => "pid",
+		"appender.Syslog.Facility" => "daemon",
+			};
+		}
+		else {
+			$logging = {
+		rootLogger => "$logging, Screen",
+		"appender.Screen" => "Log::Log4perl::Appender::Screen",
+		"appender.Screen.stderr" => 1,
+			};
+		}
+	}
+
+	# prepend "log4perl." to config hashes
+	if ( ref $logging and ref $logging eq "HASH" ) {
+		for my $key ( keys %$logging ) {
+			if ( $key !~ /^log4perl\./ and
+				     !exists $logging->{"log4perl.$key"}
+				    ) {
+				$logging->{"log4perl.$key"} =
+					delete $logging->{$key};
+			}
+		}
+	}
+
+	Log::Log4Perl->init( $logging );
 	# pass configuration options to the session class?
 }
 
@@ -113,7 +144,7 @@ method init() {
 	$self->init_listener;
 }
 
-has 'pgp_dir' =>
+has 'gpg_dir' =>
 	is => "ro",
 	isa => "Str",
 	;
@@ -139,6 +170,11 @@ has 'child_pids' =>
 	default => sub { [] },
 	;
 
+has 'backend' =>
+	is => "ro",
+	isa => "Str",
+	default => "https://srstest.srs.net.nz/srs/registrar",
+	;
 
 method accept_one() {
 	my $socket = $self->listener->accept
