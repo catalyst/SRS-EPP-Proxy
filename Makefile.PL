@@ -17,8 +17,8 @@ license         ('artistic');
 requires        ("perl" => 5.008005);
 requires        ("Moose" => 0.54);
 requires        ("MooseX::Method::Signatures" => 0);
-requires        ("XML::LibXML" => 1.70);
-requires        ("MooseX::Attributes::Curried" => 0);
 requires        ("Net::SSLeay::OO" => 0);
+requires        ("XML::SRS" => 0.01);
+requires        ("XML::EPP" => 0.01);
 
 &WriteAll;
