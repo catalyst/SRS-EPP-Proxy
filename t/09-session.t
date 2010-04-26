@@ -155,8 +155,6 @@ is_deeply(
 	or diag Dumper($session);
 is($session->commands_queued, 1, "command is now queued");
 
-exit(0);
-
 $session->process_queue;
 
 # 2. proceed with the event which was 'queued'
