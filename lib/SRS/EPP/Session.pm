@@ -37,6 +37,7 @@ use SRS::EPP::Proxy::UA;
 
 # other includes
 use HTTP::Request::Common qw(POST);
+use bytes qw();
 
 has io =>
 	is => "ro",
@@ -346,12 +347,12 @@ has 'output_queue' =>
 
 method queue_reply( SRS::EPP::Response $rs ) {
 	my $reply_data = $rs->to_xml;
-	my $length = pack("N", length($reply_data));
+	my $length = pack("N", bytes::length($reply_data));
 	push @{ $self->output_queue }, $length, $reply_data;
 	$self->yield("output_event");
 	my $remaining = 0;
 	for ( @{ $self->output_queue }) {
-		$remaining += length;
+		$remaining += bytes::length;
 	}
 	return $remaining;
 }
@@ -363,13 +364,13 @@ method output_event() {
 	while ( @$oq ) {
 		my $datum = shift @$oq;
 		my $wrote = $io->write( $datum );
-		$written += $wrote;
+		$written += $wrote;  # thankfully, this is returned in bytes.
 		if ( !$wrote ) {
 			unshift @$oq, $datum;
 			last;
 		}
-		elsif ( $wrote < length $datum ) {
-			unshift @$oq, substr $datum, $written;
+		elsif ( $wrote < bytes::length $datum ) {
+			unshift @$oq, bytes::substr $datum, $written;
 			last;
 		}
 	}
