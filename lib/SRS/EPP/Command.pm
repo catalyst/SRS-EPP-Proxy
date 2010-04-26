@@ -11,6 +11,7 @@ package SRS::EPP::Command;
 
 use Moose;
 use MooseX::Method::Signatures;
+use Moose::Util::TypeConstraints;
 
 extends 'SRS::EPP::Message';
 
@@ -21,6 +22,10 @@ has "+message" =>
 
 method simple() { 0 }
 method authenticated() { 1 }
+
+BEGIN {
+	class_type "SRS::EPP::Session";
+}
 
 # process a simple message - the $session is for posting back events
 method process( SRS::EPP::Session $session ) {
