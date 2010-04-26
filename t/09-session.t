@@ -2,9 +2,13 @@
 #
 # test the SRS::EPP::Session class overall
 
+use 5.010;
 use strict;
 use Test::More qw(no_plan);
 use Fatal qw(:void open);
+
+use XML::EPP;
+use XML::EPP::Host;
 
 BEGIN { use_ok("SRS::EPP::Session"); }
 
@@ -42,10 +46,24 @@ BEGIN { use_ok("SRS::EPP::Session"); }
 			}
 		};
 	}
+	sub queued_events {
+		my $self = shift;
+		my $events = delete $self->{timer}
+			or return();
+		map { my $href = ref $_ eq "HASH" ? $_ : { @$_ };
+		      $href->{desc} } @$events;
+	}
+	sub has_queued_events {
+		my $self = shift;
+		$self->timer && @{ $self->timer };
+	}
 }
 
 {
 	package Mock::IO;
+	use Encode;
+	use utf8;
+	use bytes qw();
 	our @ISA = qw(Mock::Base);
 	our @model_fds = qw(5 8 4 7);
 	sub new {
@@ -58,7 +76,27 @@ BEGIN { use_ok("SRS::EPP::Session"); }
 	sub read {
 		my $self = shift;
 		my $how_much = shift;
-		substr $self->{input}, 0, $how_much, "";
+		bytes::substr $self->{input}, 0, $how_much, "";
+	}
+	sub write {
+		my $self = shift;
+		my $data = shift;
+		my $how_much = bytes::length($data);
+		if ( rand(1) < 0.5 ) {
+			# be EEEVIL and split string in the middle of
+			# a utf8 sequence if we can... hyuk yuk yuk
+			$data = Encode::encode("utf8", $data)
+				if utf8::is_utf8($data);
+			if ( $data =~ /^(.*?[\200-\377])/ ) {
+				$how_much = bytes::length($1);
+			}
+			else {
+				$how_much = int($how_much * rand(1));
+			}
+		}
+		$self->{output}//="";
+		$self->{output} .= bytes::substr($data, 0, $how_much);
+		return $how_much;
 	}
 }
 
@@ -74,23 +112,85 @@ my $session = SRS::EPP::Session->new(
 	io => Mock::IO->new(input => $input),
        );
 
-# 0. fixme - should test the ->connected event
+# 0. test the ->connected event and greeting response
+$session->connected;
+is(@{$session->{event}{io}}, 2, "set up IO watchers OK on connected");
+is_deeply(
+	[$session->event->queued_events], ["output_event"],
+	"data waiting to be written",
+       );
+
+# let's write to the socket for a bit, until we see an event.  This
+# simulates events from Event etc saying that the output socket is
+# writable, and the condition where variable-sized chunks can be
+# written to it.
+srand 42;
+do {
+	$session->output_event;
+} while ( @{ $session->output_queue } );
+
+my $greeting = delete $session->io->{output};
+my $greeting_length = unpack("N", bytes::substr($greeting, 0, 4, ""));
+is(bytes::length($greeting)+4, $greeting_length,
+   "got a full packet back ($greeting_length bytes)");
+#diag($greeting);
+
+is_deeply(
+	[$session->event->queued_events], [],
+	"After issuing greeting, no events ready"
+       );
+is($session->state, "Waiting for Client Authentication",
+   "RFC5730 session state flowchart state as expected");
 
 # 1. test that input leads to queued commands
 do {
 	$session->input_event;
-} until ( $session->{event}->timer or !$session->{io}->input );
+} until ( $session->event->has_queued_events or !$session->io->input );
 
-my %event = @{ shift @{$session->{event}{timer}} };
-is($event{desc}, "process_queue", "Got the right event out!");
+use Data::Dumper;
+is_deeply(
+	[$session->event->queued_events], ["process_queue"],
+	"A valid input message results in a queued output event",
+       )
+	or diag Dumper($session);
 is($session->commands_queued, 1, "command is now queued");
 
+exit(0);
+
+$session->process_queue;
+
 # 2. proceed with the event which was 'queued'
-$session->process_queue(1);
+my @expected = qw(process_queue send_pending_replies);
+my $failed = 0;
+event:
+while ( $session->io->input ) {
+	my @events = $session->event->queued_events
+		or last;
+	for my $event ( @events ) {
+		diag("firing $event");
+		unless ($event ~~ @expected) {
+			fail("weren't expecting $event");
+			$failed = 1;
+			last event;
+		}
+		$session->$event;
+	}
+}
+pass("events as expected") unless $failed;
 
 # 3. check that we got an error!
+do {
+	$session->output_event;
+} while ( @{ $session->output_queue } );
 
-
+my $output = delete $session->io->{output};
+my $packet = 1;
+while ( $output ) {
+	my $packet_length = unpack("N", bytes::substr($output, 0, 4, ""));
+	my $packet = bytes::substr($output, 0, $packet_length - 4, "");
+	is(bytes::length($packet), $packet_length, "read packet $packet OK");
+	$packet++;
+}
 
 # Copyright (C) 2009  NZ Registry Services
 #

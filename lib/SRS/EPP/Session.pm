@@ -101,6 +101,7 @@ method input_packet( Str $data ) {
 		);
 	$self->queue_command($queue_item);
 	if ( $error ) {
+		warn "error parsing input; $error\n";
 		my %details = (extra => "General/non-specific failure");
 		if ( blessed $error and
 			     $error->isa("PRANG::Graph::Context::Error") ) {
@@ -111,11 +112,11 @@ method input_packet( Str $data ) {
 		# insert a dummy command which returns a 2001
 		# response, stall, hang up.
 		$self->add_command_response(
-			$queue_item,
 			SRS::EPP::Response::Error->new(
 				id => 2001,
 				%details,
 				),
+			$queue_item,
 			);
 		$self->yield("send_pending_replies");
 	}
@@ -347,7 +348,7 @@ has 'output_queue' =>
 
 method queue_reply( SRS::EPP::Response $rs ) {
 	my $reply_data = $rs->to_xml;
-	my $length = pack("N", bytes::length($reply_data));
+	my $length = pack("N", bytes::length($reply_data)+4);
 	push @{ $self->output_queue }, $length, $reply_data;
 	$self->yield("output_event");
 	my $remaining = 0;
@@ -370,7 +371,7 @@ method output_event() {
 			last;
 		}
 		elsif ( $wrote < bytes::length $datum ) {
-			unshift @$oq, bytes::substr $datum, $written;
+			unshift @$oq, bytes::substr $datum, $wrote;
 			last;
 		}
 	}

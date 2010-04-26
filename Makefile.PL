@@ -11,15 +11,16 @@ use inc::Module::Install;
 name            ("SRS-EPP-Proxy");
 abstract        ("EPP <=> SRS XML proxy server");
 author          ("Catalyst SRS Team <team-srs\@catalyst.net.nz>");
-version         0;
+version_from	("lib/SRS/EPP/Proxy.pm");
 license         ('artistic');
 
 requires        ("perl" => 5.008005);
 requires        ("Moose" => 0.54);
 requires        ("MooseX::Method::Signatures" => 0);
+requires        ("MooseX::Singleton" => 0);
 requires        ("Net::SSLeay::OO" => 0);
 requires        ("XML::SRS" => 0.01);
-requires        ("XML::EPP" => 0.01);
+requires        ("XML::EPP" => 0.02);
 requires        ("Module::Pluggable" => 0);
 
 &WriteAll;

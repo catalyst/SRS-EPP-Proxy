@@ -57,6 +57,24 @@ sub as_xml {
 	return $output;
 }
 
+has '+message' =>
+	lazy => 1,
+	default => sub {
+		my $self = shift;
+		my $msg = $self->extra;
+		XML::EPP->new(
+			XML::EPP::Response->new(
+				result => [
+					XML::EPP::Result->new(
+						($msg ? (msg => $msg) : ()),
+						code => $self->id,
+					       ),
+				       ],
+				trID => "dummy",
+			       ),
+		       );
+	};
+
 no Moose;
 __PACKAGE__->meta->make_immutable;
 

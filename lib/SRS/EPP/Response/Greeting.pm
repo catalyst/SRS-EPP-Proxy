@@ -14,8 +14,50 @@ package SRS::EPP::Response::Greeting;
 use Moose;
 extends 'SRS::EPP::Response';
 
-sub as_xml {
-	return 'This is where we generate the greeting message';
+use MooseX::TimestampTZ qw(gmtimestamptz);
+
+has "+message" =>
+	lazy => 1,
+	default => \&make_greeting,
+	;
+
+sub make_greeting {
+	my $self = shift;
+	my $proxy = eval { SRS::EPP::Proxy->new };
+
+	# create the "Data Collection Policy"
+	my $dcp = eval { $proxy->dcp };
+	my $access = $dcp ? $dcp->access : undef;
+	$access ||= "personalAndOther";
+	my $statements = $dcp ? $dcp->statements : undef;
+	$statements ||= [];
+	if ( !@$statements) {
+		# must have something...
+		push @$statements, {
+			purpose => [ qw(admin prov) ],
+			recipient => [ qw(ours) ],
+
+			retention => "business",
+		};
+	}
+	my $expiry = $dcp ? $dcp->expiry : undef;
+
+	# let coerce rules do the magic here...
+	my $DCP = XML::EPP::DCP->new(
+		access => $access,
+		statement => $statements,
+		( defined $expiry ? (expiry => $expiry) : () ),
+		);
+
+	return XML::EPP->new(
+		message => XML::EPP::Greeting->new(
+			server_name => eval { $proxy->server_name }
+				|| "localhost",
+			server_time => gmtimestamptz,
+			services => "auto",
+			dcp => $DCP,
+			),
+		);
 }
 
 no Moose;

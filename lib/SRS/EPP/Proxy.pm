@@ -8,7 +8,7 @@
 
 package SRS::EPP::Proxy;
 
-use Moose;
+use MooseX::Singleton;
 use MooseX::Method::Signatures;
 
 use SRS::EPP::Session;
@@ -46,6 +46,23 @@ has 'ssl_cert_dir' =>
 	is => "ro",
 	isa => "Str",
 	;
+
+use Sys::Hostname qw(hostname);
+has 'server_name' =>
+	is => "ro",
+	isa => "Str",
+	lazy => 1,
+	default => sub {
+		my $self = shift;
+		my @listen = @{ $self->listen };
+		if ( @listen == 1 and $listen[0] !~ /^(?:\d+\.|\[)/ ) {
+			# listen address seems a reasonable default...
+			$listen[0];
+		}
+		else {
+			hostname;
+		}
+	};
 
 has 'ssl_engine' =>
 	is => "rw",
