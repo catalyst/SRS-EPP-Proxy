@@ -18,6 +18,13 @@ has "+message" =>
 	isa => "XML::EPP",
 	;
 
+use Module::Pluggable
+	require => 1,
+	search_path => [__PACKAGE__],
+	;
+
+__PACKAGE__->plugins;
+
 no Moose;
 __PACKAGE__->meta->make_immutable;
 

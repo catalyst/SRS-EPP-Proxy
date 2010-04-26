@@ -20,5 +20,6 @@ requires        ("MooseX::Method::Signatures" => 0);
 requires        ("Net::SSLeay::OO" => 0);
 requires        ("XML::SRS" => 0.01);
 requires        ("XML::EPP" => 0.01);
+requires        ("Module::Pluggable" => 0);
 
 &WriteAll;

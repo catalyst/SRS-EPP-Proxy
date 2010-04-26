@@ -37,6 +37,13 @@ method process( SRS::EPP::Session $session ) {
 		);
 }
 
+use Module::Pluggable
+	require => 1,
+	search_path => [__PACKAGE__],
+	;
+
+__PACKAGE__->plugins;
+
 no Moose;
 __PACKAGE__->meta->make_immutable;
 
