@@ -11,6 +11,7 @@ package SRS::EPP::Command;
 
 use Moose;
 use MooseX::Method::Signatures;
+use Moose::Util::TypeConstraints;
 
 extends 'SRS::EPP::Message';
 
@@ -57,7 +58,8 @@ sub BUILD {
 	if ( my $epp = $self->message ) {
 		my $class;
 		$class = rebless_class( $epp->message );
-		if ( !$class and $epp->message->can("action") ) {
+		if ( !$class and $epp->message and
+			     $epp->message->can("action") ) {
 			$class = action_class($epp->message);
 		}
 		if ( $class ) {
@@ -69,6 +71,10 @@ sub BUILD {
 
 method simple() { 0 }
 method authenticated() { 1 }
+
+BEGIN {
+	class_type "SRS::EPP::Session";
+}
 
 # process a simple message - the $session is for posting back events
 method process( SRS::EPP::Session $session ) {
