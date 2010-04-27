@@ -18,6 +18,16 @@ has "+message" =>
 	isa => "XML::EPP",
 	;
 
+has "client_id" =>
+	is => "ro",
+	isa => "XML::EPP::trIDStringType",
+	;
+
+has "server_id" =>
+	is => "ro",
+	isa => "XML::EPP::trIDStringType",
+	;
+
 use Module::Pluggable
 	require => 1,
 	search_path => [__PACKAGE__],

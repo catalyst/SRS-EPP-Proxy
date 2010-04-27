@@ -38,6 +38,8 @@ use SRS::EPP::Proxy::UA;
 # other includes
 use HTTP::Request::Common qw(POST);
 use bytes qw();
+use utf8;
+use Encode qw(decode encode);
 
 has io =>
 	is => "ro",
@@ -70,6 +72,7 @@ has 'yielding' =>
 	isa => "HashRef",
 	default => sub { {} },
 	;
+
 method yield(Str $method, @args) {
 	if ( !@args ) {
 		if ( $self->yielding->{$method} ) {
@@ -85,6 +88,33 @@ method yield(Str $method, @args) {
 		});
 }
 
+has 'connection_id' =>
+	is => "ro",
+	isa => "Str",
+	default => sub {
+		sprintf("sep.%x.%.4x",time(),$$&65535);
+	},
+	;
+
+has 'server_id_seq' =>
+	is => "rw",
+	isa => "Num",
+	traits => [qw/Number/],
+	handles => {
+		'inc_server_id' => 'add',
+	},
+	default => 0,
+	;
+
+# called when a response is generated from the server itself, not the
+# back-end.  Return an ephemeral ID based on the timestamp and a
+# session counter.
+method new_server_id() {
+	$self->inc_server_id(1);
+	$self->connection_id.".".sprintf("%.3d",$self->server_id_seq);
+}
+
+#----
 # input packet chunking
 has 'input_packeter' =>
 	default => sub {
@@ -100,7 +130,12 @@ method read_input( Int $how_much where { $_ > 0 } ) {
 
 # convert input packets to messages
 method input_packet( Str $data ) {
-	my $msg = eval { XML::EPP->parse($data) };
+	my $msg = eval {
+		if ( ! utf8::is_utf8($data) ) {
+			$data = decode("utf8", $data);
+		}
+		XML::EPP->parse($data);
+	};
 	my $error = ( $msg ? undef : $@ );
 	my $queue_item = SRS::EPP::Command->new(
 		( $msg ? (message => $msg) : () ),
@@ -110,20 +145,16 @@ method input_packet( Str $data ) {
 	$self->queue_command($queue_item);
 	if ( $error ) {
 		warn "error parsing input; $error\n";
-		my %details = (extra => "General/non-specific failure");
-		if ( blessed $error and
-			     $error->isa("PRANG::Graph::Context::Error") ) {
-			$details{extra} = "XML Validation error at ".
-				$error->xpath.": ".$error->message;
-			$details{bad} = $error->node;
-		}
+		my $error_rs = SRS::EPP::Response::Error->new(
+			client_id => $queue_item->client_id,
+			server_id => $self->new_server_id,
+			code => 2001,
+			exception => $error,
+			);
 		# insert a dummy command which returns a 2001
-		# response, stall, hang up.
+		# response
 		$self->add_command_response(
-			SRS::EPP::Response::Error->new(
-				id => 2001,
-				%details,
-				),
+			$error_rs,
 			$queue_item,
 			);
 		$self->yield("send_pending_replies");
@@ -194,8 +225,12 @@ method process_queue( Int $count = 1 ) {
 		elsif ( $command->authenticated and !$self->user ) {
 			$self->add_command_response(
 				SRS::EPP::Response::Error->new(
-					id => 2201,
+					client_id => $command->client_id,
+					server_id => $self->new_server_id,
+					code => 2201,
 					extra => "Not logged in",
+					($command->has_client_id ?
+						 (client_id => $command->client_id) : () ),
 					),
 				$command,
 				);
@@ -224,7 +259,7 @@ method process_queue( Int $count = 1 ) {
 # be important.
 method connected() {
 	$self->state("Prepare Greeting");
-	my $response = SRS::EPP::Response::Greeting->new();
+	my $response = SRS::EPP::Response::Greeting->new( );
 	my $socket_fd = $self->io->get_fd;
 	$self->event->io(
 		desc => "input_event",
@@ -393,6 +428,9 @@ has 'output_queue' =>
 
 method send_reply( SRS::EPP::Response $rs ) {
 	my $reply_data = $rs->to_xml;
+	if ( utf8::is_utf8($reply_data) ) {
+		$reply_data = encode("utf8", $reply_data);
+	}
 	my $length = pack("N", bytes::length($reply_data)+4);
 	push @{ $self->output_queue }, $length, $reply_data;
 	$self->yield("output_event");

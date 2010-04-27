@@ -79,6 +79,7 @@ BEGIN { use_ok("SRS::EPP::Session"); }
 		my $how_much = shift;
 		bytes::substr $self->{input}, 0, $how_much, "";
 	}
+	our $been_evil;
 	sub write {
 		my $self = shift;
 		my $data = shift;
@@ -88,8 +89,10 @@ BEGIN { use_ok("SRS::EPP::Session"); }
 			# a utf8 sequence if we can... hyuk yuk yuk
 			$data = Encode::encode("utf8", $data)
 				if utf8::is_utf8($data);
-			if ( $data =~ /^(.*?[\200-\377])/ ) {
+			if ( $data =~ /^(.*?[\200-\377])/ and !$been_evil ) {
+				print STDERR "BEING DELIGHTFULLY EVIL\n";
 				$how_much = bytes::length($1);
+				$been_evil++;
 			}
 			else {
 				$how_much = int($how_much * rand(1));
@@ -296,7 +299,6 @@ my $srs_rs = XML::SRS::Response->new(
 	results => \@rs,
 	RegistrarId => 90,
        );
-
 
 
 # Copyright (C) 2009  NZ Registry Services
