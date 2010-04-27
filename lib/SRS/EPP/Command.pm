@@ -70,6 +70,7 @@ sub BUILD {
 
 method simple() { 0 }
 method authenticated() { 1 }
+method done() { 1 }
 
 BEGIN {
 	class_type "SRS::EPP::Session";
@@ -83,6 +84,19 @@ method process( SRS::EPP::Session $session ) {
 		id => 2101,
 		extra => "Sorry, command not yet implemented.",
 		);
+}
+
+method to_srs() {
+	die("EPP command must implement to_srs");
+}
+method notify() {
+	die("EPP command must implement notify");
+}
+method next_backend_message() {
+	die("EPP command must implement next_backend_message (if it's going to un-set 'done')");
+}
+method response() {
+	die("EPP command must implement response to reply");
 }
 
 has "client_id" =>

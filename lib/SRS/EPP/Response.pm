@@ -11,7 +11,11 @@ use warnings;
 
 package SRS::EPP::Response;
 use Moose;
+use Moose::Util::TypeConstraints;
+use MooseX::Method::Signatures;
 extends 'SRS::EPP::Message';
+
+use SRS::EPP::SRSResponse;
 
 use XML::EPP;
 has "+message" =>
@@ -26,6 +30,32 @@ has "client_id" =>
 has "server_id" =>
 	is => "ro",
 	isa => "XML::EPP::trIDStringType",
+	lazy => 1,
+	default => sub {
+		my $self = shift;
+		$self->session->new_server_id;
+	},
+	;
+
+method notify( SRS::EPP::SRSResponse @rs ) {
+	my $result;
+	if ( my $server_id = eval {
+		$result = $rs[0]->message;
+		$result->fe_id.",".$result->unique_id
+	} ) {
+		$self->server_id($server_id);
+	}
+}
+
+has 'code' =>
+	is => 'ro',
+	isa => "XML::EPP::resultCodeType",
+	;
+
+has "session" =>
+	is => "rw",
+	isa => "SRS::EPP::Session",
+	weak_ref => 1,
 	;
 
 use Module::Pluggable

@@ -17,15 +17,16 @@ has "+message" =>
 
 after 'message_trigger' => sub {
 	my $self = shift;
+	$DB::single = 1;
 	return if $self->parts and @{$self->parts};
 	my $message = $self->message;
 	my ($class, $method);
 	if ( $message->isa("XML::SRS::Request") ) {
-		$class = "SRS::Request";
+		$class = "SRS::EPP::SRSRequest";
 		$method = "requests";
 	}
 	else {
-		$class = "SRS::Response";
+		$class = "SRS::EPP::SRSResponse";
 		$method = "results";
 	}
 	$self->parts( [

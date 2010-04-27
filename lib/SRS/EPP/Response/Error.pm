@@ -13,11 +13,6 @@ package SRS::EPP::Response::Error;
 use Moose;
 extends 'SRS::EPP::Response';
 
-has 'code' =>
-	is => 'ro',
-	isa => "XML::EPP::resultCodeType",
-	;
-
 has 'exception' =>
 	is => 'ro',
 	;

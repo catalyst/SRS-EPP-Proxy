@@ -38,6 +38,7 @@ BEGIN {
 my $command = SRS::EPP::Command->new(
 	message => Mock::Anything->new(
 		name => "login",
+		message => Mock::Anything->new(),
 	       ),
        );
 
@@ -57,6 +58,7 @@ my @command_rq = map {
 	SRS::EPP::Command->new(
 		message => Mock::Anything->new(
 			name => $_,
+			message => Mock::Anything->new(),
 		       ),
 	       );
 } @commands;
@@ -66,6 +68,7 @@ my @command_rs = map {
 		message => Mock::Anything->new(
 			name => $_,
 			request => 1,
+			message => Mock::Anything->new(),
 		       ),
 	       );
 } @commands;

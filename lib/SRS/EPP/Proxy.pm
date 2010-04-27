@@ -143,13 +143,18 @@ method accept_loop() {
 			push @{ $self->child_pids }, $pid;
 		}
 		else {
+			my $peerhost = $socket->peerhost;
 			my $ssl = $self->ssl_engine->accept($socket);
+			my $client_cert = $ssl->get_peer_certificate;
+			my $peer_cn = $client_cert->get_subject_name;
 			my $mode = ( MODE_ENABLE_PARTIAL_WRITE |
 					     MODE_ACCEPT_MOVING_WRITE_BUFFER );
 			$socket->blocking(0);
 			my $session = SRS::EPP::Session->new(
 				io => $ssl,
 				event => "Event",
+				peerhost => $peerhost,
+				peer_cn => $peer_cn,
 			       );
 			$session->connected;
 			Event->loop;

@@ -13,6 +13,9 @@ package SRS::EPP::Session;
 # measures are taken to stop that from being awful; mostly delegation
 # to other objects
 
+use 5.010;
+use strict;
+
 use Moose;
 use MooseX::Method::Signatures;
 
@@ -94,6 +97,16 @@ has 'connection_id' =>
 	default => sub {
 		sprintf("sep.%x.%.4x",time(),$$&65535);
 	},
+	;
+
+has 'peerhost' =>
+	is => "rw",
+	isa => "Str",
+	;
+
+has 'peer_cn' =>
+	is => "rw",
+	isa => "Str",
 	;
 
 has 'server_id_seq' =>
@@ -237,9 +250,14 @@ method process_queue( Int $count = 1 ) {
 		}
 		else {
 			# regular message, possibly including "login"
-			my @messages = $command->to_srs($self);
+			my @messages = map {
+				SRS::EPP::SRSRequest->new(
+					message => $_,
+					);
+			} $command->to_srs($self);
+			
 			$self->queue_backend_request($command, @messages);
-			if ( $command->type eq "login" ) {
+			if ( $command->isa("SRS::EPP::Command::Login") ) {
 				$self->state("Processing <login>");
 				$self->stalled(1);
 			}
@@ -324,24 +342,35 @@ has 'active_request' =>
 	isa => "Maybe[SRS::EPP::SRSMessage]",
 	;
 
+method next_message() {
+	my @next = $self->backend_next($self->backend_tx_max)
+		or return;
+	my $tx = XML::SRS::Request->new(
+		version => "auto",
+		requests => \@next,
+		);
+	my $rq = SRS::EPP::SRSMessage->new( message => $tx );
+	$self->active_request( $rq );
+	$rq;
+}
+
 method send_backend_queue() {
 	return if $self->user_agent_busy;
 
-	my @next = $self->backend_next($self->backend_tx_max);
-
-	my $tx = SRS::EPP::SRSMessage->new( parts => \@next );
-	my $sig = $self->sign_tx($tx);
+	my $tx = $self->next_message;
+	my $xml = $tx->to_xml;
+	my $sig = $self->detached_sign($xml);
 	my $reg_id = $self->user;
 
 	my $req = POST(
 		$self->backend_url,
 		[
-			r => $tx,
+			r => $xml,
 			s => $sig,
 			n => $reg_id,
 			],
 		);
-	$self->active_request( $tx );
+
 	$self->user_agent->request( $req );
 }
 
@@ -374,9 +403,13 @@ method backend_response() {
 
 method be_response( SRS::EPP::SRSMessage $rs_tx ) {
 	my $request = $self->active_request;
+	#$self->active_request(undef);
 	my $rq_parts = $request->parts;
 	my $rs_parts = $rs_tx->parts;
-	@$rq_parts == @$rs_parts or die "rs parts != rq parts";
+	(@$rq_parts == @$rs_parts) or do {
+		$DB::single = 1;
+		die "rs parts != rq parts";
+	};
 
 	for (my $i = 0; $i <= $#$rq_parts; $i++ ) {
 		$self->add_backend_response($rq_parts->[$i], $rs_parts->[$i]);
@@ -386,11 +419,11 @@ method be_response( SRS::EPP::SRSMessage $rs_tx ) {
 
 method process_responses() {
 	while ( $self->backend_response_ready ) {
-		my ($cmd, $response, $rq) = $self->dequeue_backend_response;
-		$cmd->notify($response);
+		my ($cmd, @rs) = $self->dequeue_backend_response;
+		$cmd->notify(@rs);
 		if ( $cmd->done ) {
 			$self->state("Prepare Response");
-			my $epp_rs = $response->to_epp;
+			my $epp_rs = $cmd->response;
 			$self->add_command_response($cmd, $epp_rs);
 			$self->yield("send_pending_replies")
 				if $self->response_ready;

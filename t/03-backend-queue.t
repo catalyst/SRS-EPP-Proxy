@@ -39,6 +39,8 @@ BEGIN {
 my $command = SRS::EPP::Command->new(
 	message => Mock::Anything->new(
 		name => "login",
+		message => Mock::Anything->new(
+		       )
 	       ),
        );
 

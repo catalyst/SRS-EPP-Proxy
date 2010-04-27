@@ -10,6 +10,7 @@ use Data::Dumper;
 
 use XML::EPP;
 use XML::EPP::Host;
+use XML::SRS;
 
 BEGIN { use_ok("SRS::EPP::Session"); }
 
@@ -224,7 +225,7 @@ ok($session->stalled,
 my @rq = $session->backend_next(5);
 is(@rq, 3, "login makes 3 messages");
 is_deeply(
-	[ map { $_->root_element } @rq ],
+	[ map { $_->message->root_element } @rq ],
 	[ qw(RegistrarDetailsQry AccessControlListQry
 	     AccessControlListQry) ],
 	"login message transform",
@@ -232,7 +233,7 @@ is_deeply(
 
 is_deeply(
 	[$session->event->queued_events],
-	[qw(send_pending_replies send_backend_queue)],
+	[qw(send_backend_queue)],
 	"Session wants to send",
        )
 	or diag Dumper($session);
@@ -279,18 +280,20 @@ my @action_rs = (
 	       ),
        );
 
+use MooseX::TimestampTZ;
+
 my @rs = map {
 	XML::SRS::Result->new(
-		Action => $_,
-		FeId => "2",
-		FeSeq => "1234",
-		OrigRegistrarId => "123",
-		FeTimeStamp => time,
-		ActionResponse => shift(@action_rs),
+		action => $_,
+		fe_id => "2",
+		unique_id => "1234",
+		by_id => "123",
+		server_time => timestamptz,
+		response => shift(@action_rs),
 	       )
 	}
 	map {
-		$_->root_element
+		$_->message->root_element
 	}
 	@rq;
 
@@ -299,6 +302,12 @@ my $srs_rs = XML::SRS::Response->new(
 	results => \@rs,
 	RegistrarId => 90,
        );
+
+my $rs_tx = SRS::EPP::SRSMessage->new( message => $srs_rs );
+
+my $active_rq = $session->next_message;
+diag("hi, got $active_rq");
+$session->be_response($rs_tx);
 
 
 # Copyright (C) 2009  NZ Registry Services
