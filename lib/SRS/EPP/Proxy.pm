@@ -93,12 +93,40 @@ method init() {
 	$self->init_listener;
 }
 
-has 'pgp_dir' =>
+has 'openpgp' =>
+	is => "ro",
+	isa => "SRS::EPP::OpenPGP",
+	default => sub {
+		my $self = shift;
+		require SRS::EPP::OpenPGP;
+		my $pgp_dir = $self->pgp_dir;
+		my $secring_file = "$pgp_dir/secring.gpg";
+		my $pubring_file = "$pgp_dir/pubring.gpg";
+		my $pgp = SRS::EPP::OpenPGP->new(
+			public_keyring => $pubring_file,
+			secret_keyring => $pubring_file,
+		       );
+		$pgp->uid($self->pgp_keyid);
+		$pgp;
+	},
+	handles => ["pgp"],
+	;
+
+has 'pgp_keyid' =>
 	is => "ro",
 	isa => "Str",
 	;
 
+has 'pgp_dir' =>
+	is => "ro",
+	isa => "Str",
+	default => sub {
+		$ENV{GNUPGHOME} || "$ENV{HOME}/.gnupg";
+	},
+	;
+
 method init_pgp() {
+	$self->pgp;
 }
 
 has 'child_pids' =>
