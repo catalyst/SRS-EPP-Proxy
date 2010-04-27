@@ -37,6 +37,17 @@ method process( SRS::EPP::Session $session ) {
 		);
 }
 
+has "client_id" =>
+	is => "ro",
+	isa => "XML::EPP::trIDStringType",
+	lazy => 1,
+	predicate => "has_client_id",
+	default => sub {
+		my $self = shift;
+		my $message = $self->message;
+		eval { $message->message->client_id }
+	};
+
 use Module::Pluggable
 	require => 1,
 	search_path => [__PACKAGE__],

@@ -6,6 +6,7 @@ use 5.010;
 use strict;
 use Test::More qw(no_plan);
 use Fatal qw(:void open);
+use Data::Dumper;
 
 use XML::EPP;
 use XML::EPP::Host;
@@ -78,6 +79,7 @@ BEGIN { use_ok("SRS::EPP::Session"); }
 		my $how_much = shift;
 		bytes::substr $self->{input}, 0, $how_much, "";
 	}
+	our $been_evil;
 	sub write {
 		my $self = shift;
 		my $data = shift;
@@ -87,8 +89,10 @@ BEGIN { use_ok("SRS::EPP::Session"); }
 			# a utf8 sequence if we can... hyuk yuk yuk
 			$data = Encode::encode("utf8", $data)
 				if utf8::is_utf8($data);
-			if ( $data =~ /^(.*?[\200-\377])/ ) {
+			if ( $data =~ /^(.*?[\200-\377])/ and !$been_evil ) {
+				print STDERR "BEING DELIGHTFULLY EVIL\n";
 				$how_much = bytes::length($1);
+				$been_evil++;
 			}
 			else {
 				$how_much = int($how_much * rand(1));
@@ -97,6 +101,17 @@ BEGIN { use_ok("SRS::EPP::Session"); }
 		$self->{output}//="";
 		$self->{output} .= bytes::substr($data, 0, $how_much);
 		return $how_much;
+	}
+	sub get_packet {
+		my $self = shift;
+		my $output = $self->{output};
+		my $packet_length = unpack
+			("N", bytes::substr($output, 0, 4));
+		my $packet = bytes::substr($output, 4, $packet_length - 4);
+		if ( bytes::length($packet)+4 == $packet_length ) {
+			bytes::substr($self->{output}, 0, $packet_length, "");
+		}
+		return XML::EPP->parse($packet);
 	}
 }
 
@@ -147,7 +162,6 @@ do {
 	$session->input_event;
 } until ( $session->event->has_queued_events or !$session->io->input );
 
-use Data::Dumper;
 is_deeply(
 	[$session->event->queued_events], ["process_queue"],
 	"A valid input message results in a queued output event",
@@ -155,17 +169,18 @@ is_deeply(
 	or diag Dumper($session);
 is($session->commands_queued, 1, "command is now queued");
 
+# test that the string is valid
+
 $session->process_queue;
 
 # 2. proceed with the event which was 'queued'
-my @expected = qw(process_queue send_pending_replies);
+my @expected = qw(process_queue send_pending_replies output_event);
 my $failed = 0;
 event:
 while ( $session->io->input ) {
 	my @events = $session->event->queued_events
 		or last;
 	for my $event ( @events ) {
-		diag("firing $event");
 		unless ($event ~~ @expected) {
 			fail("weren't expecting $event");
 			$failed = 1;
@@ -181,14 +196,14 @@ do {
 	$session->output_event;
 } while ( @{ $session->output_queue } );
 
-my $output = delete $session->io->{output};
-my $packet = 1;
-while ( $output ) {
-	my $packet_length = unpack("N", bytes::substr($output, 0, 4, ""));
-	my $packet = bytes::substr($output, 0, $packet_length - 4, "");
-	is(bytes::length($packet), $packet_length, "read packet $packet OK");
-	$packet++;
-}
+my $error = $session->io->get_packet;
+
+use utf8;
+like($error->message->result->[0]->msg->content,
+     qr/not logged in/i,
+     "got an appropriate error");
+is($error->message->tx_id->client_id,
+   "ÄBC-12345", "returned client ID OK");
 
 # Copyright (C) 2009  NZ Registry Services
 #
