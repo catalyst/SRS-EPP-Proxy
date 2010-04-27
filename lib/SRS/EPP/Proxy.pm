@@ -29,7 +29,9 @@ has 'listener' =>
 		SRS::EPP::Proxy::Listener->new( listen => $self->listen );
 	},
 	lazy => 1,
-	handles => [qw(init_listener)],
+	handles => {
+		'init_listener' => 'init',
+	},
 	;
 
 has 'ssl_key_file' =>
@@ -150,11 +152,14 @@ method accept_loop() {
 				event => "Event",
 			       );
 			$session->connected;
+			Event->loop;
+			exit(0);
 		}
 	}
 }
 
 method reap_children() {
+	
 }
 
 method make_events(SRS::EPP::Session $session) {
