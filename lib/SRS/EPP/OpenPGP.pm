@@ -1,0 +1,195 @@
+
+package SRS::EPP::OpenPGP;
+
+use 5.010;
+use Moose;
+use Moose::Util::TypeConstraints;
+use MooseX::Method::Signatures;
+use Crypt::OpenPGP;
+use Crypt::OpenPGP::KeyRing;
+use Carp;
+
+BEGIN {
+	class_type "Crypt::OpenPGP::KeyRing";
+}
+
+# Crypt::OpenPGP setup.
+has 'pgp' =>
+	is => "ro",
+	isa => "Crypt::OpenPGP",
+	lazy => 1,
+	default => sub {
+		my $self = shift;
+		Crypt::OpenPGP->new(
+			($self->has_secret_keyring ?
+				 (SecRing => $self->secret_keyring)
+					 : ()),
+			($self->has_public_keyring ?
+				 (PubRing => $self->public_keyring)
+					 : ()),
+		       );
+	},
+	;
+
+has 'secret_keyring' =>
+	is => "ro",
+	isa => "Crypt::OpenPGP::KeyRing",
+	lazy => 1,
+	coerce => 1,
+	default => sub {
+		my $self = shift;
+		$self->pgp->{cfg}->get("SecRing");
+	},
+	;
+has 'public_keyring' =>
+	is => "ro",
+	isa => "Crypt::OpenPGP::KeyRing",
+	lazy => 1,
+	coerce => 1,
+	default => sub {
+		my $self = shift;
+		$self->pgp->{cfg}->get("PubRing");
+	},
+	;
+coerce "Crypt::OpenPGP::KeyRing"
+	=> from "Str"
+	=> via {
+		Crypt::OpenPGP::KeyRing->new(
+			Filename => $_,
+		       );
+	};
+
+# specifying the default signing/encryption key
+
+BEGIN {
+subtype "SRS::EPP::OpenPGP::key_id"
+	=> as "Str",
+	=> where {
+		m{^(?:0x)?(?:(?:[0-9a-f]{4}\s?){2}){1,2}$}i;
+	};
+};
+
+has 'uid' =>
+	is => "rw",
+	isa => "SRS::EPP::OpenPGP::key_id",
+	trigger => sub {
+		my $self = shift;
+		my $uid = shift;
+		$self->default_signing_key(
+			$self->find_signing_key($uid)
+		       );
+		$self->default_encrypting_key(
+			$self->find_signing_key($uid)
+		       );
+	}
+	;
+
+has 'default_signing_key' =>
+	is => "rw",
+	;
+
+has 'default_encrypting_key' =>
+	is => "rw",
+	;
+
+method find_signing_key(SRS::EPP::OpenPGP::key_id $key_id) {
+	my $kb = $self->get_sec_key_block($key_id) or return;
+	my $cert = $kb->signing_key
+		or croak "Invalid signing key $key_id";
+	$cert->uid($kb->primary_uid);
+	return $cert;
+}
+
+method find_encrypting_key(SRS::EPP::OpenPGP::key_id $key_id) {
+	my $kb = $self->get_sec_key_block($key_id) or return;
+	my $cert = $kb->encrypting_key
+		or croak "Invalid encrypting key $key_id";
+	$cert->uid($kb->primary_uid);
+	return $cert;
+}
+
+
+method get_sec_key_block(SRS::EPP::OpenPGP::key_id $key_id?) {
+	my $sec_ring = $self->secret_keyring;
+	my $kb = $key_id ? $sec_ring->find_keyblock_by_uid($key_id)
+		: $sec_ring->find_keyblock_by_index(-1)
+			or croak "Can't find keyblock ("
+				.($key_id ? $key_id : "default")
+					."): " . $sec_ring->errstr;
+	return $kb;
+}
+
+method get_pub_key_block(SRS::EPP::OpenPGP::key_id $key_id?) {
+	my $pub_ring = $self->public_keyring;
+	my $kb = $key_id ? $pub_ring->find_keyblock_by_uid($key_id)
+		: $pub_ring->find_keyblock_by_index(-1)
+			or croak "Can't find keyblock ("
+				.($key_id ? $key_id : "default")
+					."): " . $pub_ring->errstr;
+	return $kb;
+}
+
+method get_cert_from_key_text( Str $key_text ) {
+	my $kr = new Crypt::OpenPGP::KeyRing(Data => $key_text)
+		or return;
+        my $kb = $kr->find_keyblock_by_index(-1)
+		or return;
+        my $cert = $kb->signing_key
+		or return;
+        $cert->uid($kb->primary_uid);
+	$cert;
+}
+
+use Encode;
+use utf8;
+sub byte_string {
+	if ( utf8::is_utf8($_[0]) ) {
+		Encode("utf8", $_[0]);
+	}
+	else {
+		$_[0];
+	}
+}
+
+method verify_detached(Str $data, Str $signature, :$cert, :$key_text) {
+	if ( $key_text ) {
+		$cert ||= $self->get_cert_from_key_text($key_text);
+	}
+	my $pgp = $self->pgp;
+	my $res = $pgp->verify(
+		Data => byte_string($data),
+		Signature => $signature,
+		( $cert ? (Key => $cert) : () ),
+	       );
+	if ( $res ) {
+		my $res_neg = $pgp->verify(
+			Data => "xx.$$.".rand(3),
+			Signature => $signature,
+			( $cert ? (Key => $cert) : () ),
+		       );
+		if ( $res and $res_neg ) {
+			# a full doc was passed in as a signature...
+			$res = 0;
+		}
+	}
+	warn $pgp->errstr if !$res && $pgp->errstr;
+	return $res;
+}
+
+method detached_sign(Str $data, $key?, $passphrase?) {
+	$key ||= $self->default_signing_key;
+	my $pgp = $self->pgp;
+	my $signature = $pgp->sign(
+		Data => byte_string($data),
+		Detach => 1,
+		Armour => 1,
+		Digest => "SHA1",
+		Passphrase => $passphrase//"",
+		Key => $key,
+	       );
+
+	carp "Signing attempt failed: ", $pgp->errstr() unless $signature;
+	return $signature;
+}
+
+1;
