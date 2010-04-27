@@ -1,8 +1,8 @@
 
 package SRS::EPP::Session::BackendQ;
 
-use SRS::Request;
-use SRS::Response;
+use SRS::EPP::SRSRequest;
+use SRS::EPP::SRSResponse;
 use SRS::EPP::Command;
 
 use Moose;
@@ -10,7 +10,7 @@ use MooseX::Method::Signatures;
 
 has 'queue' =>
 	is => "ro",
-	isa => "ArrayRef[ArrayRef[SRS::Request]]",
+	isa => "ArrayRef[ArrayRef[SRS::EPP::SRSRequest]]",
 	default => sub { [] },
 	;
 
@@ -22,7 +22,7 @@ has 'owner' =>
 
 has 'responses' =>
 	is => "ro",
-	isa => "ArrayRef[ArrayRef[SRS::Response]]",
+	isa => "ArrayRef[ArrayRef[SRS::EPP::SRSResponse]]",
 	default => sub { [] },
 	;
 
@@ -38,7 +38,7 @@ has 'session' =>
 	;
 
 # add a response corresponding to a request
-method queue_backend_request( SRS::EPP::Command $cmd, SRS::Request @rq ) {
+method queue_backend_request( SRS::EPP::Command $cmd, SRS::EPP::SRSRequest @rq ) {
 	push @{ $self->queue }, \@rq;
 	push @{ $self->responses }, [];
 	push @{ $self->owner }, $cmd;
@@ -73,7 +73,7 @@ method backend_pending() {
 # add a response corresponding to a request - must be in order as
 # there is no other way to correlate read-only responses with their
 # requests (no client_tx_id in SRS requests)
-method add_backend_response( SRS::Request $request, SRS::Response $response )
+method add_backend_response( SRS::EPP::SRSRequest $request, SRS::EPP::SRSResponse $response )
 {
 	my $rq_a = $self->queue->[0];
 	my $rs_a = $self->responses->[0];

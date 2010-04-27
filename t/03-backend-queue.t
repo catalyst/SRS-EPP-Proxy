@@ -46,7 +46,7 @@ my $command = SRS::EPP::Command->new(
 my @commands = qw(RegistrarDetailsQry AccessControlListQry1
 		  AccessControlListQry2);
 my @command_rq = map {
-	SRS::Request->new(
+	SRS::EPP::SRSRequest->new(
 		message => Mock::Anything->new(
 			request => 1,
 			name => $_,
@@ -56,7 +56,7 @@ my @command_rq = map {
 
 # each action/query has a response/error
 my @command_rs = map {
-	SRS::Response->new(
+	SRS::EPP::SRSResponse->new(
 		message => Mock::Anything->new(
 			response => 1,
 			name => $_,
