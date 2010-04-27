@@ -6,6 +6,7 @@ use 5.010;
 use strict;
 use Test::More qw(no_plan);
 use Fatal qw(:void open);
+use Data::Dumper;
 
 use XML::EPP;
 use XML::EPP::Host;
@@ -98,6 +99,17 @@ BEGIN { use_ok("SRS::EPP::Session"); }
 		$self->{output} .= bytes::substr($data, 0, $how_much);
 		return $how_much;
 	}
+	sub get_packet {
+		my $self = shift;
+		my $output = $self->{output};
+		my $packet_length = unpack
+			("N", bytes::substr($output, 0, 4));
+		my $packet = bytes::substr($output, 4, $packet_length - 4);
+		if ( bytes::length($packet)+4 == $packet_length ) {
+			bytes::substr($self->{output}, 0, $packet_length, "");
+		}
+		return XML::EPP->parse($packet);
+	}
 }
 
 my $input = do {
@@ -124,7 +136,7 @@ is_deeply(
 # simulates events from Event etc saying that the output socket is
 # writable, and the condition where variable-sized chunks can be
 # written to it.
-srand 42;
+srand 107;
 do {
 	$session->output_event;
 } while ( @{ $session->output_queue } );
@@ -147,7 +159,6 @@ do {
 	$session->input_event;
 } until ( $session->event->has_queued_events or !$session->io->input );
 
-use Data::Dumper;
 is_deeply(
 	[$session->event->queued_events], ["process_queue"],
 	"A valid input message results in a queued output event",
@@ -155,17 +166,18 @@ is_deeply(
 	or diag Dumper($session);
 is($session->commands_queued, 1, "command is now queued");
 
+# test that the string is valid
+
 $session->process_queue;
 
 # 2. proceed with the event which was 'queued'
-my @expected = qw(process_queue send_pending_replies);
+my @expected = qw(process_queue send_pending_replies output_event);
 my $failed = 0;
 event:
 while ( $session->io->input ) {
 	my @events = $session->event->queued_events
 		or last;
 	for my $event ( @events ) {
-		diag("firing $event");
 		unless ($event ~~ @expected) {
 			fail("weren't expecting $event");
 			$failed = 1;
@@ -181,14 +193,111 @@ do {
 	$session->output_event;
 } while ( @{ $session->output_queue } );
 
-my $output = delete $session->io->{output};
-my $packet = 1;
-while ( $output ) {
-	my $packet_length = unpack("N", bytes::substr($output, 0, 4, ""));
-	my $packet = bytes::substr($output, 0, $packet_length - 4, "");
-	is(bytes::length($packet), $packet_length, "read packet $packet OK");
-	$packet++;
-}
+my $error = $session->io->get_packet;
+
+use utf8;
+like($error->message->result->[0]->msg->content,
+     qr/not logged in/i,
+     "got an appropriate error");
+is($error->message->tx_id->client_id,
+   "ÄBC-12345", "returned client ID OK");
+
+# 4. check that the login message results in queued back-end messages
+do {
+	$session->input_event;
+} until ( $session->event->has_queued_events or !$session->io->input );
+is_deeply(
+	[$session->event->queued_events], ["process_queue"],
+	"A valid login message results in a process_queue event",
+       )
+	or diag Dumper($session);
+
+$session->process_queue;
+
+ok($session->backend_pending,
+   "login message produced backend messages");
+ok($session->stalled,
+   "waiting for login result before processing further commands");
+my @rq = $session->backend_next(5);
+is(@rq, 3, "login makes 3 messages");
+is_deeply(
+	[ map { $_->root_element } @rq ],
+	[ qw(RegistrarDetailsQry AccessControlListQry
+	     AccessControlListQry) ],
+	"login message transform",
+       );
+
+is_deeply(
+	[$session->event->queued_events],
+	[qw(send_pending_replies send_backend_queue)],
+	"Session wants to send",
+       )
+	or diag Dumper($session);
+
+use Crypt::Password;
+
+# fake some responses.
+
+# these objects are missing fields and would not serialize; but for
+# this test it doesn't matter.  We must only provide the attributes
+# marked "required"
+my @action_rs = (
+	XML::SRS::Registrar->new(
+		id => "123",
+		name => "Model Registrar",
+		account_reference => "xx",
+		epp_auth => password("foo-BAR2"),
+	       ),
+	XML::SRS::ACL->new(
+		Resource => "epp_connect",
+		List => "allow",
+		Size => 1,
+		Type => "registrar_ip",
+		entries => [
+			XML::SRS::ACL::Entry->new(
+				Address => "101.1.5.0/24",
+				RegistrarId => "90",
+				Comment => "Test Registrar Netblock",
+			       ),
+		       ],
+	       ),
+	XML::SRS::ACL->new(
+		Resource => "epp_client_certs",
+		List => "allow",
+		Size => 1,
+		Type => "registrar_domain",
+		entries => [
+			XML::SRS::ACL::Entry->new(
+				DomainName => "*.client.cert.example.com",
+				RegistrarId => "90",
+				Comment => "Test Registrar Key",
+			       ),
+		       ],
+	       ),
+       );
+
+my @rs = map {
+	XML::SRS::Result->new(
+		Action => $_,
+		FeId => "2",
+		FeSeq => "1234",
+		OrigRegistrarId => "123",
+		FeTimeStamp => time,
+		ActionResponse => shift(@action_rs),
+	       )
+	}
+	map {
+		$_->root_element
+	}
+	@rq;
+
+my $srs_rs = XML::SRS::Response->new(
+	version => "auto",
+	results => \@rs,
+	RegistrarId => 90,
+       );
+
+
 
 # Copyright (C) 2009  NZ Registry Services
 #

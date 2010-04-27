@@ -60,22 +60,31 @@ has state =>
 # this object is billed with providing an Event.pm-like interface.
 has event =>
 	is => "ro",
-	isa => "Event",
 	required => 1,
 	;
 
 # 'yield' means to queue an event for running but not run it
 # immediately.
+has 'yielding' =>
+	is => "ro",
+	isa => "HashRef",
+	default => sub { {} },
+	;
 method yield(Str $method, @args) {
+	if ( !@args ) {
+		if ( $self->yielding->{$method} ) {
+			return;
+		}
+	}
 	$self->event->timer(
 		desc => $method,
 		after => 0,
 		cb => sub {
+			delete $self->yielding->{$method};
 			$self->$method(@args);
 		});
 }
 
-#----
 # input packet chunking
 has 'input_packeter' =>
 	default => sub {
@@ -89,7 +98,6 @@ method read_input( Int $how_much where { $_ > 0 } ) {
 	$self->io->read($how_much);
 }
 
-#----
 # convert input packets to messages
 method input_packet( Str $data ) {
 	my $msg = eval { XML::EPP->parse($data) };
@@ -121,7 +129,6 @@ method input_packet( Str $data ) {
 		$self->yield("send_pending_replies");
 	}
 	else {
-		# 
 		$self->yield("process_queue");
 	}
 }
@@ -148,6 +155,18 @@ has 'backend_queue' =>
 			add_backend_response backend_response_ready
 			dequeue_backend_response ) ],
 	;
+
+# this shouldn't be required... but is a good checklist
+method check_queues() {
+	$self->yield("send_pending_replies")
+		if $self->response_ready;
+	$self->yield("process_queue")
+		if $self->commands_queued;
+	$self->yield("process_responses")
+		if $self->backend_response_ready;
+	$self->yield("send_backend_queue")
+		if $self->backend_pending;
+}
 
 # "stalling" means that no more processing can be advanced until the
 # responses to the currently processing commands are available.
@@ -192,11 +211,10 @@ method process_queue( Int $count = 1 ) {
 			else {
 				$self->state("Processing Command");
 			}
+			$self->yield("send_backend_queue");
 		}
-	}
-	$self->yield("send_pending_replies");
-	if ( $self->backend_pending ) {
-		$self->yield("send_backend_queue");
+		$self->yield("send_pending_replies")
+			if $self->response_ready;
 	}
 }
 
@@ -224,7 +242,8 @@ method connected() {
 			$self->output_event;
 		},
 		);
-	$self->queue_reply($response);
+
+	$self->send_reply($response);
 	$self->state("Waiting for Client Authentication");
 }
 
@@ -293,17 +312,44 @@ method send_backend_queue() {
 
 #----
 # Dealing with backend responses
-method get_be_response() {
-	my $request = $self->active_request;
+method backend_response() {
 	my $response = $self->user_agent->get_response;
+
+	# urldecode response; split response from fields
+	my $content = $response->content;
+	my %fields = map {
+		my ($key, $value) = split "=", $_, 2;
+		($key, decode("utf8", url_decode($value)));
+	} split "&", $content;
+
+	# check signature
+	$self->pgp->verify_detached($fields{r}, $fields{s})
+		or die "failed to verify BE response integrity";
+
+	# decode message
+	my $message = XML::SRS::Response->parse($fields{r});
+	my $rs_tx = SRS::EPP::SRSMessage->new( message => $message );
+
+	$self->be_response($rs_tx);
+
+	# user agent is now free, perhaps more messages are waiting
+	$self->yield("send_backend_queue")
+		if $self->backend_pending;
 }
 
 method be_response( SRS::EPP::SRSMessage $rs_tx ) {
-	my @parts = $rs_tx->messages;
-	for my $rs ( @parts ) {
-		my $action_id = $rs->action_id;
-		$self->add_backend_response($action_id, $rs);
+	my $request = $self->active_request;
+	my $rq_parts = $request->parts;
+	my $rs_parts = $rs_tx->parts;
+	@$rq_parts == @$rs_parts or die "rs parts != rq parts";
+
+	for (my $i = 0; $i <= $#$rq_parts; $i++ ) {
+		$self->add_backend_response($rq_parts->[$i], $rs_parts->[$i]);
 	}
+	$self->yield("process_responses");
+}
+
+method process_responses() {
 	while ( $self->backend_response_ready ) {
 		my ($cmd, $response, $rq) = $self->dequeue_backend_response;
 		$cmd->notify($response);
@@ -311,22 +357,21 @@ method be_response( SRS::EPP::SRSMessage $rs_tx ) {
 			$self->state("Prepare Response");
 			my $epp_rs = $response->to_epp;
 			$self->add_command_response($cmd, $epp_rs);
+			$self->yield("send_pending_replies")
+				if $self->response_ready;
 		}
 		else {
 			my @messages = $cmd->next_backend_message($self);
 			$self->queue_backend_request($cmd, @messages);
+			$self->yield("send_backend_queue");
 		}
-	}
-	$self->yield("send_pending_replies");
-	if ( $self->backend_pending ) {
-		$self->yield("send_backend_queue");
 	}
 }
 
 method send_pending_replies() {
 	while ( $self->response_ready ) {
 		my $response = $self->dequeue_response;
-		$self->queue_reply($response);
+		$self->send_reply($response);
 	}
 	if ( ! $self->commands_queued ) {
 		if ( $self->user ) {
@@ -346,7 +391,7 @@ has 'output_queue' =>
 	default => sub { [] },
 	;
 
-method queue_reply( SRS::EPP::Response $rs ) {
+method send_reply( SRS::EPP::Response $rs ) {
 	my $reply_data = $rs->to_xml;
 	my $length = pack("N", bytes::length($reply_data)+4);
 	push @{ $self->output_queue }, $length, $reply_data;
@@ -399,7 +444,7 @@ SRS::EPP::Session - logic for EPP Session State machine
  $session->process_queue($count);
  $session->be_response($srs_rs);
  $session->send_pending_replies();
- $session->queue_reply($response);
+ $session->send_reply($response);
  $session->output_event;
 
  #--- information messages:
@@ -462,7 +507,7 @@ request at a time).  See L</be_response>
 
 Prepared L<SRS::EPP::Response> objects are queued, this involves
 individually converting them to strings, which are sent back to the
-client, each response its own SSL frame.  See L</queue_reply>
+client, each response its own SSL frame.  See L</send_reply>
 
 =item *
 
@@ -515,7 +560,7 @@ This is called by process_queue() or be_response(), and checks each
 command for a corresponding L<SRS::EPP::Response> object, dequeues and
 starts to send them back.
 
-=head2 queue_reply($response)
+=head2 send_reply($response)
 
 This is called by send_pending_replies(), and converts a
 L<SRS::EPP::Response> object to network form, then starts to send it.

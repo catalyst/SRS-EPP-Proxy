@@ -21,6 +21,7 @@ requires        ("MooseX::Singleton" => 0);
 requires        ("Net::SSLeay::OO" => 0);
 requires        ("XML::SRS" => 0.01);
 requires        ("XML::EPP" => 0.02);
+requires        ("Crypt::Password" => 0);
 requires        ("Module::Pluggable" => 0);
 
 &WriteAll;
