@@ -20,7 +20,11 @@ has 'xml' =>
 has 'message' =>
 	is => "rw",
 	handles => [qw(to_xml)],
+	trigger => sub { $_[0]->message_trigger },
 	;
+
+# for use with 'around', 'after' modifiers
+sub message_trigger { }
 
 has 'error' =>
 	is => "rw",
