@@ -1,5 +1,5 @@
 
-package SRS::Request;
+package SRS::EPP::SRSRequest;
 
 use Moose;
 use Moose::Util::TypeConstraints;

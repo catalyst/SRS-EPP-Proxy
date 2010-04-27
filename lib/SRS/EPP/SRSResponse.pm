@@ -1,5 +1,5 @@
 
-package SRS::Response;
+package SRS::EPP::SRSResponse;
 
 use Moose;
 

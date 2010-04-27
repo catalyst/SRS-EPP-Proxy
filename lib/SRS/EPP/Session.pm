@@ -25,9 +25,9 @@ use XML::SRS;
 use SRS::EPP::Command;
 use SRS::EPP::Response;
 use SRS::EPP::Response::Error;
-use SRS::Tx;
-use SRS::Request;
-use SRS::Response;
+use SRS::EPP::SRSMessage;
+use SRS::EPP::SRSRequest;
+use SRS::EPP::SRSResponse;
 
 # queue classes and slave components
 use SRS::EPP::Packets;
@@ -267,7 +267,7 @@ has 'backend_url' =>
 
 has 'active_request' =>
 	is => "rw",
-	isa => "Maybe[SRS::Tx]",
+	isa => "Maybe[SRS::EPP::SRSMessage]",
 	;
 
 method send_backend_queue() {
@@ -275,7 +275,7 @@ method send_backend_queue() {
 
 	my @next = $self->backend_next($self->backend_tx_max);
 
-	my $tx = SRS::Tx->new( parts => \@next );
+	my $tx = SRS::EPP::SRSMessage->new( parts => \@next );
 	my $sig = $self->sign_tx($tx);
 	my $reg_id = $self->user;
 
@@ -298,7 +298,7 @@ method get_be_response() {
 	my $response = $self->user_agent->get_response;
 }
 
-method be_response( SRS::Tx $rs_tx ) {
+method be_response( SRS::EPP::SRSMessage $rs_tx ) {
 	my @parts = $rs_tx->messages;
 	for my $rs ( @parts ) {
 		my $action_id = $rs->action_id;
