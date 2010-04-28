@@ -21,6 +21,10 @@ has "+message" =>
 	default => \&make_greeting,
 	;
 
+has "+code" =>
+	required => 0,
+	;
+
 sub make_greeting {
 	my $self = shift;
 	my $proxy = eval { SRS::EPP::Proxy->new };

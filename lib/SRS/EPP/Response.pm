@@ -20,6 +20,7 @@ use SRS::EPP::SRSResponse;
 has 'code' =>
 	is => 'ro',
 	isa => "XML::EPP::resultCodeType",
+	required => 1,
 	;
 
 has 'extra' =>
@@ -34,10 +35,13 @@ has "+message" =>
 		my $self = shift;
 		my $server_id = $self->server_id;
 		my $client_id = $self->client_id;
-		my $tx_id = XML::EPP::TrID->new(
-			server_id => $server_id,
-			($client_id ? (client_id => $client_id) : () ),
-		       );
+		my $tx_id;
+		if ( $server_id ) {
+			$tx_id = XML::EPP::TrID->new(
+				server_id => $server_id,
+				($client_id ? (client_id => $client_id) : () ),
+				);
+		}
 		my $msg = $self->extra;
 		my $result = XML::EPP::Result->new(
 			($msg ? (msg => $msg) : ()),
@@ -46,7 +50,7 @@ has "+message" =>
 		XML::EPP->new(
 			message => XML::EPP::Response->new(
 				result => [ $result ],
-				tx_id => $tx_id,
+				($tx_id ? (tx_id => $tx_id) : () ),
 			       ),
 		       );
 	},

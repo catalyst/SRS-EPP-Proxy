@@ -23,7 +23,9 @@ my $command = SRS::EPP::Command->new(
 
 isa_ok($command, "SRS::EPP::Command", "new 'vanilla' command");
 
-my $response = SRS::EPP::Response->new();
+my $response = SRS::EPP::Response->new(
+	code => 1000,
+       );
 
 isa_ok($response, "SRS::EPP::Response", "new 'vanilla' response");
 
