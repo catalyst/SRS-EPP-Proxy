@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2009  NZ Registry Services
+# Copyright (C) 2009, 2010  NZ Registry Services
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the Artistic License 2.0 or later.  You should
@@ -13,7 +13,75 @@ use MooseX::Method::Signatures;
 
 use SRS::EPP::Session;
 
+use Log::Log4perl qw(:easy);
+
+use POSIX ":sys_wait_h";
+
+with 'MooseX::SimpleConfig';
+with 'MooseX::Getopt';
+with 'MooseX::Log::Log4Perl';
+with 'MooseX::Daemonize';
+
+has '+configfile' => (
+	default => sub { [
+		"$ENV{HOME}/.srs_epp_proxy.yaml",
+		'/etc/srs-epp-proxy.yaml'
+	       ] });
+
+sub BUILD {
+	my $self = shift;
+
+	# should have already done SimpleConfig; with a bit of luck,
+	# all properties in this master object may be specified there.
+
+	# pass configuration via this method to log4perl
+	my $logging = $self->logging;
+
+	if ( !defined $logging ) {
+		$logging = "info";
+	}
+
+	if ( !ref $logging and ! -f $logging ) {
+		# 'default'
+		if ( $self->is_daemon ) {
+			$logging = {
+		rootLogger => "$logging, Syslog",
+		"appender.Syslog" => "Log::Log4perl::JavaMap::SyslogAppender",
+		"appender.Syslog.logopt" => "pid",
+		"appender.Syslog.Facility" => "daemon",
+			};
+		}
+		else {
+			$logging = {
+		rootLogger => "$logging, Screen",
+		"appender.Screen" => "Log::Log4perl::Appender::Screen",
+		"appender.Screen.stderr" => 1,
+			};
+		}
+	}
+
+	# prepend "log4perl." to config hashes
+	if ( ref $logging and ref $logging eq "HASH" ) {
+		for my $key ( keys %$logging ) {
+			if ( $key !~ /^log4perl\./ and
+				     !exists $logging->{"log4perl.$key"}
+				    ) {
+				$logging->{"log4perl.$key"} =
+					delete $logging->{$key};
+			}
+		}
+	}
+
+	Log::Log4Perl->init( $logging );
+	# pass configuration options to the session class?
+}
+
 our $VERSION = "0.00_01";
+
+has 'logging' =>
+	is => "ro",
+	isa => "HashRef[Str]",
+	;
 
 has 'listen' =>
 	is => "ro",
@@ -131,16 +199,100 @@ method init_pgp() {
 	$self->pgp;
 }
 
+has 'forking' =>
+	is => "ro",
+	isa => "Bool",
+	default => 0,
+	;
+
+has 'running' =>
+	is => "rw",
+	isa => "Bool",
+	default => 1,
+	;
+
 has 'child_pids' =>
 	is => "ro",
 	isa => "ArrayRef[Int]",
 	default => sub { [] },
 	;
 
+has 'backend' =>
+	is => "ro",
+	isa => "Str",
+	default => "https://srstest.srs.net.nz/srs/registrar",
+	;
+
+method accept_one() {
+	my $socket = $self->listener->accept
+		or return;
+
+	if ( $self->forking and (my $pid = fork) ) {
+		push @{ $self->child_pids }, $pid;
+	}
+	else {
+		# blocking SSL accept...
+		my $ssl = $self->ssl_engine->accept($socket);
+
+		# then set the socket to non-blocking for event-driven
+		# fun.
+		my $mode = ( MODE_ENABLE_PARTIAL_WRITE |
+				     MODE_ACCEPT_MOVING_WRITE_BUFFER );
+		$ssl->set_mode($mode);
+		$socket->blocking(0);
+
+		# create a new session...
+		my $session = SRS::EPP::Session->new(
+			io => $ssl,
+		       );
+
+		# let it know it's connected.
+		$session->connected;
+
+		return $session;
+	}
+}
+
+method signals =>
+	is => "rw",
+	isa => "ArrayRef[Int]",
+	default => sub { [(0) x 15] },
+	;
+
+method handlers =>
+	is => "rw",
+	isa => "HashRef[CodeRef]",
+	default => sub { {} },
+	;
+
+method signal_handler( Int $signal ) {
+	$self->signals[$signal]++;
+}
+
+method process_signals() {
+	my @sig_a = $self->signals->[$signal];
+	while (my ($signal,$handler) = each %{ $self->handlers }) {
+		if ($sig_a[$signal]) {
+			$sig_a[$signal] = 0;
+			$handler->();
+		}
+	}
+}
+
+method catch_signal(Str $sig, CodeRef $sub) {
+	$SIG{$sig} = sub { $self->signal_handler($sig) };
+}
+
 method accept_loop() {
-	while ( my $socket = $self->listener->accept ) {
-		if ( my $pid = fork ) {
-			push @{ $self->child_pids }, $pid;
+	$self->catch_signal(TERM => sub { $self->running(0) });
+	if ( $self->forking ) {
+		$self->catch_signal(CHLD => sub { $self->reap_children });
+	}
+	while ( $self->running ) {
+		my $session = $self->accept_one;
+		if ( $session ) {
+			$session->loop;
+			exit if $self->forking;
 		}
 		else {
 			my $peerhost = $socket->peerhost;
@@ -164,7 +316,18 @@ method accept_loop() {
 }
 
 method reap_children() {
-	
+	my $self = shift;
+	my $kid;
+	my %reaped;
+	do {
+		$kid = waitpid(-1, WNOHANG);
+		if ($kid > 0) {
+			$reaped{$kid} = $?
+			redo;
+		}
+	} while 0;
+	my $child_pids = $self->child_pids;
+	@$child_pids = grep { exists $reaped{$_} } @$child_pids;
 }
 
 method make_events(SRS::EPP::Session $session) {

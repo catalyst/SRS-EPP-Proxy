@@ -19,6 +19,8 @@ use strict;
 use Moose;
 use MooseX::Method::Signatures;
 
+#with 'MooseX::Log::Log4Perl';
+
 # messages that we use
 # - XML formats
 use XML::EPP;

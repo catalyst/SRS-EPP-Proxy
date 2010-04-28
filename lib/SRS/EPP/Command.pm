@@ -58,7 +58,8 @@ sub BUILD {
 	if ( my $epp = $self->message ) {
 		my $class;
 		$class = rebless_class( $epp->message );
-		if ( !$class and $epp->message->can("action") ) {
+		if ( !$class and $epp->message and
+			     $epp->message->can("action") ) {
 			$class = action_class($epp->message);
 		}
 		if ( $class ) {
@@ -92,6 +93,10 @@ has 'server_id' =>
 		$self->session->new_server_id;
 	}
 	;
+
+BEGIN {
+	class_type "SRS::EPP::Session";
+}
 
 # process a simple message - the $session is for posting back events
 method process( SRS::EPP::Session $session ) {
