@@ -17,9 +17,39 @@ extends 'SRS::EPP::Message';
 
 use SRS::EPP::SRSResponse;
 
+has 'code' =>
+	is => 'ro',
+	isa => "XML::EPP::resultCodeType",
+	;
+
+has 'extra' =>
+	is => "ro",
+	isa => "Str",
+	;
+
 use XML::EPP;
 has "+message" =>
 	isa => "XML::EPP",
+	default => sub {
+		my $self = shift;
+		my $server_id = $self->server_id;
+		my $client_id = $self->client_id;
+		my $tx_id = XML::EPP::TrID->new(
+			server_id => $server_id,
+			($client_id ? (client_id => $client_id) : () ),
+		       );
+		my $msg = $self->extra;
+		my $result = XML::EPP::Result->new(
+			($msg ? (msg => $msg) : ()),
+			code => $self->code,
+		       );
+		XML::EPP->new(
+			message => XML::EPP::Response->new(
+				result => [ $result ],
+				tx_id => $tx_id,
+			       ),
+		       );
+	},
 	;
 
 has "client_id" =>
@@ -27,35 +57,10 @@ has "client_id" =>
 	isa => "XML::EPP::trIDStringType",
 	;
 
+# not all response types require a server_id
 has "server_id" =>
 	is => "ro",
 	isa => "XML::EPP::trIDStringType",
-	lazy => 1,
-	default => sub {
-		my $self = shift;
-		$self->session->new_server_id;
-	},
-	;
-
-method notify( SRS::EPP::SRSResponse @rs ) {
-	my $result;
-	if ( my $server_id = eval {
-		$result = $rs[0]->message;
-		$result->fe_id.",".$result->unique_id
-	} ) {
-		$self->server_id($server_id);
-	}
-}
-
-has 'code' =>
-	is => 'ro',
-	isa => "XML::EPP::resultCodeType",
-	;
-
-has "session" =>
-	is => "rw",
-	isa => "SRS::EPP::Session",
-	weak_ref => 1,
 	;
 
 use Module::Pluggable

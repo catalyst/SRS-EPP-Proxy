@@ -17,11 +17,6 @@ has 'exception' =>
 	is => 'ro',
 	;
 
-has 'extra' =>
-	is => "ro",
-	isa => "Str",
-	;
-
 has 'bad_node' =>
 	is => "rw",
 	isa => "XML::LibXML::Node",
@@ -31,43 +26,24 @@ has '+server_id' =>
 	required => 1,
 	;
 
-has '+message' =>
-	lazy => 1,
-	default => sub {
-		my $self = shift;
-		my $msg = $self->extra;
-		my $bad_node = $self->bad_node;
-		my $client_id = $self->client_id;
-		my $server_id = $self->server_id;
-		my $tx_id = XML::EPP::TrID->new(
-			server_id => $server_id,
-			($client_id ? (client_id => $client_id) : () ),
-		       );
-		my $result = XML::EPP::Result->new(
-			($msg ? (msg => $msg) : ()),
-			code => $self->code,
-		       );
-		if ( my $except = $self->exception ) {
-			# permit validation errors to be returned.
-			if ( blessed $except and
-				     $except->isa("PRANG::Graph::Context::Error") ) {
-				my $error = XML::EPP::Error->new(
-					value => $except->node,
-					reason => "XML validation error at "
-						.$except->xpath."; "
+after 'message_trigger' => sub {
+	my $self = shift;
+	my $bad_node = $self->bad_node;
+	my $result = $self->message->message->result;
+	if ( my $except = $self->exception ) {
+		# permit validation errors to be returned.
+		if ( blessed $except and
+			     $except->isa("PRANG::Graph::Context::Error") ) {
+			my $error = XML::EPP::Error->new(
+				value => $except->node,
+				reason => "XML validation error at "
+					.$except->xpath."; "
 						.$except->message,
-				       );
-				$result->add_error($error);
-			}
+				);
+			$result->add_error($error);
 		}
-		# if there is an extended
-		XML::EPP->new(
-			message => XML::EPP::Response->new(
-				result => [ $result ],
-				tx_id => $tx_id,
-			       ),
-		       );
-	};
+	}
+};
 
 no Moose;
 __PACKAGE__->meta->make_immutable;

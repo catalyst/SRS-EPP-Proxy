@@ -154,6 +154,7 @@ method input_packet( Str $data ) {
 		( $msg ? (message => $msg) : () ),
 		xml => $data,
 		( $error ? (error => $error) : () ),
+		session => $self,
 		);
 	$self->queue_command($queue_item);
 	if ( $error ) {
@@ -205,7 +206,7 @@ method check_queues() {
 	$self->yield("send_pending_replies")
 		if $self->response_ready;
 	$self->yield("process_queue")
-		if $self->commands_queued;
+		if !$self->stalled and $self->commands_queued;
 	$self->yield("process_responses")
 		if $self->backend_response_ready;
 	$self->yield("send_backend_queue")
@@ -221,6 +222,13 @@ method check_queues() {
 has stalled =>
 	is => "rw",
 	isa => "Bool",
+	trigger => sub {
+		my $self = shift;
+		my $val = shift;
+		if ( !$val ) {
+			$self->check_queues;
+		}
+	}
 	;
 
 method process_queue( Int $count = 1 ) {
@@ -237,13 +245,9 @@ method process_queue( Int $count = 1 ) {
 		}
 		elsif ( $command->authenticated and !$self->user ) {
 			$self->add_command_response(
-				SRS::EPP::Response::Error->new(
-					client_id => $command->client_id,
-					server_id => $self->new_server_id,
-					code => 2201,
+				$command->make_response(
+					Error => code => 2201,
 					extra => "Not logged in",
-					($command->has_client_id ?
-						 (client_id => $command->client_id) : () ),
 					),
 				$command,
 				);
@@ -255,11 +259,11 @@ method process_queue( Int $count = 1 ) {
 					message => $_,
 					);
 			} $command->to_srs($self);
-			
+
 			$self->queue_backend_request($command, @messages);
 			if ( $command->isa("SRS::EPP::Command::Login") ) {
 				$self->state("Processing <login>");
-				$self->stalled(1);
+				#$self->stalled(1);
 			}
 			else {
 				$self->state("Processing Command");
@@ -277,7 +281,9 @@ method process_queue( Int $count = 1 ) {
 # be important.
 method connected() {
 	$self->state("Prepare Greeting");
-	my $response = SRS::EPP::Response::Greeting->new( );
+	my $response = SRS::EPP::Response::Greeting->new(
+		session => $self,
+		);
 	my $socket_fd = $self->io->get_fd;
 	$self->event->io(
 		desc => "input_event",
@@ -318,14 +324,17 @@ has 'user_agent' =>
 	},
 	trigger => sub {
 		my $self = shift;
-		$self->event->io(
-			desc => "user_agent",
-			fd => $self->user_agent->read_fh,
-			poll => 'r',
-			cb => sub {
-				$self->backend_response;
-			},
-			);
+		my $ua = shift;
+		if ( $ua ) {
+			$self->event->io(
+				desc => "user_agent",
+				fd => $ua->read_fh,
+				poll => 'r',
+				cb => sub {
+					$self->backend_response;
+				},
+				);
+		}
 	},
 	handles => {
 		"user_agent_busy" => "busy",
@@ -347,9 +356,12 @@ method next_message() {
 		or return;
 	my $tx = XML::SRS::Request->new(
 		version => "auto",
-		requests => \@next,
+		requests => [ map { $_->message } @next ],
 		);
-	my $rq = SRS::EPP::SRSMessage->new( message => $tx );
+	my $rq = SRS::EPP::SRSMessage->new(
+		message => $tx,
+		parts => \@next,
+		);
 	$self->active_request( $rq );
 	$rq;
 }
@@ -407,7 +419,6 @@ method be_response( SRS::EPP::SRSMessage $rs_tx ) {
 	my $rq_parts = $request->parts;
 	my $rs_parts = $rs_tx->parts;
 	(@$rq_parts == @$rs_parts) or do {
-		$DB::single = 1;
 		die "rs parts != rq parts";
 	};
 
@@ -422,9 +433,12 @@ method process_responses() {
 		my ($cmd, @rs) = $self->dequeue_backend_response;
 		$cmd->notify(@rs);
 		if ( $cmd->done ) {
+			#if ( $self->stalled and $cmd->isa("SRS::EPP::Command::Login") ) {
+				#$self->stalled(0);
+			#}
 			$self->state("Prepare Response");
 			my $epp_rs = $cmd->response;
-			$self->add_command_response($cmd, $epp_rs);
+			$self->add_command_response($epp_rs, $cmd);
 			$self->yield("send_pending_replies")
 				if $self->response_ready;
 		}
@@ -474,6 +488,18 @@ method send_reply( SRS::EPP::Response $rs ) {
 	return $remaining;
 }
 
+# once we are "shutdown", no new commands will be allowed to process
+# (stalled queue) and the connection will be disconnected once the
+# back-end processing and output queue is cleared.
+has 'shutting_down' =>
+	is => "rw",
+	isa => "Bool",
+	;
+method shutdown() {
+	$self->stalled(1);
+	$self->shutting_down(1);
+}
+
 method output_event() {
 	my $oq = $self->output_queue;
 	my $written = 0;
@@ -489,6 +515,17 @@ method output_event() {
 		elsif ( $wrote < bytes::length $datum ) {
 			unshift @$oq, bytes::substr $datum, $wrote;
 			last;
+		}
+	}
+	if ( !@$oq and $self->shutting_down ) {
+		$self->check_queues;
+		# if check_queues didn't yield any events, we're done.
+		if ( !keys %{$self->yielding} ) {
+			$self->io->shutdown;
+			#$self->io->get_fd->shutdown(1);
+			# ... and without yielding any more events, we
+			# are also done... close all watchers
+			$self->user_agent(undef);
 		}
 	}
 	return $written;

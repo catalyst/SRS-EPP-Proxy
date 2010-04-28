@@ -59,7 +59,11 @@ method to_srs( SRS::EPP::Session $session ) {
 	my $epp = $self->message;
 	my $login = $epp->message->argument;
 	my $uid = $login->client_id;
+	$self->password($login->password);
+	$self->new_password($login->new_password)
+		if $login->new_password;
 	$self->uid($uid);
+	$session->stalled(1);
 
 	return (XML::SRS::Registrar::Query->new(
 		registrar_id => $uid,
@@ -82,9 +86,7 @@ method to_srs( SRS::EPP::Session $session ) {
 }
 
 
-after 'notify' => sub {
-	my $self = shift;
-	my @rs = @_;
+method notify( SRS::EPP::SRSResponse @rs ) {
 	if ( @rs == 3 ) {
 		# response to login
 		my $registrar = $rs[0];
@@ -97,7 +99,7 @@ after 'notify' => sub {
 		# check the password
 		my $password_ok;
 		if ( my $auth = eval {
-			password($registrar->message->response->epp_auth)
+			$registrar->message->response->epp_auth
 		} ) {
 			$password_ok = $auth->check($self->password);
 		}
@@ -121,6 +123,7 @@ after 'notify' => sub {
 		if ( $password_ok and $ip_ok and $cn_ok ) {
 			$self->login_ok(1);
 			$self->session->user($self->uid);
+			$self->session->stalled(0);
 		}
 	}
 	else {
@@ -163,23 +166,14 @@ method response() {
 	if ( $self->login_ok ) {
 		if ( defined $self->new_password
 			     and !$self->password_changed ) {
-			SRS::EPP::Response->new(
-				code => 2400,
-				session => $self->session,
-			       );
+			$self->make_response(code => 2400);
 		}
 		else {
-			SRS::EPP::Response->new(
-				code => 1000,
-				session => $self->session,
-			       );
+			$self->make_response(code => 1000);
 		}
 	}
 	else {
-		SRS::EPP::Response::Error->new(
-			code => 2200,
-			session => $self->session,
-		       );
+		$self->make_response(code => 2200);
 	}
 }
 

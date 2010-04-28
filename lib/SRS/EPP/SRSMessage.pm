@@ -17,7 +17,6 @@ has "+message" =>
 
 after 'message_trigger' => sub {
 	my $self = shift;
-	$DB::single = 1;
 	return if $self->parts and @{$self->parts};
 	my $message = $self->message;
 	my ($class, $method);

@@ -74,41 +74,83 @@ method done() { 1 }
 
 BEGIN {
 	class_type "SRS::EPP::Session";
+	class_type "SRS::EPP::SRSResponse";
 }
+
+has 'session' =>
+	is => "rw",
+	isa => "SRS::EPP::Session",
+	weak_ref => 1,
+	;
+
+has 'server_id' =>
+	is => "rw",
+	isa => "XML::EPP::trIDStringType",
+	lazy => 1,
+	default => sub {
+		my $self = shift;
+		$self->session->new_server_id;
+	}
+	;
 
 # process a simple message - the $session is for posting back events
 method process( SRS::EPP::Session $session ) {
+	$self->session($session);
 
 	# default handler is to return an unimplemented message
 	return SRS::EPP::Response::Error->new(
 		id => 2101,
+		server_id => $self->server_id,
 		extra => "Sorry, command not yet implemented.",
 		);
 }
 
 method to_srs() {
-	die("EPP command must implement to_srs");
+	die("$self: EPP command must implement to_srs");
 }
-method notify() {
-	die("EPP command must implement notify");
+method notify( SRS::EPP::SRSResponse @rs ) {
+	my $result;
+	if ( my $server_id = eval {
+		$result = $rs[0]->message;
+		$result->fe_id.",".$result->unique_id
+	} ) {
+		$self->server_id($server_id);
+	}
 }
 method next_backend_message() {
-	die("EPP command must implement next_backend_message (if it's going to un-set 'done')");
+	die("$self: EPP command must implement next_backend_message (if it's going to un-set 'done')");
 }
 method response() {
-	die("EPP command must implement response to reply");
+	die("$self: EPP command must implement response to reply");
+}
+sub make_response {
+	my $self = shift;
+	my $type = "SRS::EPP::Response";
+	if ( @_ % 2 ) {
+		$type = shift;
+		$type = "SRS::EPP::Response::$type" if $type !~ /^SRS::/;
+	}
+	my %fields = @_;
+	$fields{client_id} ||= $self->client_id if $self->has_client_id;
+	$fields{server_id} ||= $self->server_id;
+	$type->new(
+		%fields,
+		);
 }
 
 has "client_id" =>
-	is => "ro",
+	is => "rw",
 	isa => "XML::EPP::trIDStringType",
-	lazy => 1,
 	predicate => "has_client_id",
-	default => sub {
-		my $self = shift;
-		my $message = $self->message;
-		eval { $message->message->client_id }
-	};
+	;
+
+after 'message_trigger' => sub {
+	my $self = shift;
+	my $message = $self->message;
+	if ( my $client_id = eval { $message->message->client_id } ) {
+		$self->client_id($client_id);
+	}
+};
 
 use Module::Pluggable
 	require => 1,

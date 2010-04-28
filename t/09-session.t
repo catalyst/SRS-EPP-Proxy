@@ -108,9 +108,13 @@ BEGIN { use_ok("SRS::EPP::Session"); }
 		my $output = $self->{output};
 		my $packet_length = unpack
 			("N", bytes::substr($output, 0, 4));
+		$packet_length or return;
 		my $packet = bytes::substr($output, 4, $packet_length - 4);
 		if ( bytes::length($packet)+4 == $packet_length ) {
 			bytes::substr($self->{output}, 0, $packet_length, "");
+		}
+		else {
+			return;
 		}
 		return XML::EPP->parse($packet);
 	}
@@ -222,10 +226,10 @@ ok($session->backend_pending,
    "login message produced backend messages");
 ok($session->stalled,
    "waiting for login result before processing further commands");
-my @rq = $session->backend_next(5);
-is(@rq, 3, "login makes 3 messages");
+my $rq = $session->next_message;
+is(@{$rq->parts}, 3, "login makes 3 messages");
 is_deeply(
-	[ map { $_->message->root_element } @rq ],
+	[ map { $_->message->root_element } @{$rq->parts} ],
 	[ qw(RegistrarDetailsQry AccessControlListQry
 	     AccessControlListQry) ],
 	"login message transform",
@@ -295,7 +299,7 @@ my @rs = map {
 	map {
 		$_->message->root_element
 	}
-	@rq;
+	@{$rq->parts};
 
 my $srs_rs = XML::SRS::Response->new(
 	version => "auto",
@@ -304,11 +308,55 @@ my $srs_rs = XML::SRS::Response->new(
        );
 
 my $rs_tx = SRS::EPP::SRSMessage->new( message => $srs_rs );
-
-my $active_rq = $session->next_message;
-diag("hi, got $active_rq");
+$DB::single = 1;
 $session->be_response($rs_tx);
 
+# now, with the response there, process_replies should be ready.
+is_deeply(
+	[$session->event->queued_events],
+	[qw(process_responses)],
+	"Session wants to process that response",
+       );
+
+$session->process_responses;
+is_deeply(
+	[$session->event->queued_events],
+	[qw(process_queue send_pending_replies)],
+	"reply ready to be sent",
+       );
+
+$session->send_pending_replies;
+do {
+	$session->output_event;
+} while ( @{ $session->output_queue } );
+
+my $response = $session->io->get_packet;
+is($response->message->result->[0]->code, 1000, "Login successful!");
+
+# now we should have a response ready to go
+ok($session->user, "Session now authenticated");
+
+$session->input_event;
+
+# ... and we should eventually log out
+@expected = qw(process_queue send_pending_replies output_event);
+$failed = 0;
+event:
+while ( my @events = $session->event->queued_events ) {
+	$session->input_event if $session->io->input;
+	for my $event ( @events ) {
+		unless ($event ~~ @expected) {
+			fail("weren't expecting $event");
+			$failed = 1;
+			last event;
+		}
+		$session->$event;
+	}
+}
+pass("events as expected") unless $failed;
+
+my $goodbye = $session->io->get_packet;
+is(eval{$goodbye->message->result->[0]->code}, 1500, "logout response");
 
 # Copyright (C) 2009  NZ Registry Services
 #
