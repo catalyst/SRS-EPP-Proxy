@@ -19,7 +19,7 @@ use POSIX ":sys_wait_h";
 
 with 'MooseX::SimpleConfig';
 with 'MooseX::Getopt';
-with 'MooseX::Log::Log4Perl';
+with 'MooseX::Log::Log4perl';
 with 'MooseX::Daemonize';
 
 has '+configfile' => (
@@ -72,7 +72,7 @@ sub BUILD {
 		}
 	}
 
-	Log::Log4Perl->init( $logging );
+	Log::Log4perl->init( $logging );
 	# pass configuration options to the session class?
 }
 

@@ -87,7 +87,7 @@ stop the program from daemonizing.
 
 =item B<logging>
 
-This option can customize the L<Log::Log4Perl> system.  This system is
+This option can customize the L<Log::Log4perl> system.  This system is
 used for its support for flexible, per-component log levels.
 
 You can specify a log level such as FATAL, ERROR, WARN, INFO, DEBUG,
@@ -98,7 +98,7 @@ If you specified C<--foreground>, then all logging will be set to go
 to standard error.  Otherwise, it will end up in the C<daemon> syslog
 category.
 
-If you specify a filename here, it will be used as the Log::Log4Perl
+If you specify a filename here, it will be used as the Log::Log4perl
 configuration file.  If you are configuring via the F<.yml> file, you
 can pass in the detailed configuration directly; eg
 

@@ -25,7 +25,7 @@ requires        ("Crypt::Password" => 0);
 requires        ("Module::Pluggable" => 0);
 requires        ("MooseX::SimpleConfig" => 0);
 requires        ("MooseX::Getopt" => 0);
-requires        ("MooseX::Log::Log4Perl" => 0);
+requires        ("MooseX::Log::Log4perl" => 0);
 requires        ("MooseX::Daemonize" => 0);
 
 &WriteAll;
