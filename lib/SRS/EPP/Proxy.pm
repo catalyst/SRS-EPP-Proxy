@@ -17,7 +17,7 @@ use Log::Log4perl qw(:easy);
 
 use POSIX ":sys_wait_h";
 
-with 'MooseX::SimpleConfig';
+with 'SRS::EPP::Proxy::SimpleConfig';
 with 'MooseX::Getopt';
 with 'MooseX::Log::Log4perl';
 with 'MooseX::Daemonize';
