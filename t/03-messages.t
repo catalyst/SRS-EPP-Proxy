@@ -7,7 +7,7 @@ use strict;
 
 # of particular note: these stateful EPP messages are never converted
 # to the stateless SRS protocol; so they will not be covered by later
-# tests and tests must be particularly thorough.
+# transform tests and tests before then must be particularly thorough.
 
 #    - Hello / Greeting
 #    - logout
