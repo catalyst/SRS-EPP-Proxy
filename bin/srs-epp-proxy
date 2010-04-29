@@ -6,8 +6,8 @@ use SRS::EPP::Proxy;
 
 my $daemon = SRS::EPP::Proxy->new_with_options();
 
-my ($command) = @{$daemon->extra_argv}
-	defined $command || die "No command specified";
+my ($command) = @{$daemon->extra_argv};
+defined $command || die "No command specified";
 
 $daemon->start   if $command eq 'start';
 $daemon->status  if $command eq 'status';

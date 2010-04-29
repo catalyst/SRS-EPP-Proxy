@@ -38,7 +38,7 @@ sub BUILD {
 	my $logging = $self->logging;
 
 	if ( !defined $logging ) {
-		$logging = "info";
+		$logging = "INFO";
 	}
 
 	if ( !ref $logging and ! -f $logging ) {
@@ -49,6 +49,8 @@ sub BUILD {
 		"appender.Syslog" => "Log::Log4perl::JavaMap::SyslogAppender",
 		"appender.Syslog.logopt" => "pid",
 		"appender.Syslog.Facility" => "daemon",
+		"appender.Syslog.layout" =>
+			"Log::Log4perl::Layout::SimpleLayout",
 			};
 		}
 		else {
@@ -56,6 +58,8 @@ sub BUILD {
 		rootLogger => "$logging, Screen",
 		"appender.Screen" => "Log::Log4perl::Appender::Screen",
 		"appender.Screen.stderr" => 1,
+		"appender.Screen.layout" =>
+			"Log::Log4perl::Layout::SimpleLayout",
 			};
 		}
 	}
@@ -166,6 +170,7 @@ method init() {
 has 'openpgp' =>
 	is => "ro",
 	isa => "SRS::EPP::OpenPGP",
+	lazy => 1,
 	default => sub {
 		my $self = shift;
 		require SRS::EPP::OpenPGP;
