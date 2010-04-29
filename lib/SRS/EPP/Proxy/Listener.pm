@@ -6,6 +6,8 @@ use 5.010;  # for (?| alternation feature
 use Moose;
 use MooseX::Method::Signatures;
 
+with 'MooseX::Log::Log4perl::Easy';
+
 use IO::Select;
 use Net::SSLeay::OO;
 use Socket;
@@ -97,10 +99,12 @@ method init() {
 			       );
 
 			if ( !$socket ) {
-				warn "Failed to listen on $addr:$port; $!";
+				$self->log_error("Failed to listen on $addr:$port; $!");
 			}
-
-			push @sockets, $socket;
+			else {
+				$self->log_info("Listening on $addr port $port");
+				push @sockets, $socket;
+			}
 		}
 	}
 
@@ -129,7 +133,7 @@ method accept( Int $timeout? ) {
 
 method close() {
 	for my $socket ( @{ $self->sockets } ) {
-		$socket->close;
+		$socket->close if $socket;
 	}
 	@{ $self->sockets } = ();
 }

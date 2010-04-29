@@ -19,7 +19,7 @@ use POSIX ":sys_wait_h";
 
 with 'SRS::EPP::Proxy::SimpleConfig';
 with 'MooseX::Getopt';
-with 'MooseX::Log::Log4perl';
+with 'MooseX::Log::Log4perl::Easy';
 with 'MooseX::Daemonize';
 
 has '+configfile' => (
@@ -90,6 +90,7 @@ has 'logging' =>
 has 'listen' =>
 	is => "ro",
 	isa => "ArrayRef[Str]",
+	metaclass => "Getopt",
 	;
 
 has 'listener' =>
@@ -98,7 +99,9 @@ has 'listener' =>
 	default => sub {
 		require SRS::EPP::Proxy::Listener;
 		my $self = shift;
-		SRS::EPP::Proxy::Listener->new( listen => $self->listen );
+		SRS::EPP::Proxy::Listener->new(
+			($self->listen ? (listen => $self->listen) : () ),
+		       );
 	},
 	lazy => 1,
 	handles => {
@@ -107,18 +110,23 @@ has 'listener' =>
 	;
 
 has 'ssl_key_file' =>
+	metaclass => "Getopt",
 	is => "ro",
 	isa => "Str",
+	required => 1,
 	;
 
 has 'ssl_cert_file' =>
+	metaclass => "Getopt",
 	is => "ro",
 	isa => "Str",
+	required => 1,
 	;
 
 has 'ssl_cert_dir' =>
 	is => "ro",
 	isa => "Str",
+	default => "",
 	;
 
 use Sys::Hostname qw(hostname);
@@ -147,23 +155,26 @@ use Net::SSLeay::OO;
 use Net::SSLeay::OO::Constants qw(MODE_ENABLE_PARTIAL_WRITE
 				  MODE_ACCEPT_MOVING_WRITE_BUFFER
 				  OP_ALL OP_NO_SSLv2 VERIFY_PEER
-				  VERIFY_FAIL_IF_NO_PEER_CERT);
+				  VERIFY_FAIL_IF_NO_PEER_CERT
+				  FILETYPE_PEM
+				);
 
 method init_ssl() {
-	require Net::SSLeay::OO;
 	my $ctx = Net::SSLeay::OO::Context->new;
-	Net::SSLeay::OO::Constants->import(":all");
 	$ctx->set_options(&OP_ALL | OP_NO_SSLv2);
 	$ctx->set_verify(VERIFY_PEER | VERIFY_FAIL_IF_NO_PEER_CERT);
 	$ctx->load_verify_locations("", $self->ssl_cert_dir);
-	$ctx->use_PrivateKey_file($self->ssl_key_file);
+	$ctx->use_PrivateKey_file($self->ssl_key_file, FILETYPE_PEM);
 	$ctx->use_certificate_chain_file($self->ssl_cert_file);
 	$self->ssl_engine($ctx);
 }
 
 method init() {
+	$self->log_info("Initializing PGP");
 	$self->init_pgp;
+	$self->log_info("Initializing SSL");
 	$self->init_ssl;
+	$self->log_info("Initializing Listener");
 	$self->init_listener;
 }
 
@@ -179,7 +190,7 @@ has 'openpgp' =>
 		my $pubring_file = "$pgp_dir/pubring.gpg";
 		my $pgp = SRS::EPP::OpenPGP->new(
 			public_keyring => $pubring_file,
-			secret_keyring => $pubring_file,
+			secret_keyring => $secring_file,
 		       );
 		$pgp->uid($self->pgp_keyid);
 		$pgp;
@@ -188,8 +199,10 @@ has 'openpgp' =>
 	;
 
 has 'pgp_keyid' =>
+	metaclass => "Getopt",
 	is => "ro",
 	isa => "Str",
+	required => 1,
 	;
 
 has 'pgp_dir' =>
@@ -203,12 +216,6 @@ has 'pgp_dir' =>
 method init_pgp() {
 	$self->pgp;
 }
-
-has 'forking' =>
-	is => "ro",
-	isa => "Bool",
-	default => 0,
-	;
 
 has 'running' =>
 	is => "rw",
@@ -232,8 +239,9 @@ method accept_one() {
 	my $socket = $self->listener->accept
 		or return;
 
-	if ( $self->forking and (my $pid = fork) ) {
+	if ( !$self->foreground and (my $pid = fork) ) {
 		push @{ $self->child_pids }, $pid;
+		$self->log_debug("forked $pid for connection");
 	}
 	else {
 		# blocking SSL accept...
@@ -302,14 +310,14 @@ method catch_signal(Str $sig, CodeRef $sub) {
 
 method accept_loop() {
 	$self->catch_signal(TERM => sub { $self->running(0) });
-	if ( $self->forking ) {
+	if ( !$self->foreground ) {
 		$self->catch_signal(CHLD => sub { $self->reap_children });
 	}
 	while ( $self->running ) {
 		my $session = $self->accept_one;
 		if ( $session ) {
 			$session->loop;
-			exit if $self->forking;
+			exit if $self->foreground;
 		}
 		else {
 			$session->connected;
@@ -332,9 +340,15 @@ method reap_children() {
 	@$child_pids = grep { exists $reaped{$_} } @$child_pids;
 }
 
-method make_events(SRS::EPP::Session $session) {
+before 'start' => sub {
+	my $self = shift;
+	$self->init;
+};
 
-}
+after 'start' => sub {
+	my $self = shift;
+	$self->accept_loop;
+};
 
 1;
 

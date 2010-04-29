@@ -9,8 +9,12 @@ use Crypt::OpenPGP;
 use Crypt::OpenPGP::KeyRing;
 use Carp;
 
+with 'MooseX::Log::Log4perl';
+
 BEGIN {
 	class_type "Crypt::OpenPGP::KeyRing";
+	class_type "Crypt::OpenPGP::KeyBlock";
+	class_type "Crypt::OpenPGP::Certificate";
 }
 
 # Crypt::OpenPGP setup.
@@ -21,10 +25,10 @@ has 'pgp' =>
 	default => sub {
 		my $self = shift;
 		Crypt::OpenPGP->new(
-			($self->has_secret_keyring ?
+			($self->_has_secret_keyring ?
 				 (SecRing => $self->secret_keyring)
 					 : ()),
-			($self->has_public_keyring ?
+			($self->_has_public_keyring ?
 				 (PubRing => $self->public_keyring)
 					 : ()),
 		       );
@@ -35,6 +39,7 @@ has 'secret_keyring' =>
 	is => "ro",
 	isa => "Crypt::OpenPGP::KeyRing",
 	lazy => 1,
+	predicate => "_has_secret_keyring",
 	coerce => 1,
 	default => sub {
 		my $self = shift;
@@ -45,6 +50,7 @@ has 'public_keyring' =>
 	is => "ro",
 	isa => "Crypt::OpenPGP::KeyRing",
 	lazy => 1,
+	predicate => "_has_public_keyring",
 	coerce => 1,
 	default => sub {
 		my $self = shift;
@@ -84,6 +90,35 @@ has 'uid' =>
 	}
 	;
 
+has 'passphrase' =>
+	is => "rw",
+	isa => "Str",
+	;
+
+method unlock_cert( Crypt::OpenPGP::Certificate $cert ) {
+	return unless $cert->is_protected;
+
+	return if $self->passphrase and
+		$cert->unlock($self->passphrase);
+
+	my $key_id = $cert->fingerprint_hex;
+	require Scriptalicious;
+
+	unless (-t STDIN) {
+		$self->logger->fatal("no terminal");
+		die "no terminal";
+	}
+
+	$self->passphrase(
+		Scriptalicious::prompt_passwd(
+			"Enter passphrase for PGP cert $key_id:"
+		       ),
+	       );
+	print "\n";  # workaround bug in Scriptalicious..
+
+	return $self->unlock_cert($cert);
+}
+
 has 'default_signing_key' =>
 	is => "rw",
 	;
@@ -96,6 +131,7 @@ method find_signing_key(SRS::EPP::OpenPGP::key_id $key_id) {
 	my $kb = $self->get_sec_key_block($key_id) or return;
 	my $cert = $kb->signing_key
 		or croak "Invalid signing key $key_id";
+	$self->unlock_cert($cert);
 	$cert->uid($kb->primary_uid);
 	return $cert;
 }
@@ -104,6 +140,7 @@ method find_encrypting_key(SRS::EPP::OpenPGP::key_id $key_id) {
 	my $kb = $self->get_sec_key_block($key_id) or return;
 	my $cert = $kb->encrypting_key
 		or croak "Invalid encrypting key $key_id";
+	$self->unlock_cert($cert);
 	$cert->uid($kb->primary_uid);
 	return $cert;
 }
@@ -111,7 +148,9 @@ method find_encrypting_key(SRS::EPP::OpenPGP::key_id $key_id) {
 
 method get_sec_key_block(SRS::EPP::OpenPGP::key_id $key_id?) {
 	my $sec_ring = $self->secret_keyring;
-	my $kb = $key_id ? $sec_ring->find_keyblock_by_uid($key_id)
+	$key_id =~ s{^0x}{};
+	my $kb = $key_id
+		? $sec_ring->find_keyblock_by_keyid( pack("H*", $key_id) )
 		: $sec_ring->find_keyblock_by_index(-1)
 			or croak "Can't find keyblock ("
 				.($key_id ? $key_id : "default")
@@ -121,7 +160,9 @@ method get_sec_key_block(SRS::EPP::OpenPGP::key_id $key_id?) {
 
 method get_pub_key_block(SRS::EPP::OpenPGP::key_id $key_id?) {
 	my $pub_ring = $self->public_keyring;
-	my $kb = $key_id ? $pub_ring->find_keyblock_by_uid($key_id)
+	$key_id =~ s{^0x}{};
+	my $kb = $key_id
+		? $pub_ring->find_keyblock_by_keyid( pack("H*", $key_id) )
 		: $pub_ring->find_keyblock_by_index(-1)
 			or croak "Can't find keyblock ("
 				.($key_id ? $key_id : "default")
