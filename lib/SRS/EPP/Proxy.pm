@@ -234,6 +234,16 @@ method accept_one() {
 		# blocking SSL accept...
 		my $ssl = $self->ssl_engine->accept($socket);
 
+		# RFC3734 and updates specify the use of client
+		# certificates.  So, fetch it and get its subject.
+		my $client_cert = $ssl->get_peer_certificate;
+		my $peer_cn = $client_cert->get_subject_name;
+
+		# We'll also want to know the address of the other end
+		# of the socket, for checking it against the back-end
+		# ACL
+		my $peerhost = $socket->peerhost;
+
 		# then set the socket to non-blocking for event-driven
 		# fun.
 		my $mode = ( MODE_ENABLE_PARTIAL_WRITE |
@@ -244,8 +254,10 @@ method accept_one() {
 		# create a new session...
 		my $session = SRS::EPP::Session->new(
 			io => $ssl,
+			event => "Event",
+			peerhost => $peerhost,
+			peer_cn => $peer_cn,
 		       );
-
 		# let it know it's connected.
 		$session->connected;
 
@@ -253,27 +265,27 @@ method accept_one() {
 	}
 }
 
-method signals =>
+has signals =>
 	is => "rw",
 	isa => "ArrayRef[Int]",
 	default => sub { [(0) x 15] },
 	;
 
-method handlers =>
+has handlers =>
 	is => "rw",
 	isa => "HashRef[CodeRef]",
 	default => sub { {} },
 	;
 
 method signal_handler( Int $signal ) {
-	$self->signals[$signal]++;
+	$self->signals->[$signal]++;
 }
 
 method process_signals() {
-	my @sig_a = $self->signals->[$signal];
+	my $sig_a = $self->signals;
 	while (my ($signal,$handler) = each %{ $self->handlers }) {
-		if ($sig_a[$signal]) {
-			$sig_a[$signal] = 0;
+		if ($sig_a->[$signal]) {
+			$sig_a->[$signal] = 0;
 			$handler->();
 		}
 	}
@@ -295,19 +307,6 @@ method accept_loop() {
 			exit if $self->forking;
 		}
 		else {
-			my $peerhost = $socket->peerhost;
-			my $ssl = $self->ssl_engine->accept($socket);
-			my $client_cert = $ssl->get_peer_certificate;
-			my $peer_cn = $client_cert->get_subject_name;
-			my $mode = ( MODE_ENABLE_PARTIAL_WRITE |
-					     MODE_ACCEPT_MOVING_WRITE_BUFFER );
-			$socket->blocking(0);
-			my $session = SRS::EPP::Session->new(
-				io => $ssl,
-				event => "Event",
-				peerhost => $peerhost,
-				peer_cn => $peer_cn,
-			       );
 			$session->connected;
 			Event->loop;
 			exit(0);
@@ -316,22 +315,19 @@ method accept_loop() {
 }
 
 method reap_children() {
-	my $self = shift;
 	my $kid;
 	my %reaped;
 	do {
 		$kid = waitpid(-1, WNOHANG);
 		if ($kid > 0) {
-			$reaped{$kid} = $?
-			redo;
+			$reaped{$kid} = $?;
 		}
-	} while 0;
+	} while ($kid > 0);
 	my $child_pids = $self->child_pids;
 	@$child_pids = grep { exists $reaped{$_} } @$child_pids;
 }
 
 method make_events(SRS::EPP::Session $session) {
-	
 
 }
 
