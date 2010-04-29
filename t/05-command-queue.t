@@ -44,6 +44,7 @@ my $command = SRS::EPP::Command->new(
 
 # is answered by a *single* EPP response
 my $response = SRS::EPP::Response->new(
+	code => 1000,
 	message => Mock::Anything->new(
 		response => 1,
 		name => "greeting",
@@ -65,6 +66,7 @@ my @command_rq = map {
 
 my @command_rs = map {
 	SRS::EPP::Response->new(
+		code => 1000,
 		message => Mock::Anything->new(
 			name => $_,
 			request => 1,
