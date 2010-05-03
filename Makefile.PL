@@ -28,4 +28,6 @@ requires        ("MooseX::Getopt" => 0);
 requires        ("MooseX::Log::Log4perl" => 0);
 requires        ("MooseX::Daemonize" => 0);
 
+install_script  ("bin/srs-epp-proxy");
+
 &WriteAll;
