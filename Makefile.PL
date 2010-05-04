@@ -26,6 +26,7 @@ requires        ("Module::Pluggable" => 0);
 requires        ("MooseX::SimpleConfig" => 0);
 requires        ("MooseX::Getopt" => 0);
 requires        ("MooseX::Log::Log4perl" => 0);
+requires        ("Log::Dispatch" => 0);
 requires        ("MooseX::Daemonize" => 0);
 
 install_script  ("bin/srs-epp-proxy");
