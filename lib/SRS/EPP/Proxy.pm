@@ -305,8 +305,8 @@ method accept_one() {
 
 has signals =>
 	is => "rw",
-	isa => "ArrayRef[Int]",
-	default => sub { [(0) x 15] },
+	isa => "HashRef[Int]",
+	default => sub { {} },
 	;
 
 has handlers =>
@@ -315,15 +315,17 @@ has handlers =>
 	default => sub { {} },
 	;
 
-method signal_handler( Int $signal ) {
-	$self->signals->[$signal]++;
+method signal_handler( Str $signal ) {
+	$self->log_debug("caught SIG$signal");
+	$self->signals->{$signal}++;
 }
 
 method process_signals() {
-	my $sig_a = $self->signals;
+	my $sig_h = $self->signals;
 	while (my ($signal,$handler) = each %{ $self->handlers }) {
-		if ($sig_a->[$signal]) {
-			$sig_a->[$signal] = 0;
+		if ($sig_h->{$signal}) {
+			$sig_h->{$signal} = 0;
+			$self->log_debug("processing SIG$signal");
 			$handler->();
 		}
 	}
@@ -359,6 +361,11 @@ method reap_children() {
 		$kid = waitpid(-1, WNOHANG);
 		if ($kid > 0) {
 			$reaped{$kid} = $?;
+			$self->log_debug(
+"child $kid, ".($?&255 ?" killed by signal ".($?&127)
+			.($?&128?" (core dumped)":"")
+:"exited with error code ".($?>>8))
+			       );
 		}
 	} while ($kid > 0);
 	my $child_pids = $self->child_pids;
