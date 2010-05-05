@@ -152,20 +152,25 @@ has 'ssl_engine' =>
 	;
 
 use Net::SSLeay::OO;
-use Net::SSLeay::OO::Constants qw(MODE_ENABLE_PARTIAL_WRITE
-				  MODE_ACCEPT_MOVING_WRITE_BUFFER
-				  OP_ALL OP_NO_SSLv2 VERIFY_PEER
-				  VERIFY_FAIL_IF_NO_PEER_CERT
-				  FILETYPE_PEM
-				);
+use Net::SSLeay::OO::Error qw(die_if_ssl_error);
+use Net::SSLeay::OO::Constants
+	qw(MODE_ENABLE_PARTIAL_WRITE MODE_ACCEPT_MOVING_WRITE_BUFFER
+	   OP_ALL OP_NO_SSLv2 VERIFY_PEER VERIFY_FAIL_IF_NO_PEER_CERT
+	   FILETYPE_PEM);
 
 method init_ssl() {
 	my $ctx = Net::SSLeay::OO::Context->new;
 	$ctx->set_options(&OP_ALL | OP_NO_SSLv2);
 	$ctx->set_verify(VERIFY_PEER | VERIFY_FAIL_IF_NO_PEER_CERT);
+	$self->log_info("SSL Certificates from ".$self->ssl_cert_dir);
 	$ctx->load_verify_locations("", $self->ssl_cert_dir);
+	$self->log_info(
+		"SSL private key: ".$self->ssl_key_file
+		.", public certificate chain: ".$self->ssl_cert_file
+	       );
 	$ctx->use_PrivateKey_file($self->ssl_key_file, FILETYPE_PEM);
 	$ctx->use_certificate_chain_file($self->ssl_cert_file);
+	die_if_ssl_error;  # one last check...
 	$self->ssl_engine($ctx);
 }
 

@@ -84,6 +84,7 @@ method init() {
 		$port ||= EPP_DEFAULT_LOCAL_PORT;
 
 		my @addr = resolve($hostname);
+		$self->log_debug("$hostname resolved to @addr");
 
 		for my $addr ( @addr ) {
 			my $SOCKET_TYPE = "IO::Socket::INET";

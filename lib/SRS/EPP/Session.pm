@@ -19,7 +19,7 @@ use strict;
 use Moose;
 use MooseX::Method::Signatures;
 
-#with 'MooseX::Log::Log4Perl';
+with 'MooseX::Log::Log4perl::Easy';
 
 # messages that we use
 # - XML formats
@@ -79,8 +79,17 @@ has 'yielding' =>
 	;
 
 method yield(Str $method, @args) {
+	my $trace;
+	if ( $self->log->is_trace ) {
+		my $caller = ((caller(1))[3]);
+		$self->log_trace(
+			"$caller yields $method"
+			 .(@args?" (with args: @args)":"")
+			);
+	}
 	if ( !@args ) {
 		if ( $self->yielding->{$method} ) {
+			$self->log_trace(" - already yielding");
 			return;
 		}
 	}
@@ -89,6 +98,11 @@ method yield(Str $method, @args) {
 		after => 0,
 		cb => sub {
 			delete $self->yielding->{$method};
+			if ( $self->log->is_trace ) {
+				$self->log_trace(
+				"Calling $method".(@args?"(@args)":"")
+					);
+			}
 			$self->$method(@args);
 		});
 }
@@ -126,7 +140,9 @@ has 'server_id_seq' =>
 # session counter.
 method new_server_id() {
 	$self->inc_server_id(1);
-	$self->connection_id.".".sprintf("%.3d",$self->server_id_seq);
+	my $id = $self->connection_id.".".sprintf("%.3d",$self->server_id_seq);
+	$self->log_trace("server-generated ID is $id");
+	$id;
 }
 
 #----
@@ -145,28 +161,39 @@ method read_input( Int $how_much where { $_ > 0 } ) {
 
 # convert input packets to messages
 method input_packet( Str $data ) {
+	$self->log_debug("parsing ".bytes::length($data)." bytes of XML");
 	my $msg = eval {
 		if ( ! utf8::is_utf8($data) ) {
+			my $pre_length = bytes::length($data);
 			$data = decode("utf8", $data);
+			my $post_length = length($data);
+			if ( $pre_length != $post_length ) {
+				$self->log_debug(
+				"data is $post_length unicode characters"
+					);
+			}
 		}
 		XML::EPP->parse($data);
 	};
 	my $error = ( $msg ? undef : $@ );
+	$self->log_info("error parsing message: $error")
+		if $error;
 	my $queue_item = SRS::EPP::Command->new(
 		( $msg ? (message => $msg) : () ),
 		xml => $data,
 		( $error ? (error => $error) : () ),
 		session => $self,
 		);
+	$self->log_info("queuing command: $queue_item");
 	$self->queue_command($queue_item);
 	if ( $error ) {
-		warn "error parsing input; $error\n";
 		my $error_rs = SRS::EPP::Response::Error->new(
 			client_id => $queue_item->client_id,
 			server_id => $self->new_server_id,
 			code => 2001,
 			exception => $error,
 			);
+		$self->log_info("queuing response: $error_rs");
 		# insert a dummy command which returns a 2001
 		# response
 		$self->add_command_response(
@@ -227,6 +254,9 @@ has stalled =>
 	trigger => sub {
 		my $self = shift;
 		my $val = shift;
+		$self->log_debug(
+			"processing queue is ".($val?"":"un-")."stalled"
+			);
 		if ( !$val ) {
 			$self->check_queues;
 		}
@@ -237,12 +267,19 @@ method process_queue( Int $count = 1 ) {
 	while ( $count-- > 0 ) {
 		if ( $self->stalled ) {
 			$self->state("Processing Command");
+			$self->log_trace("stalled; not processing");
 			last;
 		}
 		my $command = $self->next_command or last;
+		$self->log_info(
+			"processing command $command"
+			);
 		if ( $command->simple ) {
 			# "simple" commands include "hello" and "logout"
 			my $response = $command->process($self);
+			$self->log_debug(
+				"processed simple command $command"
+				);
 			$self->add_command_response($response, $command);
 		}
 		elsif ( $command->authenticated and !$self->user ) {
@@ -253,6 +290,9 @@ method process_queue( Int $count = 1 ) {
 					),
 				$command,
 				);
+			$self->log_info(
+				"rejecting command: not logged in"
+				);
 		}
 		else {
 			# regular message, possibly including "login"
@@ -262,6 +302,9 @@ method process_queue( Int $count = 1 ) {
 					);
 			} $command->to_srs($self);
 
+			$self->log_info(
+			"command produced ".@messages." SRS messages"
+				);
 			$self->queue_backend_request($command, @messages);
 			if ( $command->isa("SRS::EPP::Command::Login") ) {
 				$self->state("Processing <login>");
@@ -285,6 +328,9 @@ method connected() {
 	$self->state("Prepare Greeting");
 	my $response = SRS::EPP::Response::Greeting->new(
 		session => $self,
+		);
+	$self->log_info(
+	"prepared greeting $response for ".$self->peerhost
 		);
 	my $socket_fd = $self->io->get_fd;
 	$self->event->io(
@@ -364,6 +410,10 @@ method next_message() {
 		message => $tx,
 		parts => \@next,
 		);
+	$self->log_info("creating a ".@next."-part SRS message");
+	if ( $self->log->is_debug ) {
+		$self->log_debug("parts: @next");
+	}
 	$self->active_request( $rq );
 	$rq;
 }
@@ -373,7 +423,11 @@ method send_backend_queue() {
 
 	my $tx = $self->next_message;
 	my $xml = $tx->to_xml;
+	$self->log_debug(
+		"XML message is ".length($xml)." characters long"
+		);
 	my $sig = $self->detached_sign($xml);
+	$self->log_trace("signed XML message");
 	my $reg_id = $self->user;
 
 	my $req = POST(
@@ -383,6 +437,9 @@ method send_backend_queue() {
 			s => $sig,
 			n => $reg_id,
 			],
+		);
+	$self->log_info(
+		"posting to ".$self->backend_url." as registrar $reg_id"
 		);
 
 	$self->user_agent->request( $req );
@@ -395,16 +452,24 @@ method backend_response() {
 
 	# urldecode response; split response from fields
 	my $content = $response->content;
+
+	$self->log_debug(
+		"received ".bytes::length($content)." bytes of "
+			."response from back-end"
+		);
+
 	my %fields = map {
 		my ($key, $value) = split "=", $_, 2;
 		($key, decode("utf8", url_decode($value)));
 	} split "&", $content;
 
 	# check signature
+	$self->log_debug("verifying signature");
 	$self->pgp->verify_detached($fields{r}, $fields{s})
 		or die "failed to verify BE response integrity";
 
 	# decode message
+	$self->log_debug("parsing as XML::SRS::Response");
 	my $message = XML::SRS::Response->parse($fields{r});
 	my $rs_tx = SRS::EPP::SRSMessage->new( message => $message );
 
@@ -420,6 +485,10 @@ method be_response( SRS::EPP::SRSMessage $rs_tx ) {
 	#$self->active_request(undef);
 	my $rq_parts = $request->parts;
 	my $rs_parts = $rs_tx->parts;
+	$self->log_debug(
+		"response from back-end has $rs_parts parts, "
+			."active request $rq_parts parts"
+		);
 	(@$rq_parts == @$rs_parts) or do {
 		die "rs parts != rq parts";
 	};
@@ -433,19 +502,29 @@ method be_response( SRS::EPP::SRSMessage $rs_tx ) {
 method process_responses() {
 	while ( $self->backend_response_ready ) {
 		my ($cmd, @rs) = $self->dequeue_backend_response;
+		$self->log_info(
+			"notifying command $cmd of back-end response"
+			);
 		$cmd->notify(@rs);
 		if ( $cmd->done ) {
+			$self->log_info( "command $cmd is complete" );
 			#if ( $self->stalled and $cmd->isa("SRS::EPP::Command::Login") ) {
 				#$self->stalled(0);
 			#}
 			$self->state("Prepare Response");
 			my $epp_rs = $cmd->response;
+			$self->log_debug( "response to $cmd is response $epp_rs" );
 			$self->add_command_response($epp_rs, $cmd);
 			$self->yield("send_pending_replies")
 				if $self->response_ready;
 		}
 		else {
+			$self->log_info( "command $cmd not yet incomplete" );
 			my @messages = $cmd->next_backend_message($self);
+			$self->log_info(
+		"command $cmd produced ".@messages." further SRS messages"
+				);
+			$self->log_info( "$cmd not yet incomplete" );
 			$self->queue_backend_request($cmd, @messages);
 			$self->yield("send_backend_queue");
 		}
@@ -455,6 +534,9 @@ method process_responses() {
 method send_pending_replies() {
 	while ( $self->response_ready ) {
 		my $response = $self->dequeue_response;
+		$self->log_info(
+			"queuing response $response"
+			);
 		$self->send_reply($response);
 	}
 	if ( ! $self->commands_queued ) {
@@ -476,10 +558,17 @@ has 'output_queue' =>
 	;
 
 method send_reply( SRS::EPP::Response $rs ) {
+	$self->log_debug(
+		"converting response $rs to XML"
+		);
 	my $reply_data = $rs->to_xml;
 	if ( utf8::is_utf8($reply_data) ) {
 		$reply_data = encode("utf8", $reply_data);
 	}
+	$self->log_info(
+		"response $rs is ".bytes::length($reply_data)
+			." bytes long"
+		);
 	my $length = pack("N", bytes::length($reply_data)+4);
 	push @{ $self->output_queue }, $length, $reply_data;
 	$self->yield("output_event");
@@ -498,6 +587,7 @@ has 'shutting_down' =>
 	isa => "Bool",
 	;
 method shutdown() {
+	$self->log_info( "shutting down session" );
 	$self->stalled(1);
 	$self->shutting_down(1);
 }
@@ -519,15 +609,28 @@ method output_event() {
 			last;
 		}
 	}
-	if ( !@$oq and $self->shutting_down ) {
-		$self->check_queues;
-		# if check_queues didn't yield any events, we're done.
-		if ( !keys %{$self->yielding} ) {
-			$self->io->shutdown;
-			#$self->io->get_fd->shutdown(1);
-			# ... and without yielding any more events, we
-			# are also done... close all watchers
-			$self->user_agent(undef);
+	$self->log_trace(
+	"output_event wrote $written bytes, ".@$oq." chunk(s) remaining"
+		);
+	if ( !@$oq ) {
+		$self->log_info("flushed output to client");
+		if ( $self->shutting_down ) {
+			$self->check_queues;
+			# if check_queues didn't yield any events, we're done.
+			if ( !keys %{$self->yielding} ) {
+				$self->log_debug( "shutting down SSL session" );
+				$self->io->shutdown;
+				#$self->io->get_fd->shutdown(1);
+				# ... and without yielding any more events, we
+				# are also done... close all watchers
+				$self->log_debug( "shutting down user agent" );
+				$self->user_agent(undef);
+			}
+			else {
+				$self->log_debug(
+			"shutdown still pending: @{[keys %{$self->yielding}]}"
+					);
+			}
 		}
 	}
 	return $written;
