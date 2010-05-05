@@ -130,6 +130,8 @@ my $input = do {
 my $session = SRS::EPP::Session->new(
 	event => Mock::Event->new(),
 	io => Mock::IO->new(input => $input),
+	peerhost => "101.1.5.27",
+	peer_cn => "foobar.client.cert.example.com",
        );
 
 # 0. test the ->connected event and greeting response

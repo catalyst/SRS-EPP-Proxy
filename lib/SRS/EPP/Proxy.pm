@@ -151,6 +151,12 @@ has 'ssl_engine' =>
 	isa => "Net::SSLeay::OO::Context",
 	;
 
+has 'rfc_compliant_ssl' =>
+	is => "rw",
+	traits => [qw[Getopt]],
+	isa => "Bool",
+	;
+
 use Net::SSLeay::OO;
 use Net::SSLeay::OO::Error qw(die_if_ssl_error);
 use Net::SSLeay::OO::Constants
@@ -161,7 +167,14 @@ use Net::SSLeay::OO::Constants
 method init_ssl() {
 	my $ctx = Net::SSLeay::OO::Context->new;
 	$ctx->set_options(&OP_ALL | OP_NO_SSLv2);
-	$ctx->set_verify(VERIFY_PEER | VERIFY_FAIL_IF_NO_PEER_CERT);
+	my $options = VERIFY_PEER;
+	if ( $self->rfc_compliant_ssl) {
+		$self->log_info(
+"Strict RFC5734-compliant SSL enabled (client certificates required)"
+		       );
+		$options |= VERIFY_FAIL_IF_NO_PEER_CERT;
+	}
+	$ctx->set_verify($options);
 	$self->log_info("SSL Certificates from ".$self->ssl_cert_dir);
 	$ctx->load_verify_locations("", $self->ssl_cert_dir);
 	$self->log_info(
@@ -249,21 +262,28 @@ method accept_one() {
 		$self->log_debug("forked $pid for connection");
 	}
 	else {
-		# blocking SSL accept...
+		# We'll also want to know the address of the other end
+		# of the socket, for checking it against the back-end
+		# ACL
+		my $peerhost = $socket->peerhost;
+		$self->log_info("connection from $peerhost, starting SSL");
+
 		my $ssl = $self->ssl_engine->accept($socket);
 
 		# RFC3734 and updates specify the use of client
 		# certificates.  So, fetch it and get its subject.
 		my $client_cert = $ssl->get_peer_certificate;
-		my $peer_cn = $client_cert->get_subject_name;
+		my $peer_cn;
+		if ( $client_cert ) {
+			# should use subjectAltName if present..
+			$peer_cn = $client_cert->get_subject_name->cn;
+			$self->log_info("have a valid peer certificate, cn=$peer_cn");
+		}
+		else {
+			$self->log_info("no peer certificate presented");
+		}
 
-		# We'll also want to know the address of the other end
-		# of the socket, for checking it against the back-end
-		# ACL
-		my $peerhost = $socket->peerhost;
-
-		# then set the socket to non-blocking for event-driven
-		# fun.
+		# set the socket to non-blocking for event-driven fun.
 		my $mode = ( MODE_ENABLE_PARTIAL_WRITE |
 				     MODE_ACCEPT_MOVING_WRITE_BUFFER );
 		$ssl->set_mode($mode);
@@ -274,7 +294,7 @@ method accept_one() {
 			io => $ssl,
 			event => "Event",
 			peerhost => $peerhost,
-			peer_cn => $peer_cn,
+			($self->rfc_compliant_ssl ? (peer_cn => $peer_cn) : ()),
 		       );
 		# let it know it's connected.
 		$session->connected;

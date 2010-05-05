@@ -75,19 +75,21 @@ method to_srs( SRS::EPP::Session $session ) {
 			filter_types => ["DomainNameFilter", "RegistrarIdFilter"],
 			AddressFilter => [$session->peerhost, $uid],
 		       ),
-		XML::SRS::ACL::Query->new(
+		($session->peer_cn ?
+			 (
+			XML::SRS::ACL::Query->new(
 			Resource => "epp_client_certs",
 			List => "allow",
 			Type => "registrar_domain",
 			filter_types => ["DomainNameFilter", "RegistrarIdFilter"],
 			AddressFilter => [$session->peer_cn, $uid],
-		       ),
+		       )) : () ),
 	       );
 }
 
 
 method notify( SRS::EPP::SRSResponse @rs ) {
-	if ( @rs == 3 ) {
+	if ( @rs > 1 ) {
 		# response to login
 		my $registrar = $rs[0];
 		my $ip_ok_acl = $rs[1];
@@ -113,11 +115,11 @@ method notify( SRS::EPP::SRSResponse @rs ) {
 		}
 
 		# the certificate must also have an entry
-		my $cn_ok;
+		my $cn_ok = 1;
 		if ( my $entry = eval {
-			$cn_ok_acl->message->response->entries->[0]
+			scalar(@{ $cn_ok_acl->message->response->entries }) == 0
 		}) {
-			$cn_ok = 1;
+			$cn_ok = 0;
 		}
 
 		if ( $password_ok and $ip_ok and $cn_ok ) {
