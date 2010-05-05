@@ -343,13 +343,11 @@ method accept_loop() {
 	while ( $self->running ) {
 		my $session = $self->accept_one;
 		if ( $session ) {
-			$session->loop;
+			Event->loop;
 			exit if $self->foreground;
 		}
 		else {
-			$session->connected;
-			Event->loop;
-			exit(0);
+			$self->process_signals;
 		}
 	}
 }
