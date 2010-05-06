@@ -261,6 +261,7 @@ method accept_one() {
 	if ( !$self->foreground and (my $pid = fork) ) {
 		push @{ $self->child_pids }, $pid;
 		$self->log_debug("forked $pid for connection");
+		return ();
 	}
 	else {
 		# We'll also want to know the address of the other end

@@ -129,7 +129,11 @@ method accept( Int $timeout? ) {
 			pop @ready;
 		}
 	}
-	$ready[0]->accept;
+	my $socket = $ready[0]->accept;
+	if ( !$socket ) {
+		die "accept lost a socket; exiting";
+	}
+	$socket;
 }
 
 method close() {
