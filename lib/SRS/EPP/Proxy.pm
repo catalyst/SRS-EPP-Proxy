@@ -12,6 +12,7 @@ use MooseX::Singleton;
 use MooseX::Method::Signatures;
 
 use SRS::EPP::Session;
+use Event;
 
 use Log::Log4perl qw(:easy);
 
@@ -343,8 +344,9 @@ method accept_loop() {
 	while ( $self->running ) {
 		my $session = $self->accept_one;
 		if ( $session ) {
-			Event->loop;
-			exit if $self->foreground;
+			$self->log_trace("accepted a new session, entering event loop");
+			Event::loop(120);
+			exit unless $self->foreground;
 		}
 		else {
 			$self->process_signals;

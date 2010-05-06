@@ -70,6 +70,10 @@ has event =>
 	required => 1,
 	;
 
+has output_event_watcher =>
+	is => "rw",
+	;
+
 # 'yield' means to queue an event for running but not run it
 # immediately.
 has 'yielding' =>
@@ -333,6 +337,7 @@ method connected() {
 	"prepared greeting $response for ".$self->peerhost
 		);
 	my $socket_fd = $self->io->get_fd;
+	$self->log_trace("setting up io event handlers for FD $socket_fd");
 	$self->event->io(
 		desc => "input_event",
 		fd => $socket_fd,
@@ -340,15 +345,27 @@ method connected() {
 		cb => sub {
 			$self->input_event;
 		},
+		timeout => 120,
+		timeout_cb => sub {
+			$self->log_trace("got input timeout event");
+			$self->input_timeout;
+		},
 		);
-	$self->event->io(
+
+	my $w = $self->event->io(
 		desc => "output_event",
 		fd => $socket_fd,
 		poll => 'w',
 		cb => sub {
 			$self->output_event;
 		},
+		timeout => 120,
+		timeout_cb => sub {
+			$self->log_trace("got output timeout event");
+		},
 		);
+	$w->stop;
+	$self->output_event_watcher($w);
 
 	$self->send_reply($response);
 	$self->state("Waiting for Client Authentication");
@@ -592,6 +609,11 @@ method shutdown() {
 	$self->shutting_down(1);
 }
 
+method input_timeout() {
+	# just hang up...
+	$self->shutdown;
+}
+
 method output_event() {
 	my $oq = $self->output_queue;
 	my $written = 0;
@@ -599,21 +621,29 @@ method output_event() {
 	while ( @$oq ) {
 		my $datum = shift @$oq;
 		my $wrote = $io->write( $datum );
-		$written += $wrote;  # thankfully, this is returned in bytes.
-		if ( !$wrote ) {
+		if ( $wrote <= 0 ) {
+			$self->log_debug("error on write? \$! = $!");
 			unshift @$oq, $datum;
 			last;
 		}
-		elsif ( $wrote < bytes::length $datum ) {
-			unshift @$oq, bytes::substr $datum, $wrote;
-			last;
+		else {
+			$written += $wrote;  # thankfully, this is returned in bytes.
+			if ( $wrote < bytes::length $datum ) {
+				unshift @$oq, bytes::substr $datum, $wrote;
+				last;
+			}
 		}
 	}
 	$self->log_trace(
 	"output_event wrote $written bytes, ".@$oq." chunk(s) remaining"
 		);
-	if ( !@$oq ) {
+	if ( @$oq ) {
+		$self->output_event_watcher->start;
+	}
+	else {
+		$self->output_event_watcher->stop;
 		$self->log_info("flushed output to client");
+		$self->output_event_watcher->stop;
 		if ( $self->shutting_down ) {
 			$self->check_queues;
 			# if check_queues didn't yield any events, we're done.
