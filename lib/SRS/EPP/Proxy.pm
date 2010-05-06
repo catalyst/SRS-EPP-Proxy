@@ -390,6 +390,17 @@ method reap_children() {
 	@$child_pids = grep { exists $reaped{$_} } @$child_pids;
 }
 
+{
+	no warnings 'redefine';
+	my $daemonize = \&daemonize;
+	*daemonize = sub {
+		my $self = shift;
+		my %args = @_;
+		$args{dont_close_all_files} = 1;
+		$daemonize->($self, %args);
+	};
+}
+
 before 'start' => sub {
 	my $self = shift;
 	$self->init;
@@ -397,7 +408,8 @@ before 'start' => sub {
 
 after 'start' => sub {
 	my $self = shift;
-	$self->accept_loop;
+	$self->accept_loop
+		if $self->is_daemon;
 };
 
 1;
