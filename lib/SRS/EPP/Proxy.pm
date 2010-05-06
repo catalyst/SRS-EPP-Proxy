@@ -349,6 +349,7 @@ method process_signals() {
 }
 
 method catch_signal(Str $sig, CodeRef $sub) {
+	$self->handlers->{$sig} = $sub;
 	$SIG{$sig} = sub { $self->signal_handler($sig) };
 }
 
