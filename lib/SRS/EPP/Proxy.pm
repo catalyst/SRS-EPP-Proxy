@@ -269,8 +269,10 @@ method accept_one() {
 		# ACL
 		my $peerhost = $socket->peerhost;
 		$self->log_info("connection from $peerhost, starting SSL");
+		$0 = "srs-epp-proxy [$peerhost] - SSL init";
 
 		my $ssl = $self->ssl_engine->accept($socket);
+		$0 = "srs-epp-proxy [$peerhost] - setup";
 
 		# RFC3734 and updates specify the use of client
 		# certificates.  So, fetch it and get its subject.
@@ -304,6 +306,17 @@ method accept_one() {
 
 		return $session;
 	}
+}
+
+method show_state( Str $state, SRS::EPP::Session $session? ) {
+	my ($regid, $peer_host_or_cn);
+	if ( $session ) {
+		$regid = $session->user;
+		$peer_host_or_cn = $session->peer_cn
+			|| $session->peerhost;
+	}
+	$0 = "srs-epp-proxy [$peer_host_or_cn] - ".
+		($regid?"registrar $regid - ":"").$state;
 }
 
 has signals =>
@@ -343,6 +356,7 @@ method accept_loop() {
 	if ( !$self->foreground ) {
 		$self->catch_signal(CHLD => sub { $self->reap_children });
 	}
+	$0 = "srs-epp-proxy - listener";
 	while ( $self->running ) {
 		my $session = $self->accept_one;
 		if ( $session ) {

@@ -68,6 +68,19 @@ has state =>
 	is => "rw",
 	isa => "Str",
 	default => "Waiting for Client",
+	trigger => sub {
+		my $self = shift;
+		if ( $self->has_proxy ) {
+			$self->proxy->show_state(shift, $self);
+		}
+	},
+	;
+
+has 'proxy' =>
+	is => "ro",
+	isa => "SRS::EPP::Proxy",
+	predicate => "has_proxy",
+	weak_ref => 1,
 	;
 
 # this object is billed with providing an Event.pm-like interface.
