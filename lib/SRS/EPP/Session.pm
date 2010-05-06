@@ -51,6 +51,12 @@ has io =>
 	isa => "Net::SSLeay::OO::SSL",
 	;
 
+# so the socket doesn't fall out of scope and get closed...
+has 'socket' =>
+	is => "ro",
+	isa => "IO::Handle",
+	;
+
 has user =>
 	is => "rw",
 	isa => "Str",
