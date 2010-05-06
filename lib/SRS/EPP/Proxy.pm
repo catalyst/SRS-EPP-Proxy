@@ -255,6 +255,7 @@ has 'backend' =>
 	;
 
 method accept_one() {
+	$self->log_trace("accepting connections");
 	my $socket = $self->listener->accept
 		or return;
 
@@ -365,6 +366,7 @@ method accept_loop() {
 			exit unless $self->foreground;
 		}
 		else {
+			$self->log_trace("no new session, processing signals");
 			$self->process_signals;
 		}
 	}
