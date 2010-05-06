@@ -613,6 +613,7 @@ method shutdown() {
 	$self->log_info( "shutting down session" );
 	$self->stalled(1);
 	$self->shutting_down(1);
+	$self->yield("output_event");
 }
 
 method input_timeout() {
@@ -649,18 +650,21 @@ method output_event() {
 	else {
 		$self->output_event_watcher->stop;
 		$self->log_info("flushed output to client");
-		$self->output_event_watcher->stop;
 		if ( $self->shutting_down ) {
 			$self->check_queues;
 			# if check_queues didn't yield any events, we're done.
 			if ( !keys %{$self->yielding} ) {
 				$self->log_debug( "shutting down SSL session" );
 				$self->io->shutdown;
-				#$self->io->get_fd->shutdown(1);
+				$self->log_debug( "shutting down Socket" );
+				$self->socket->shutdown(1);
 				# ... and without yielding any more events, we
 				# are also done... close all watchers
 				$self->log_debug( "shutting down user agent" );
 				$self->user_agent(undef);
+				# ... and that should be all the active event
+				# watchers cleared, so we should fall out of
+				# Event::loop and exit.
 			}
 			else {
 				$self->log_debug(
