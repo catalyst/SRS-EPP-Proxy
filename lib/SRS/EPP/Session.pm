@@ -522,9 +522,16 @@ method be_response( SRS::EPP::SRSMessage $rs_tx ) {
 	my $rq_parts = $request->parts;
 	my $rs_parts = $rs_tx->parts;
 	$self->log_debug(
-		"response from back-end has $rs_parts parts, "
-			."active request $rq_parts parts"
+		"response from back-end has ".@$rs_parts." parts, "
+			."active request ".@$rq_parts." parts"
 		);
+	if ( @$rs_parts < @$rq_parts and @$rs_parts == 1 and
+		     $rs_parts->[0]->isa("XML::SRS::Error")
+	     ) {
+		# this is a more fundamental type of error than others
+		# ... 'extend' to the other messages
+		@$rs_parts = ((@$rs_parts) x @$rq_parts);
+	}
 	(@$rq_parts == @$rs_parts) or do {
 		die "rs parts != rq parts";
 	};
