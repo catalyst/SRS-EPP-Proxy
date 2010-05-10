@@ -427,21 +427,25 @@ has 'user_agent' =>
 	lazy => 1,
 	default => sub {
 		my $self = shift;
-		SRS::EPP::Proxy::UA->new($self);
-	},
-	trigger => sub {
-		my $self = shift;
-		my $ua = shift;
-		if ( $ua ) {
-			$self->event->io(
-				desc => "user_agent",
-				fd => $ua->read_fh,
-				poll => 'r',
-				cb => sub {
+		my $ua = SRS::EPP::Proxy::UA->new(session => $self);
+		$self->log_trace("setting up UA input event");
+		my $w;
+		$w = $self->event->io(
+			desc => "user_agent",
+			fd => $ua->read_fh,
+			poll => 'r',
+			cb => sub {
+				if ( $self->user_agent ) {
+					$self->log_trace("UA input event fired, calling backend_response");
 					$self->backend_response;
-				},
-				);
-		}
+				}
+				else {
+					$self->log_trace("canceling UA watcher");
+					$w->cancel;
+				}
+			},
+			);
+		$ua;
 	},
 	handles => {
 		"user_agent_busy" => "busy",
