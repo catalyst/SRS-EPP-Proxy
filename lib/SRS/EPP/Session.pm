@@ -216,6 +216,7 @@ method input_packet( Str $data ) {
 					);
 			}
 		}
+		$self->log_packet("input", $data);
 		XML::EPP->parse($data);
 	};
 	my $error = ( $msg ? undef : $@ );
@@ -480,8 +481,9 @@ method send_backend_queue() {
 
 	my $tx = $self->next_message;
 	my $xml = $tx->to_xml;
-	$self->log_debug(
-		"XML message is ".length($xml)." characters long"
+	$self->log_packet(
+		"backend request",
+		$xml,
 		);
 	my $sig = $self->detached_sign($xml);
 	$self->log_trace("signed XML message");
@@ -529,7 +531,7 @@ method backend_response() {
 		or die "failed to verify BE response integrity";
 
 	# decode message
-	$self->log_debug("parsing as XML::SRS::Response");
+	$self->log_packet("BE response", $fields{r});
 	my $message = XML::SRS::Response->parse($fields{r});
 	my $rs_tx = SRS::EPP::SRSMessage->new( message => $message );
 
@@ -629,6 +631,7 @@ method send_reply( SRS::EPP::Response $rs ) {
 		"converting response $rs to XML"
 		);
 	my $reply_data = $rs->to_xml;
+	$self->log_packet("output", $reply_data);
 	if ( utf8::is_utf8($reply_data) ) {
 		$reply_data = encode("utf8", $reply_data);
 	}
@@ -728,6 +731,21 @@ method output_event() {
 	return $written;
 }
 
+method log_packet(Str $label, Str $data) {
+	$data =~ s{([\0-\037])}{chr(ord($1)+0x2400)}eg;
+	$data =~ s{([,\|])}{chr(ord($1)+0xff00-0x20)}eg;
+	my @data;
+	while ( length $data ) {
+		push @data, substr $data, 0, 1024, "";
+	}
+	for (my $i = 0; $i <= $#data; $i++ ) {
+		my $n_of_n = (@data > 1 ? " [".($i+1)." of ".@data."]" : "");
+		$self->log_info(
+			"$label message$n_of_n: "
+				.encode("utf8", $data[$i]),
+			);
+	}
+}
 1;
 
 __END__
