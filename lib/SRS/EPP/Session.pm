@@ -93,6 +93,10 @@ has output_event_watcher =>
 	is => "rw",
 	;
 
+has input_event_watcher =>
+	is => "rw",
+	;
+
 # 'yield' means to queue an event for running but not run it
 # immediately.
 has 'yielding' =>
@@ -182,7 +186,13 @@ has 'input_packeter' =>
 	;
 
 method read_input( Int $how_much where { $_ > 0 } ) {
-	$self->io->read($how_much);
+	my $rv = $self->io->read($how_much);
+	$self->log_trace("read_input($how_much) = ".bytes::length($rv));
+	return $rv;
+}
+
+method input_ready() {
+	!!$self->io->peek(1);
 }
 
 # convert input packets to messages
@@ -360,11 +370,12 @@ method connected() {
 		);
 	my $socket_fd = $self->io->get_fd;
 	$self->log_trace("setting up io event handlers for FD $socket_fd");
-	$self->event->io(
+	my $w = $self->event->io(
 		desc => "input_event",
-		fd => $socket_fd,
+		fd => $self->socket,
 		poll => 'r',
 		cb => sub {
+			$self->log_trace("got input callback");
 			$self->input_event;
 		},
 		timeout => 120,
@@ -373,8 +384,9 @@ method connected() {
 			$self->input_timeout;
 		},
 		);
+	$self->input_event_watcher($w);
 
-	my $w = $self->event->io(
+	$w = $self->event->io(
 		desc => "output_event",
 		fd => $socket_fd,
 		poll => 'w',
@@ -634,6 +646,7 @@ has 'shutting_down' =>
 	;
 method shutdown() {
 	$self->log_info( "shutting down session" );
+	$self->state("Shutting down");
 	$self->stalled(1);
 	$self->shutting_down(1);
 	$self->yield("output_event");
@@ -642,6 +655,23 @@ method shutdown() {
 method input_timeout() {
 	# just hang up...
 	$self->shutdown;
+}
+
+method do_close() {
+	# hang up on us without logging out will you?  Well, we'll
+	# just have to close your TCP session without properly closing
+	# SSL.  Take that.
+	$self->log_debug( "shutting down Socket" );
+	$self->socket->shutdown(1);
+	$self->log_debug( "shutting down user agent" );
+	$self->user_agent(undef);
+	$self->input_event_watcher->cancel;
+}
+
+# called when input_event fires, but nothing is readable.
+method empty_read() {
+	$self->log_info( "detected EOF on input" );
+	$self->do_close;
 }
 
 method output_event() {
@@ -677,17 +707,7 @@ method output_event() {
 			$self->check_queues;
 			# if check_queues didn't yield any events, we're done.
 			if ( !keys %{$self->yielding} ) {
-				$self->log_debug( "shutting down SSL session" );
-				$self->io->shutdown;
-				$self->log_debug( "shutting down Socket" );
-				$self->socket->shutdown(1);
-				# ... and without yielding any more events, we
-				# are also done... close all watchers
-				$self->log_debug( "shutting down user agent" );
-				$self->user_agent(undef);
-				# ... and that should be all the active event
-				# watchers cleared, so we should fall out of
-				# Event::loop and exit.
+				$self->do_close;
 			}
 			else {
 				$self->log_debug(

@@ -5,6 +5,8 @@ package SRS::EPP::Packets;
 use Moose;
 use MooseX::Method::Signatures;
 
+with 'MooseX::Log::Log4perl::Easy';
+
 has input_state =>
 	is => "rw",
 	default => "expect_length",
@@ -50,12 +52,17 @@ has 'input_expect' =>
 	;
 
 has 'session' =>
-	handles => [qw(input_packet read_input)],
+	handles => [qw(input_packet read_input input_ready yield empty_read)],
 	;
 
 method input_event( Str $data? ) {
+	$self->log_trace(
+		"input event: "
+			.(defined($data)?length($data)." byte(s)":"will read")
+		       );
 	if ( defined $data and $data ne "") {
 		push @{ $self->input_buffer }, $data;
+
 	}
 
 	my $ready = $self->input_buffer_size;
@@ -63,7 +70,15 @@ method input_event( Str $data? ) {
 
 	if ( !defined $data ) {
 		$data = $self->read_input($expected - $ready);
-		push @{ $self->input_buffer }, $data;
+		$self->log_trace(
+			"input_event read ".length($data)." byte(s)"
+		       );
+		if ( length($data) == 0 ) {
+			$self->empty_read;
+		}
+		else {
+			push @{ $self->input_buffer }, $data;
+		}
 	}
 
 	my $got_chunk;
@@ -75,14 +90,30 @@ method input_event( Str $data? ) {
 		if ( $self->input_state eq "expect_length" ) {
 			$self->input_state("expect_data");
 			$self->input_expect(unpack("N", $data)-4);
+			$self->log_trace(
+				"expecting ".$self->input_expect." byte(s)"
+			       );
 		}
 		else {
+			$self->log_trace(
+				"got complete packet, calling input_packet"
+			       );
 			$self->input_state("expect_length");
 			$self->input_packet($data);
 			$self->input_expect(4);
+			$self->log_trace(
+				"now expecting length packet"
+			       );
 		}
 		$expected = $self->input_expect;
 		$got_chunk = 1;
+	}
+
+	if ( $self->input_ready ) {
+		$self->log_trace(
+			"done input_event, but more input ready - yielding input_event"
+		       );
+		$self->yield("input_event");
 	}
 
 	return $got_chunk;
