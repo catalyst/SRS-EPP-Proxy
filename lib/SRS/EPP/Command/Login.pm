@@ -6,6 +6,9 @@ use Moose;
 extends 'SRS::EPP::Command';
 use MooseX::Method::Signatures;
 use Crypt::Password;
+use Data::Dumper;
+
+with 'MooseX::Log::Log4perl::Easy';
 
 sub action {
 	"login";
@@ -104,7 +107,13 @@ method notify( SRS::EPP::SRSResponse @rs ) {
 		if ( my $auth = eval {
 			$registrar->message->response->epp_auth
 		} ) {
+			$self->log_debug("checking provided password (".$self->password.") against ".Dumper($auth->crypted));
 			$password_ok = $auth->check($self->password);
+			$self->log_info("supplied password does not match")
+				if !$password_ok;
+		}
+		else {
+			$self->log_info("could not fetch password (denying login): $@");
 		}
 
 		# must be an entry on the allow list
@@ -114,6 +123,9 @@ method notify( SRS::EPP::SRSResponse @rs ) {
 		       }) {
 			$ip_ok = 1;
 		}
+		else {
+			$self->log_info("no IP ACL found; denying login");
+		}
 
 		# the certificate must also have an entry
 		my $cn_ok = 1;
@@ -121,11 +133,16 @@ method notify( SRS::EPP::SRSResponse @rs ) {
 			scalar(@{ $cn_ok_acl->message->response->entries }) == 0
 		}) {
 			$cn_ok = 0;
+			$self->log_info("no common name ACL found; denying login");
 		}
 
 		if ( $password_ok and $ip_ok and $cn_ok ) {
+			$self->log_info("login as registrar ".$self->uid." successful");
 			$self->login_ok(1);
 			$self->session->user($self->uid);
+		}
+		else {
+			$self->log_info("login as registrar ".$self->uid." unsuccessful");
 		}
 		$self->session->clear_want_user;
 		$self->session->stalled(0);
