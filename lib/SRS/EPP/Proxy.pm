@@ -298,6 +298,7 @@ method accept_one() {
 		my $session = SRS::EPP::Session->new(
 			io => $ssl,
 			socket => $socket,
+			backend_url => $self->backend,
 			event => "Event",
 			peerhost => $peerhost,
 			($self->rfc_compliant_ssl ? (peer_cn => $peer_cn) : ()),

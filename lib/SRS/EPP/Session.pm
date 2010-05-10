@@ -450,6 +450,7 @@ has 'user_agent' =>
 has 'backend_url' =>
 	isa => "Str",
 	is => "rw",
+	required => 1,
 	;
 
 has 'active_request' =>
