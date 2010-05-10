@@ -9,6 +9,8 @@ use Moose::Util::TypeConstraints;
 use IO::Handle;
 use Storable qw(store_fd retrieve_fd);
 
+with 'MooseX::Log::Log4perl::Easy';
+
 enum __PACKAGE__."::states" => qw(waiting busy ready);
 BEGIN {
 	class_type "HTTP::Request";
@@ -78,17 +80,28 @@ method check_reader_ready( Num $timeout = 0 ) {
 sub BUILD {
 	my $self = shift;
 	{
+		$self->log_trace("setting up pipes...");
 		pipe(my $rq_rdr, my $rq_wtr);
 		pipe(my $rs_rdr, my $rs_wtr);
+		$self->log_trace("forking...");
 		my $pid = fork;
 		defined $pid or die "fork failed; $!";
 		if ( $pid ) {
+			$self->log_trace(
+"parent, child pid = $pid, reading from ".fileno($rs_rdr)
+	.", writing to ".fileno($rq_wtr)
+			       );
 			$self->pid($pid);
 			$self->read_fh($rs_rdr);
 			$self->write_fh($rq_wtr);
 			return;
 		}
 		else {
+			$self->log_trace(
+"child, I am $$, reading from "
+	.fileno($rq_rdr).", writing to ".fileno($rs_wtr)
+			       );
+			$0 = __PACKAGE__;
 			$self->read_fh($rq_rdr);
 			$self->write_fh($rs_wtr);
 		}
@@ -120,22 +133,32 @@ has 'ua' =>
 method loop() {
 	$SIG{TERM} = sub { exit(0) };
 	while ( 1 ) {
+		$self->log_trace("UA waiting for request");
+		$0 = __PACKAGE__." - idle";
 		my $request = eval { fd_retrieve($self->read_fh) }
 			or do {
+				#$self->log_error("failed to read request; $@");
 				last;
 			};
+		$self->log_debug("sending a request to back-end");
+		$0 = __PACKAGE__." - active";
 		my $response = $self->ua->request($request);
+		$self->log_debug("got response - writing to response socket");
+		$0 = __PACKAGE__." - responding";
 		store_fd $response, $self->write_fh;
 		$self->write_fh->flush;
 	}
+	$self->log_trace("UA exiting");
 	exit(0);
 }
 
 method request( HTTP::Request $request ) {
 	die "sorry, can't handle a request in state '".$self->state."'"
 		unless $self->waiting;
+	$self->log_trace("writing request to child UA socket");
 	store_fd $request, $self->write_fh;
 	$self->write_fh->flush;
+	$self->log_trace("flushed");
 	$self->state("busy");
 }
 
