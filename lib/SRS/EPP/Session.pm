@@ -685,6 +685,7 @@ method do_close() {
 	$self->log_debug( "shutting down user agent" );
 	$self->user_agent(undef);
 	$self->input_event_watcher->cancel;
+	$self->event->unloop_all;
 }
 
 # called when input_event fires, but nothing is readable.

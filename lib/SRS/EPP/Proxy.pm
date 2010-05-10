@@ -380,6 +380,7 @@ method accept_loop() {
 				my $event = shift;
 				my $exception = shift;
 				$self->log_error("Exception during ".$event->w->desc."; $exception");
+				Event::unloop_all;
 			};
 			Event::loop(120);
 			$self->log_info("Session ends");
