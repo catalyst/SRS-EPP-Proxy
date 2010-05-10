@@ -62,6 +62,13 @@ has user =>
 	isa => "Str",
 	;
 
+# hack for login message
+has want_user =>
+	is => "rw",
+	isa => "Str",
+	clearer => "clear_want_user",
+	;
+
 # this "State" is the state according to the chart in RFC3730 and is
 # updated for amusement's sake only
 has state =>
@@ -318,16 +325,15 @@ method process_queue( Int $count = 1 ) {
 				);
 			$self->add_command_response($response, $command);
 		}
-		elsif ( $command->authenticated and !$self->user ) {
+		elsif ( $command->authenticated xor $self->user ) {
 			$self->add_command_response(
 				$command->make_response(
-					Error => code => 2201,
-					extra => "Not logged in",
+					Error => code => 2001,
 					),
 				$command,
 				);
 			$self->log_info(
-				"rejecting command: not logged in"
+	"rejecting command: ".($self->user?"already":"not")." logged in"
 				);
 		}
 		else {
@@ -480,6 +486,9 @@ method send_backend_queue() {
 	my $sig = $self->detached_sign($xml);
 	$self->log_trace("signed XML message");
 	my $reg_id = $self->user;
+	if ( !$reg_id ) {
+		$reg_id = $self->want_user;
+	}
 
 	my $req = POST(
 		$self->backend_url,

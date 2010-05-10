@@ -63,6 +63,7 @@ method to_srs( SRS::EPP::Session $session ) {
 	$self->new_password($login->new_password)
 		if $login->new_password;
 	$self->uid($uid);
+	$self->session->want_user($uid);
 	$session->stalled(1);
 
 	return (XML::SRS::Registrar::Query->new(
