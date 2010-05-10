@@ -73,8 +73,8 @@ method to_srs( SRS::EPP::Session $session ) {
 			Resource => "epp_connect",
 			List => "allow",
 			Type => "registrar_ip",
-			filter_types => ["DomainNameFilter", "RegistrarIdFilter"],
-			AddressFilter => [$session->peerhost, $uid],
+			filter_types => ["AddressFilter", "RegistrarIdFilter"],
+			filter => [$session->peerhost, $uid],
 		       ),
 		($session->peer_cn ?
 			 (
@@ -83,7 +83,7 @@ method to_srs( SRS::EPP::Session $session ) {
 			List => "allow",
 			Type => "registrar_domain",
 			filter_types => ["DomainNameFilter", "RegistrarIdFilter"],
-			AddressFilter => [$session->peer_cn, $uid],
+			filter => [$session->peer_cn, $uid],
 		       )) : () ),
 	       );
 }
