@@ -323,7 +323,7 @@ method process_queue( Int $count = 1 ) {
 			# "simple" commands include "hello" and "logout"
 			my $response = $command->process($self);
 			$self->log_debug(
-				"processed simple command $command"
+				"processed simple command $command; response is $response"
 				);
 			$self->add_command_response($response, $command);
 		}
