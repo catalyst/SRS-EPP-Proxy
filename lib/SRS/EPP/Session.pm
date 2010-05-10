@@ -115,6 +115,9 @@ method yield(Str $method, @args) {
 			$self->log_trace(" - already yielding");
 			return;
 		}
+		else {
+			$self->yielding->{$method} = 1;
+		}
 	}
 	$self->event->timer(
 		desc => $method,
