@@ -356,7 +356,13 @@ method catch_signal(Str $sig, CodeRef $sub) {
 }
 
 method accept_loop() {
-	$self->catch_signal(TERM => sub { $self->running(0) });
+	$self->catch_signal(TERM => sub {
+				    $self->log_info("Shutting down.");
+				    for my $kid ( @{ $self->child_pids } ) {
+					    kill "TERM", $kid;
+				    }
+				    $self->running(0);
+			    });
 	if ( !$self->foreground ) {
 		$self->catch_signal(CHLD => sub { $self->reap_children });
 	}
@@ -364,8 +370,19 @@ method accept_loop() {
 	while ( $self->running ) {
 		my $session = $self->accept_one;
 		if ( $session ) {
+			unless ( $self->foreground ) {
+				$self->catch_signal(TERM => sub {
+							    $session->shutdown;
+						    });
+			}
 			$self->log_trace("accepted a new session, entering event loop");
+			local($Event::DIED) = sub {
+				my $event = shift;
+				my $exception = shift;
+				$self->log_error("Exception during ".$event->w->desc."; $exception");
+			};
 			Event::loop(120);
+			$self->log_info("Session ends");
 			exit unless $self->foreground;
 		}
 		else {
@@ -400,6 +417,24 @@ method reap_children() {
 		my $self = shift;
 		my %args = @_;
 		$args{dont_close_all_files} = 1;
+		$SIG{__DIE__} = sub {
+			# be sure to re-throw exceptions whilst inside
+			# eval { }
+			if ( $^S ) {
+				die @_;
+			} else {
+				$self->log_error("Uncaught exception, exiting: @_");
+				$self->log_error("stack trace: ".Carp::longmess);
+				exit(1);
+			}
+		};
+		my $no_recurse;
+		$SIG{__WARN__} = sub {
+			return if $no_recurse;
+			$no_recurse = 1;
+			eval { $self->log_warn("caught warning: @_") };
+			$no_recurse = 0;
+		};
 		$daemonize->($self, %args);
 	};
 }
