@@ -126,8 +126,9 @@ method notify( SRS::EPP::SRSResponse @rs ) {
 		if ( $password_ok and $ip_ok and $cn_ok ) {
 			$self->login_ok(1);
 			$self->session->user($self->uid);
-			$self->session->stalled(0);
 		}
+		$self->session->clear_want_user;
+		$self->session->stalled(0);
 	}
 	else {
 		# response to a password update
