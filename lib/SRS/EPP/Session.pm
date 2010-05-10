@@ -602,12 +602,15 @@ method process_responses() {
 				if $self->response_ready;
 		}
 		else {
-			$self->log_info( "command $cmd not yet incomplete" );
-			my @messages = $cmd->next_backend_message($self);
+			$self->log_info( "command $cmd not yet complete" );
+			my @messages = map {
+				SRS::EPP::SRSRequest->new(
+					message => $_,
+					);
+			} $cmd->next_backend_message($self);
 			$self->log_info(
 		"command $cmd produced ".@messages." further SRS messages"
 				);
-			$self->log_info( "$cmd not yet incomplete" );
 			$self->queue_backend_request($cmd, @messages);
 			$self->yield("send_backend_queue");
 		}
