@@ -514,6 +514,13 @@ method send_backend_queue() {
 	$self->user_agent->request( $req );
 }
 
+sub url_decode {
+	my $url_encoded = shift;
+	$url_encoded =~ tr{+}{ };
+	$url_encoded =~ s{%([0-9a-f]{2})}{chr(hex($1))}eg;
+	return $url_encoded;
+}
+
 #----
 # Dealing with backend responses
 method backend_response() {
