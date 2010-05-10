@@ -151,11 +151,16 @@ method notify( SRS::EPP::SRSResponse @rs ) {
 		# response to a password update
 		my $registrar = $rs[0];
 		if ( my $auth = eval {
-			password($registrar->message->response->epp_auth)
+			$registrar->message->response->epp_auth
 		}) {
-			$self->password_changed(
-				$auth->check($self->new_password),
-			       );
+			my $ok = $auth->check($self->new_password);
+			if ( $ok ) {
+				$self->log_info("changed password successfully");
+			}
+			else {
+				$self->log_error("failed to change password!");
+			}
+			$self->password_changed( $ok );
 		}
 	}
 };
@@ -179,7 +184,8 @@ method next_backend_message ( SRS::EPP::Session $session ) {
 	die unless $self->new_password;
 	XML::SRS::Registrar::Update->new(
 		registrar_id => $self->uid,
-		epp_auth => password( $self->new_password ),
+		epp_auth => Crypt::Password::password( $self->new_password ),
+		action_id => $self->server_id,
 	       );
 }
 
