@@ -297,6 +297,7 @@ method accept_one() {
 		# create a new session...
 		my $session = SRS::EPP::Session->new(
 			io => $ssl,
+			proxy => $self,
 			socket => $socket,
 			backend_url => $self->backend,
 			event => "Event",

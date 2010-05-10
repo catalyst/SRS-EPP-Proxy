@@ -88,6 +88,7 @@ has 'proxy' =>
 	isa => "SRS::EPP::Proxy",
 	predicate => "has_proxy",
 	weak_ref => 1,
+	handles => [qw/openpgp/],
 	;
 
 # this object is billed with providing an Event.pm-like interface.
@@ -486,8 +487,9 @@ method send_backend_queue() {
 		"backend request",
 		$xml,
 		);
-	my $sig = $self->detached_sign($xml);
-	$self->log_trace("signed XML message");
+	my $sig = $self->openpgp->detached_sign($xml);
+	$self->log_debug("signed XML message - sig is ".$sig)
+		if $self->log->is_debug;
 	my $reg_id = $self->user;
 	if ( !$reg_id ) {
 		$reg_id = $self->want_user;
@@ -528,7 +530,7 @@ method backend_response() {
 
 	# check signature
 	$self->log_debug("verifying signature");
-	$self->pgp->verify_detached($fields{r}, $fields{s})
+	$self->openpgp->verify_detached($fields{r}, $fields{s})
 		or die "failed to verify BE response integrity";
 
 	# decode message

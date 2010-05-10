@@ -185,7 +185,7 @@ use Encode;
 use utf8;
 sub byte_string {
 	if ( utf8::is_utf8($_[0]) ) {
-		Encode("utf8", $_[0]);
+		encode("utf8", $_[0]);
 	}
 	else {
 		$_[0];
