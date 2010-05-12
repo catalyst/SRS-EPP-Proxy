@@ -12,6 +12,9 @@ use XML::EPP;
 use XML::EPP::Host;
 use XML::SRS;
 
+use Log::Log4perl qw(:easy);
+Log::Log4perl->easy_init($ERROR);
+
 BEGIN { use_ok("SRS::EPP::Session"); }
 
 {

@@ -6,6 +6,9 @@ use 5.010;
 use strict;
 use Test::More qw(no_plan);
 
+use Log::Log4perl qw(:easy);
+Log::Log4perl->easy_init($ERROR);
+
 # gah, this should really be split into its own distribution.
 use_ok("SRS::EPP::Packets");
 
