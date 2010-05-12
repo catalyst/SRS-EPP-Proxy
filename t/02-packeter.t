@@ -30,6 +30,9 @@ use_ok("SRS::EPP::Packets");
 		my $packet = shift;
 		push @{ $self->{output} }, $packet;
 	}
+	sub input_ready {
+		0
+	}
 }
 
 my $test_case = Mock::Session->new(pack("N",17+4), "U" x 17);
