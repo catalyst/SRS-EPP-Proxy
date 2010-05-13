@@ -566,7 +566,7 @@ method be_response( SRS::EPP::SRSMessage $rs_tx ) {
 			."active request ".@$rq_parts." parts"
 		);
 	if ( @$rs_parts < @$rq_parts and @$rs_parts == 1 and
-		     $rs_parts->[0]->isa("XML::SRS::Error")
+		     $rs_parts->[0]->message->isa("XML::SRS::Error")
 	     ) {
 		# this is a more fundamental type of error than others
 		# ... 'extend' to the other messages
