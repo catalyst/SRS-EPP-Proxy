@@ -122,6 +122,7 @@ method notify( SRS::EPP::SRSResponse @rs ) {
 			$ip_ok_acl->message->response->entries->[0]
 		       }) {
 			$ip_ok = 1;
+			$self->log_info("IP ACL found for ".$entry->Address);
 		}
 		else {
 			$self->log_info("no IP ACL found; denying login");
