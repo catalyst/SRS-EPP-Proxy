@@ -6,8 +6,7 @@ use strict;
 use HTTP::Request::Common qw(GET);
 use Time::HiRes qw(sleep);
 
-use Log::Log4perl qw(:easy);
-Log::Log4perl->easy_init($ERROR);
+use t::Log4test;
 
 our $tests = 0;
 our $pid = $$;

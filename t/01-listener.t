@@ -7,6 +7,8 @@ use IO::Socket::INET;
 
 our $have_v6;
 
+use t::Log4test;
+
 BEGIN {
 	$have_v6 = eval "use IO::Socket::INET6; 1";
 }

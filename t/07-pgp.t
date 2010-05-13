@@ -5,8 +5,7 @@
 use strict;
 use Test::More qw(no_plan);
 
-use Log::Log4perl qw(:easy);
-Log::Log4perl->easy_init($ERROR);
+use t::Log4test;
 
 BEGIN {
 	use_ok("SRS::EPP::OpenPGP");
