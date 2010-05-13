@@ -173,7 +173,7 @@ method notify( SRS::EPP::SRSResponse @rs ) {
 method done() {
 	if ( defined $self->login_ok ) {
 		# login result is back
-		if ( $self->new_password ) {
+		if ( $self->login_ok and $self->new_password ) {
 			defined $self->password_changed;
 		}
 		else {
