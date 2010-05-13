@@ -380,7 +380,7 @@ method connected() {
 	$self->log_trace("setting up io event handlers for FD $socket_fd");
 	my $w = $self->event->io(
 		desc => "input_event",
-		fd => $self->socket,
+		fd => $socket_fd,
 		poll => 'r',
 		cb => sub {
 			$self->log_trace("got input callback");
