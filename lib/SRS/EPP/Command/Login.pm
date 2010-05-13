@@ -79,7 +79,7 @@ method to_srs( SRS::EPP::Session $session ) {
 			filter_types => ["AddressFilter", "RegistrarIdFilter"],
 			filter => [$session->peerhost, $uid],
 		       ),
-		($session->peer_cn ?
+		($session->proxy->rfc_compliant_ssl ?
 			 (
 			XML::SRS::ACL::Query->new(
 			Resource => "epp_client_certs",
@@ -128,11 +128,15 @@ method notify( SRS::EPP::SRSResponse @rs ) {
 		}
 
 		# the certificate must also have an entry
-		my $cn_ok = 1;
-		if ( my $entry = eval {
-			scalar(@{ $cn_ok_acl->message->response->entries }) == 0
-		}) {
-			$cn_ok = 0;
+		my $cn_ok = $cn_ok_acl ? 0 : 1;
+		if ( $cn_ok_acl && (my $entry = eval {
+			$cn_ok_acl->message->response->entries->[0];
+		})) {
+			$self->log_info("Domain ACL found for: "
+						.$entry->DomainName);
+			$cn_ok = 1;
+		}
+		else {
 			$self->log_info("no common name ACL found; denying login");
 		}
 
