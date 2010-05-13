@@ -89,6 +89,7 @@ has 'proxy' =>
 	predicate => "has_proxy",
 	weak_ref => 1,
 	handles => [qw/openpgp/],
+	required => 1,
 	;
 
 # this object is billed with providing an Event.pm-like interface.

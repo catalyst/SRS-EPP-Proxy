@@ -218,10 +218,12 @@ my $input = do {
 };
 
 my $event = Mock::Event->new();
+my $proxy = Mock::Base->new(rfc_compliant_ssl => 1);
 my $session = SRS::EPP::Session->new(
 	backend_url => "foo",
 	event => $event,
 	io => Mock::IO->new(input => ""),
+	proxy => $proxy,
 	peerhost => "101.1.5.27",
 	socket => Mock::Base->new,
 	peer_cn => "foobar.client.cert.example.com",
