@@ -6,7 +6,6 @@ use 5.010;
 use strict;
 use Test::More qw(no_plan);
 use Fatal qw(:void open);
-use Data::Dumper;
 
 use XML::EPP;
 use XML::EPP::Host;
@@ -35,6 +34,32 @@ BEGIN { use_ok("SRS::EPP::Session"); }
 }
 
 {
+	package Mock::Event::Watcher;
+	our @ISA = qw(Mock::Base);
+	sub stop {
+		my $self = shift;
+		$self->{running} = 0;
+	};
+	sub start {
+		my $self = shift;
+		$self->{running} = 1;
+	};
+	sub ready {
+		my $self = shift;
+		if ( $self->{running}//=1 ) {
+			if ( $self->{poll} eq "r" ) {
+				if ( length ${ $self->{fd}||\"" }) {
+					return 1;
+				}
+			}
+			else {
+				1;
+			}
+		}
+	}
+}
+
+{
 	package Mock::Event;
 	our @ISA = qw(Mock::Base);
 	for my $func ( qw(io timer) ) {
@@ -42,8 +67,13 @@ BEGIN { use_ok("SRS::EPP::Session"); }
 		*$func = sub {
 			my $self = shift;
 			if ( @_ ) {
-				my $aref=$self->{$func}||=[];
-				push @$aref,\@_;
+				push @{$self->{$func}}, {@_};
+				my $w = Mock::Event::Watcher->new
+					(event => $self,
+					 @_);
+				$self->{watchers}{$w}=$w
+					if $func eq "io";
+				return $w;
 			}
 			else {
 				$self->{$func};
@@ -52,7 +82,7 @@ BEGIN { use_ok("SRS::EPP::Session"); }
 	}
 	sub queued_events {
 		my $self = shift;
-		my $events = delete $self->{timer}
+		my $events = $self->{timer}
 			or return();
 		map { my $href = ref $_ eq "HASH" ? $_ : { @$_ };
 		      $href->{desc} } @$events;
@@ -60,6 +90,55 @@ BEGIN { use_ok("SRS::EPP::Session"); }
 	sub has_queued_events {
 		my $self = shift;
 		$self->timer && @{ $self->timer };
+	}
+	sub queued {
+		my $self = shift;
+		my $event = shift;
+		grep { $_ eq $event } $self->queued_events;
+	}
+	sub ignore {
+		my $self = shift;
+		my $event = shift;
+		my $events = $self->{timer} or return;
+		@$events = grep { $_->{desc} ne $event }
+			@$events;
+	}
+	sub loop_until {
+		my $self = shift;
+		my $end = shift;
+		my $allowed = shift if ref $_[0];
+		my $test_name = pop;
+		$test_name ||= "event loop";
+		my $fail;
+		while ( !$end->() ) {
+			my $event;
+			$event = shift @{ $self->{timer}||=[] }
+				or do {
+					for my $watcher (values %{$self->{watchers}}) {
+						if ( $watcher->ready ) {
+							$event = $watcher;
+							last;
+						}
+					}
+				};
+			last if !$event;
+			my $desc = $event->{desc};
+			my $cb = $event->{cb};
+			if ( $allowed and
+				     !($desc ~~ @$allowed) ) {
+				# Hoist the main::fail!!
+				main::fail("$test_name - "
+					   ."illegal event '$desc' "
+					   ."(allowed: @$allowed)");
+				++$fail;
+				last;
+			}
+			else {
+				$cb->();
+			}
+		}
+		main::pass("$test_name - events as expected")
+				unless $fail;
 	}
 }
 
@@ -76,11 +155,20 @@ BEGIN { use_ok("SRS::EPP::Session"); }
 		$self->{get_fd} = shift @model_fds;
 		$self;
 	}
+	sub get_fd {
+		my $self = shift;
+		\$self->{input};
+	}
 	use bytes;
 	sub read {
 		my $self = shift;
 		my $how_much = shift;
 		bytes::substr $self->{input}, 0, $how_much, "";
+	}
+	sub peek {
+		my $self = shift;
+		my $how_much = shift;
+		bytes::substr $self->{input}, 0, $how_much;
 	}
 	our $been_evil;
 	sub write {
@@ -129,10 +217,13 @@ my $input = do {
 	<$input>
 };
 
+my $event = Mock::Event->new();
 my $session = SRS::EPP::Session->new(
-	event => Mock::Event->new(),
-	io => Mock::IO->new(input => $input),
+	backend_url => "foo",
+	event => $event,
+	io => Mock::IO->new(input => ""),
 	peerhost => "101.1.5.27",
+	socket => Mock::Base->new,
 	peer_cn => "foobar.client.cert.example.com",
        );
 
@@ -149,82 +240,64 @@ is_deeply(
 # writable, and the condition where variable-sized chunks can be
 # written to it.
 srand 107;
-do {
-	$session->output_event;
-} while ( @{ $session->output_queue } );
+$event->loop_until(
+	sub { !@{ $session->output_queue } },
+	[ qw(output_event) ],
+	"queued output",
+       );
 
 my $greeting = delete $session->io->{output};
 my $greeting_length = unpack("N", bytes::substr($greeting, 0, 4, ""));
 is(bytes::length($greeting)+4, $greeting_length,
    "got a full packet back ($greeting_length bytes)");
-#diag($greeting);
 
 is_deeply(
-	[$session->event->queued_events], [],
-	"After issuing greeting, no events ready"
+	[$session->event->queued_events], [ ],
+	"After issuing greeting, no events waiting"
        );
 is($session->state, "Waiting for Client Authentication",
    "RFC5730 session state flowchart state as expected");
 
 # 1. test that input leads to queued commands
-do {
-	$session->input_event;
-} until ( $session->event->has_queued_events or !$session->io->input );
+$session->{io}{input} = $input;
+$event->loop_until(
+	sub { $session->event->queued("process_queue") or
+		      !$session->io->input },
+	[qw(input_event)],
+	"queued input",
+	);
 
-is_deeply(
-	[$session->event->queued_events], ["process_queue"],
-	"A valid input message results in a queued output event",
-       )
-	or diag Dumper($session);
 is($session->commands_queued, 1, "command is now queued");
 
-# test that the string is valid
-
-$session->process_queue;
-
 # 2. proceed with the event which was 'queued'
-my @expected = qw(process_queue send_pending_replies output_event);
-my $failed = 0;
-event:
-while ( $session->io->input ) {
-	my @events = $session->event->queued_events
-		or last;
-	for my $event ( @events ) {
-		unless ($event ~~ @expected) {
-			fail("weren't expecting $event");
-			$failed = 1;
-			last event;
-		}
-		$session->$event;
-	}
-}
-pass("events as expected") unless $failed;
+$event->loop_until(
+	sub { $event->queued("output_event") },
+	[qw(process_queue input_event send_pending_replies)],
+	"queue processing",
+	);
 
-# 3. check that we got an error!
+# this one can jump the queue here...
+my $error;
 do {
 	$session->output_event;
-} while ( @{ $session->output_queue } );
+} until ( $error = $session->io->get_packet );
 
-my $error = $session->io->get_packet;
-
+# 3. check that we got an error!
 use utf8;
 like($error->message->result->[0]->msg->content,
-     qr/not logged in/i,
+     qr/Command syntax error/i,
      "got an appropriate error");
 is($error->message->tx_id->client_id,
    "ÄBC-12345", "returned client ID OK");
 
 # 4. check that the login message results in queued back-end messages
-do {
-	$session->input_event;
-} until ( $session->event->has_queued_events or !$session->io->input );
-is_deeply(
-	[$session->event->queued_events], ["process_queue"],
-	"A valid login message results in a process_queue event",
-       )
-	or diag Dumper($session);
-
-$session->process_queue;
+$event->loop_until(
+	sub {
+		$event->queued("send_backend_queue");
+	},
+	[qw(input_event process_queue output_event)],
+	"login produces a backend message",
+	);
 
 ok($session->backend_pending,
    "login message produced backend messages");
@@ -239,16 +312,12 @@ is_deeply(
 	"login message transform",
        );
 
-is_deeply(
-	[$session->event->queued_events],
-	[qw(send_backend_queue)],
-	"Session wants to send",
-       )
-	or diag Dumper($session);
+ok($event->queued("send_backend_queue"), "Session wants to send", );
 
 use Crypt::Password;
 
 # fake some responses.
+$event->ignore("send_backend_queue");
 
 # these objects are missing fields and would not serialize; but for
 # this test it doesn't matter.  We must only provide the attributes
@@ -312,29 +381,21 @@ my $srs_rs = XML::SRS::Response->new(
        );
 
 my $rs_tx = SRS::EPP::SRSMessage->new( message => $srs_rs );
-$DB::single = 1;
 $session->be_response($rs_tx);
 
 # now, with the response there, process_replies should be ready.
-is_deeply(
-	[$session->event->queued_events],
-	[qw(process_responses)],
-	"Session wants to process that response",
+ok($event->queued("process_responses"),
+   "Session wants to process that response",
+  );
+
+my $response;
+$event->loop_until(
+	sub { $response = $session->io->get_packet },
+	[qw(send_pending_replies input_event process_queue
+	    process_responses output_event)],
+	"response produced",
        );
 
-$session->process_responses;
-is_deeply(
-	[$session->event->queued_events],
-	[qw(process_queue send_pending_replies)],
-	"reply ready to be sent",
-       );
-
-$session->send_pending_replies;
-do {
-	$session->output_event;
-} while ( @{ $session->output_queue } );
-
-my $response = $session->io->get_packet;
 is($response->message->result->[0]->code, 1000, "Login successful!");
 
 # now we should have a response ready to go
@@ -343,8 +404,8 @@ ok($session->user, "Session now authenticated");
 $session->input_event;
 
 # ... and we should eventually log out
-@expected = qw(process_queue send_pending_replies output_event);
-$failed = 0;
+my @expected = qw(process_queue send_pending_replies output_event);
+my $failed = 0;
 event:
 while ( my @events = $session->event->queued_events ) {
 	$session->input_event if $session->io->input;
