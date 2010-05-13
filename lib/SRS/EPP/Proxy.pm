@@ -81,7 +81,7 @@ sub BUILD {
 	# pass configuration options to the session class?
 }
 
-our $VERSION = "0.11";
+our $VERSION = "0.12";
 
 has 'logging' =>
 	is => "ro",
