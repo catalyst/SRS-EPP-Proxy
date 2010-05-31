@@ -1,0 +1,40 @@
+#<NZSRSRequest VerMajor='5' VerMinor='0'>
+#   <Whois DomainName="cheese.co.nz" FullResult="0"/>
+#</NZSRSRequest>
+#
+#<?xml version="1.0"?>
+#<!DOCTYPE NZSRSResponse SYSTEM "protocol.dtd">
+#<NZSRSResponse VerMajor="5" VerMinor="0">
+#  <Response Action="Whois" FeId="8" FeSeq="4640992" OrigRegistrarId="1" RecipientRegistrarId="1"><FeTimeStamp Day="26" Hour="11" Minute="41" Month="5" Second="21" TimeZoneOffset="+12:00" Year="2010"/><Domain DomainName="cheese.co.nz" Status="Active"/></Response>
+#</NZSRSResponse>
+
+template: checkdomain.tt
+
+vars:
+  domains:
+    - cheese.co.te
+    - ffo.co.te
+    - foo.net.te
+    - bar.org.te
+
+initial_epp_assertions:
+  count:
+    - [ '//domain:name', 4, 'Initial EPP: Four domains to check' ]
+
+srs_assertions:
+  count:
+    - [ '//Whois', 4, 'SRS: Check that there are 4 domains' ]
+    - [ '/NZSRSRequest/*', 4, 'SRS: Check there are only 4 commands' ]
+  match:
+    - [ '/NZSRSRequest/Whois[1]/@DomainName', 'cheese.co.te', 'SRS: Check cheese is the first check' ]
+    - [ '/NZSRSRequest/Whois[4]/@DomainName', 'bar.org.te', 'SRS: Check bar is the last check' ]
+  match_all:
+    - [ '//Whois[1]/@FullResult', '0', 'SRS: Check all FullResult attributes are zero' ]
+  attr_is: []
+
+epp_assertions:
+  count:
+    - [ '//domain:cd', 4, 'Check there are 4 domains' ]
+  matches:
+    - [ '//epp::resData/domain:chkData/domain:cd[1]/domain:name', 'cheese.co.te', 'Check cheese is in the response' ]
+  attr_is: []

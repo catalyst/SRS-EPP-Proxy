@@ -5,37 +5,14 @@
 use 5.010;
 use strict;
 use Test::More qw(no_plan);
+use FindBin qw($Bin);
+use lib $Bin;
+use Mock;
 
 use t::Log4test;
 
 # gah, this should really be split into its own distribution.
 use_ok("SRS::EPP::Packets");
-
-{
-	package Mock::Session;
-	sub new {
-		shift;
-		bless {input=>[@_],output=>[]}, __PACKAGE__;
-	}
-	sub read_input {
-		my $self = shift;
-		my $length = shift;
-		my $packet = shift @{ $self->{input} };
-		$packet //= "";
-		warn("read was bigger than asked for! wanted $length,"
-			     ." have ".length($packet))
-			if length $packet > $length;
-		$packet;
-	}
-	sub input_packet {
-		my $self = shift;
-		my $packet = shift;
-		push @{ $self->{output} }, $packet;
-	}
-	sub input_ready {
-		0
-	}
-}
 
 my $test_case = Mock::Session->new(pack("N",17+4), "U" x 17);
 
@@ -65,26 +42,6 @@ while ( length $test_stream ) {
 is_deeply($test_case->{output}, \@test_packets, "input line discipline worked!");
 
 # now do some tests with high-bit data
-{
-	package Mock::Session::FromFile;
-	our @ISA = qw(Mock::Session);
-	sub new {
-		my $class = shift;
-		open my $fh, shift or die $!;
-		binmode $fh;
-		bless {fh=>$fh,output=>[]}, $class;
-	}
-	sub read_input {
-		my $self = shift;
-		my $length = shift;
-		my $well_give_them_cackle = rand(1)>0.2
-			? int(rand($length))
-				: $length;
-		$well_give_them_cackle ||= 1;
-		read $self->{fh}, (my $data), $well_give_them_cackle;
-		return $data;
-	}
-}
 
 (my $test_file = $0) =~ s{\.t}{/example-stream.raw};
 my $session = Mock::Session::FromFile->new( $test_file );
