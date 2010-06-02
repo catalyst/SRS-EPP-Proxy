@@ -61,10 +61,9 @@ for my $testfile ( sort @testfiles ) {
     # 4) parse the XML to get an XML::EPP object
     # 5) test the XML::EPP->to_xml() against our same initial assertions
     # 6) create a queue item, passing it the XML
-    # 7) FIXME: rebless
-    # 8) create the SRS xml messages
-    # 9) make a transaction (which wraps the messages in an NZSRSRequest)
-    # 10) test that against what we expect has been created
+    # 7) create the SRS xml messages
+    # 8) make a transaction (which wraps the messages in an NZSRSRequest)
+    # 9) test that against what we expect has been created
 
     # make the EPP (templated) XML and sanity check it
     my $epp_xml_str;
@@ -81,14 +80,10 @@ for my $testfile ( sort @testfiles ) {
     XMLMappingTests::run_testset( $xml_epp->to_xml(), $yaml->{initial_epp_assertions} );
 
     # create a queue item
-    my $queue_item = SRS::EPP::Command::Check::Domain->new(
+    my $queue_item = SRS::EPP::Command->new(
         message => $xml_epp,
-        xml     => $epp_xml_str,
         session => $session,
     );
-
-    # FIXME: rebless $queue_item into the proper one and see if it works
-    bless $queue_item, 'SRS::EPP::Command::Check::Domain';
 
     # now get the SRS XML
     my @srs_xml = $queue_item->to_srs( $session );

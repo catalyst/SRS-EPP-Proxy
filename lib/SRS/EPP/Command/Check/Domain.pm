@@ -3,14 +3,15 @@
 package SRS::EPP::Command::Check::Domain;
 
 use Moose;
-extends 'SRS::EPP::Command';
+extends 'SRS::EPP::Command::Check';
 use MooseX::Method::Signatures;
 use Crypt::Password;
 use SRS::EPP::Session;
+use XML::EPP::Domain;
 
 # for plugin system to connect
 sub xmlns {
-    XML::EPP::Domain::xmlns();
+    XML::EPP::Domain::Node::xmlns();
 }
 
 method to_srs( SRS::EPP::Session $session ) {

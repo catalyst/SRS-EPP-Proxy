@@ -38,7 +38,7 @@ sub rebless_class {
 }
 
 sub action_class {
-	my $object = shift;
+	my $action = shift;
 	our $action_classes;
 	if ( !$action_classes ) {
 		$action_classes = {
@@ -49,10 +49,13 @@ sub action_class {
 			} __PACKAGE__->plugins,
 		};
 	}
-	$action_classes->{ $object->action };
+	$action_classes->{ $action };
 }
 
-sub REBLESS { }
+sub REBLESS {
+
+}
+
 sub BUILD {
 	my $self = shift;
 	if ( my $epp = $self->message ) {
@@ -60,7 +63,7 @@ sub BUILD {
 		$class = rebless_class( $epp->message );
 		if ( !$class and $epp->message and
 			     $epp->message->can("action") ) {
-			$class = action_class($epp->message);
+			$class = action_class($epp->message->action);
 		}
 		if ( $class ) {
 			bless $self, $class;
@@ -215,6 +218,7 @@ L<SRS::EPP::Response>
 # Local Variables:
 # mode:cperl
 # indent-tabs-mode: t
+# tab-width: 8
 # cperl-continued-statement-offset: 8
 # cperl-brace-offset: 0
 # cperl-close-paren-offset: 0
