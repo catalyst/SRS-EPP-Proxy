@@ -1,0 +1,23 @@
+template: checkdomain.tt
+
+vars:
+  domains:
+    - cheese.co.te
+
+initial_epp_assertions:
+  count:
+  match:
+  match_all:
+  attr_is:
+
+srs_assertions:
+  count:
+  match:
+  match_all:
+  attr_is:
+
+epp_assertions:
+  count:
+  match:
+  match_all:
+  attr_is:
