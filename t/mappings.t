@@ -70,6 +70,8 @@ for my $testfile ( sort @testfiles ) {
     my $ret = $tt->process( 'frame.tt', $yaml->{vars}, \$epp_xml_str );
     XMLMappingTests::run_testset( $epp_xml_str, $yaml->{initial_epp_assertions} );
 
+    print $epp_xml_str if $VERBOSE;
+
     # parse the XML to get an XML::EPP object
     my $xml_epp = XML::EPP->parse( $epp_xml_str );
 
@@ -94,12 +96,13 @@ for my $testfile ( sort @testfiles ) {
 		requests => [ @srs_xml ],
 		);
 
+    print $tx->to_xml(), "\n" if $VERBOSE;
+
     # now test the assertions
     XMLMappingTests::run_testset( $tx->to_xml(), $yaml->{srs_assertions} );
 
     # ToDo: reverse conversion tests ($srs -> $epp)
     # ToDo: integration tests
-
 }
 
 # Copyright (C) 2010  NZ Registry Services
