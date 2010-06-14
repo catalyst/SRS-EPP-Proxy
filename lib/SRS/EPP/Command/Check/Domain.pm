@@ -14,13 +14,10 @@ sub xmlns {
     XML::EPP::Domain::Node::xmlns();
 }
 
-method to_srs( SRS::EPP::Session $session ) {
-	$self->session($session);
+method to_srs() {
 	my $epp = $self->message;
 
-    # print "epp=$epp\n";
     my $payload = $epp->message->argument->payload;
-    # print "payload=$payload\n";
 
     my @domains = $payload->names;
 
@@ -38,7 +35,7 @@ has 'avail' =>
     ;
 
 method notify( SRS::EPP::SRSResponse @rs ) {
-    $self->avail([ map { $_->message->ActionResponse->status } @rs ]);
+    $self->avail([ map { $_->message->response->status } @rs ]);
 };
 
 method response() {
@@ -47,20 +44,28 @@ method response() {
 
     my @domains = $payload->names;
 
-    $self->make_response(
+    my $r = XML::EPP::Domain::Check::Response->new(
+        items => [
+            map { XML::EPP::Domain::Check::Status->new(
+                      name_status => XML::EPP::Domain::Check::Name->new(
+                          name => $domains[$_],
+                          available => ($self->avail->[$_] eq 'Available' ? 1 : 0),
+                      ),
+                      #reason =>
+                      ) } 0..$#domains
+        ]
+    );
+
+    # from SRS::EPP::Response::Check
+    return $self->make_response(
+        'Check',
         code => 1000,
-        payload => XML::EPP::Domain::Check::Response->new(
-            items => [
-                map { XML::EPP::Domain::Check::Status->new(
-                          name_status => XML::EPP::Domain::Check::Name->new(
-                              name => $domains[$_],
-                              available => $self->avail->[$_],
-                          ),
-                          #reason => 
-                          ) } 0..$#domains
-            ]
-        ),
+        payload => $r,
         );
 }
+
+
+
+
 
 1;

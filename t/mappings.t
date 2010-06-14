@@ -54,23 +54,17 @@ for my $testfile ( sort @testfiles ) {
     # this 'command' is wrapped by frame.tt
     $yaml->{vars}{command} = $yaml->{template};
 
-    # Order of things to do:
-    # 1) a session object already exists
-    # 2) create the XML from the templated file and $yaml->{vars}
-    # 3) test that XML against our initial assertions
-    # 4) parse the XML to get an XML::EPP object
-    # 5) test the XML::EPP->to_xml() against our same initial assertions
-    # 6) create a queue item, passing it the XML
-    # 7) create the SRS xml messages
-    # 8) make a transaction (which wraps the messages in an NZSRSRequest)
-    # 9) test that against what we expect has been created
+    ## ---
+    # Step 1 - convert the EPP message into an SRS one
 
-    # make the EPP (templated) XML and sanity check it
+    # create the EPP XML from the template plus vars
     my $epp_xml_str;
     my $ret = $tt->process( 'frame.tt', $yaml->{vars}, \$epp_xml_str );
+
+    # test this XML against our initial assertions
     XMLMappingTests::run_testset( $epp_xml_str, $yaml->{initial_epp_assertions} );
 
-    print $epp_xml_str if $VERBOSE;
+    print 'EPP request  = ', $epp_xml_str if $VERBOSE;
 
     # parse the XML to get an XML::EPP object
     my $xml_epp = XML::EPP->parse( $epp_xml_str );
@@ -78,7 +72,7 @@ for my $testfile ( sort @testfiles ) {
     # check that this is an XML::EPP object
     ok( ref $xml_epp eq 'XML::EPP', 'Check the templated in XML was parsed ok' );
 
-    # and check the round-tripping passes our expectations
+    # check the round-tripping (same tests as earlier)
     XMLMappingTests::run_testset( $xml_epp->to_xml(), $yaml->{initial_epp_assertions} );
 
     # create a queue item
@@ -88,7 +82,7 @@ for my $testfile ( sort @testfiles ) {
     );
 
     # now get the SRS XML
-    my @srs_xml = $queue_item->to_srs( $session );
+    my @srs_xml = $queue_item->to_srs();
 
     # make a new transaction, which puts these messages into an NZSRSRequest
 	my $tx = XML::SRS::Request->new(
@@ -96,13 +90,39 @@ for my $testfile ( sort @testfiles ) {
 		requests => [ @srs_xml ],
 		);
 
-    print $tx->to_xml(), "\n" if $VERBOSE;
+    print 'SRS request  = ', $tx->to_xml(), "\n" if $VERBOSE;
 
     # now test the assertions
     XMLMappingTests::run_testset( $tx->to_xml(), $yaml->{srs_assertions} );
 
-    # ToDo: reverse conversion tests ($srs -> $epp)
-    # ToDo: integration tests
+    ## ---
+    # Step 2 - Convert the SRS message back into EPP
+
+    # assume we have the XML ... from the YAML file
+    my $srs_xml_str = $yaml->{example_srs_response};
+    print "SRS response = $srs_xml_str\n" if $VERBOSE;
+
+    # parse the message and put it in a transaction
+	my $message = XML::SRS::Response->parse($srs_xml_str);
+	my $rs_tx = SRS::EPP::SRSMessage->new( message => $message );
+
+    # these 'parts' are SRS::EPP::SRSResponse, which notify() needs an array of
+    my @parts = @{$rs_tx->parts()};
+    $queue_item->notify( @parts );
+
+    # now create the EPP response
+    my $resp = $queue_item->response();
+
+    # print out the XML
+    print 'EPP response = ', $resp->to_xml() if $VERBOSE;
+
+    # finally, after years of trying, test the EPP returned message
+    XMLMappingTests::run_testset( $resp->to_xml(), $yaml->{epp_assertions} );
+
+    ## ---
+    # Step 3 - do some integrated tests
+
+    # ToDo
 }
 
 # Copyright (C) 2010  NZ Registry Services
