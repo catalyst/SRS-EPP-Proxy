@@ -98,26 +98,31 @@ for my $testfile ( sort @testfiles ) {
     ## ---
     # Step 2 - Convert the SRS message back into EPP
 
-    # assume we have the XML ... from the YAML file
-    my $srs_xml_str = $yaml->{example_srs_response};
-    print "SRS response = $srs_xml_str\n" if $VERBOSE;
+    if ( $yaml->{example_srs_response} ) {
+        # assume we have the XML ... from the YAML file
+        my $srs_xml_str = $yaml->{example_srs_response};
+        print "SRS response = $srs_xml_str\n" if $VERBOSE;
 
-    # parse the message and put it in a transaction
-	my $message = XML::SRS::Response->parse($srs_xml_str);
-	my $rs_tx = SRS::EPP::SRSMessage->new( message => $message );
+        # parse the message and put it in a transaction
+        my $message = XML::SRS::Response->parse($srs_xml_str);
+        my $rs_tx = SRS::EPP::SRSMessage->new( message => $message );
 
-    # these 'parts' are SRS::EPP::SRSResponse, which notify() needs an array of
-    my @parts = @{$rs_tx->parts()};
-    $queue_item->notify( @parts );
+        # these 'parts' are SRS::EPP::SRSResponse, which notify() needs an array of
+        my @parts = @{$rs_tx->parts()};
+        $queue_item->notify( @parts );
 
-    # now create the EPP response
-    my $resp = $queue_item->response();
+        # now create the EPP response
+        my $resp = $queue_item->response();
 
-    # print out the XML
-    print 'EPP response = ', $resp->to_xml() if $VERBOSE;
+        # print out the XML
+        print 'EPP response = ', $resp->to_xml() if $VERBOSE;
 
-    # finally, after years of trying, test the EPP returned message
-    XMLMappingTests::run_testset( $resp->to_xml(), $yaml->{epp_assertions} );
+        # finally, after years of trying, test the EPP returned message
+        XMLMappingTests::run_testset( $resp->to_xml(), $yaml->{epp_assertions} );
+    }
+    else {
+        diag("Warning: No example srs response to be unit tested");
+    }
 
     ## ---
     # Step 3 - do some integrated tests
