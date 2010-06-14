@@ -32,26 +32,4 @@ method notify( SRS::EPP::SRSResponse @rs ) {
     $self->avail([ map { $_->message->ActionResponse->status } @rs ]);
 };
 
-method response() {
-    my $epp = $self->message;
-    my $payload = $epp->message->argument->payload;
-
-    my @contacts = $payload->ids;
-
-    $self->make_response(
-        code => 1000,
-        payload => XML::EPP::Contact::Check::Response->new(
-            items => [
-                map { XML::EPP::Contact::Check::Status->new(
-                          name_status => XML::EPP::Contact::Check::Name->new(
-                              name => $contacts[$_],
-                              available => $self->avail->[$_],
-                          ),
-                          #reason =>
-                          ) } 0..$#contacts
-            ]
-        ),
-        );
-}
-
 1;
