@@ -45,6 +45,8 @@ srs_assertions:
   match_all:
   attr_is: []
 
+# example_srs_response: |-
+
 epp_assertions:
   count:
     - [ '//domain:cd', 4, 'Check there are 4 domains' ]
