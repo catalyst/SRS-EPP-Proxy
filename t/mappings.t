@@ -37,7 +37,7 @@ my $parser = XML::LibXML->new();
 # get a template object
 my $tt = Template->new({
     # FIXME: this shouldn't be relative
-    INCLUDE_PATH => '../brause/share/Brause/NZRS/',
+    INCLUDE_PATH => 't/templates/',
 });
 
 # create an SRS::EPP::Session
@@ -61,10 +61,10 @@ for my $testfile ( sort @testfiles ) {
     my $epp_xml_str;
     my $ret = $tt->process( 'frame.tt', $yaml->{vars}, \$epp_xml_str );
 
+    print 'EPP request  = ', $epp_xml_str if $VERBOSE;
+
     # test this XML against our initial assertions
     XMLMappingTests::run_testset( $epp_xml_str, $yaml->{initial_epp_assertions} );
-
-    print 'EPP request  = ', $epp_xml_str if $VERBOSE;
 
     # parse the XML to get an XML::EPP object
     my $xml_epp = XML::EPP->parse( $epp_xml_str );
