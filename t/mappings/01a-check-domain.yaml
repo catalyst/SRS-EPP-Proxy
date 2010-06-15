@@ -8,7 +8,7 @@
 #  <Response Action="Whois" FeId="8" FeSeq="4640992" OrigRegistrarId="1" RecipientRegistrarId="1"><FeTimeStamp Day="26" Hour="11" Minute="41" Month="5" Second="21" TimeZoneOffset="+12:00" Year="2010"/><Domain DomainName="cheese.co.nz" Status="Active"/></Response>
 #</NZSRSResponse>
 
-template: checkdomain.tt
+template: check-domain.tt
 
 vars:
   domains:

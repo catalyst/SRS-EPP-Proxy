@@ -22,7 +22,7 @@
 #    </HandleDetailsQry>
 # </NZSRSRequest>
 
-template: checkcontact.tt
+template: check-contact.tt
 
 vars:
   contact_ids:
