@@ -83,6 +83,13 @@ sub run_testset {
             do_xpath_values_match( $doc, $xmlns, $t->[0], $t->[1], $t->[2] );
         }
     }
+
+    # if we some attribute checks
+    if ( defined $testset->{attr_is} ) {
+        for my $t ( @{$testset->{attr_is}} ) {
+            does_attr_value_match( $doc, $xmlns, $t->[0], $t->[1], $t->[2], $t->[3] );
+        }
+    }
 }
 
 1;

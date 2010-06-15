@@ -25,12 +25,12 @@ srs_assertions:
   count:
     - [ '//Whois', 4, 'SRS: Check that there are 4 domains' ]
     - [ '/NZSRSRequest/*', 4, 'SRS: Check there are only 4 commands' ]
-  match:
-    - [ '/NZSRSRequest/Whois[1]/@DomainName', 'cheese.co.te', 'SRS: Check cheese is the first check' ]
-    - [ '/NZSRSRequest/Whois[4]/@DomainName', 'bar.org.te', 'SRS: Check bar is the last check' ]
+  match: []
   match_all:
     - [ '//Whois[1]/@FullResult', '0', 'SRS: Check all FullResult attributes are zero' ]
-  attr_is: []
+  attr_is:
+    - [ '/NZSRSRequest/Whois[1]', 'DomainName', 'cheese.co.te', 'SRS: Check cheese is the first check' ]
+    - [ '/NZSRSRequest/Whois[4]', 'DomainName', 'bar.org.te', 'SRS: Check bar is the last check' ]
 
 example_srs_response: |-
     <NZSRSResponse VerMajor="5" VerMinor="0">
