@@ -70,14 +70,14 @@ sub run_testset {
         }
     }
 
-    # if we some matches
+    # if we have some matches
     if ( defined $testset->{match} ) {
         for my $t ( @{$testset->{match}} ) {
             does_xpath_value_match( $doc, $xmlns, $t->[0], $t->[1], $t->[2] );
         }
     }
 
-    # if we some matche_all
+    # if we have some match_all
     if ( defined $testset->{match_all} ) {
         for my $t ( @{$testset->{match_all}} ) {
             do_xpath_values_match( $doc, $xmlns, $t->[0], $t->[1], $t->[2] );
