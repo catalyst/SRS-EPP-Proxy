@@ -4,19 +4,21 @@ use Moose::Role;
 
 sub payload_class {
     my $self = shift;
-	my $root_element = shift;
+    my $class = ref $self;
+    my $root_element = shift;
     my $xmlns = shift;
-	our $payload_classes;
-	if ( !$payload_classes ) {
-		$payload_classes = {
-			map {
-				$_->can("xmlns") ?
-					($_->action.":".$_->xmlns => $_)
-						: ();
-			} $self->plugins,
-		};
-	}
-	$payload_classes->{ $root_element.":".$xmlns };
+    our $payload_classes;
+    if ( !$payload_classes->{$class} ) {
+      $payload_classes->{$class} = {
+        map {
+          $_->can("xmlns") ?
+         ($_->action.":".$_->xmlns => $_)
+         : ();
+        } $self->plugins,
+      };
+    #print "payload classes for $class are: ".Dumper($payload_classes->{$class});
+    }
+    $payload_classes->{$class}{ $root_element.":".$xmlns };
 }
 
 sub REBLESS {

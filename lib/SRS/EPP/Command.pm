@@ -31,7 +31,9 @@ sub rebless_class {
 				$_->can("match_class") ?
 					( $_->match_class => $_ )
 						: ();
-			} __PACKAGE__->plugins,
+			}# map { print "rebless_class checking plugin $_\n"; $_ }
+				grep m{${\(__PACKAGE__)}::[^:]*$},
+				__PACKAGE__->plugins,
 		};
 	}
 	$map->{ref $object};
@@ -46,7 +48,9 @@ sub action_class {
 				$_->can("action") ?
 					($_->action => $_)
 						: ();
-			} __PACKAGE__->plugins,
+			}# map { print "action_class checking plugin $_\n"; $_ }
+				grep m{^${\(__PACKAGE__)}::[^:]*$},
+			__PACKAGE__->plugins,
 		};
 	}
 	$action_classes->{ $action };
