@@ -53,8 +53,6 @@ method response() {
     my $epp = $self->message;
     my $payload = $epp->message->argument->payload;
 
-    my $name = $payload->name;
-
     $self->make_response(code => $self->code());
 }
 
