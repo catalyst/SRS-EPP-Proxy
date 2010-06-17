@@ -34,3 +34,20 @@ srs_assertions:
     - [ '//HandleIdFilter[1]', 'one', 'SRS: Check one is the first contact check' ]
   match_all:
   attr_is: []
+
+example_srs_response: |-
+  <NZSRSResponse VerMajor="5" VerMinor="0">
+    <Response Action="HandleDetailsQry" FeId="8" FeSeq="4713409" OrigRegistrarId="90" RecipientRegistrarId="90" Rows="0">
+      <FeTimeStamp Day="16" Hour="17" Minute="41" Month="6" Second="28" TimeZoneOffset="+12:00" Year="2010"/>
+    </Response>
+  </NZSRSResponse>
+
+epp_assertions:
+  count:
+   - [ '//contact:cd', '1', 'Check for 4 contacts' ]
+   - [ '//contact:id', 1, 'Check there are 4 ids' ]
+  match:
+   - [ '//contact:id[1]', 'one', 'Check one is first' ]
+  match_all:
+    - [ '//contact:id/@avail', '1', 'EPP: check all contacts are available' ]
+  attr_is:
