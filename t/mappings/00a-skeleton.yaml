@@ -5,6 +5,7 @@ vars:
     - cheese.co.te
 
 initial_epp_assertions:
+  class:
   count:
   match:
   match_all:

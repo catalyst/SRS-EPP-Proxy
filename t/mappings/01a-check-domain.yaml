@@ -18,6 +18,7 @@ vars:
     - bar.org.te
 
 initial_epp_assertions:
+  class: SRS::EPP::Command::Check::Domain
   count:
     - [ '//domain:name', 4, 'Initial EPP: Four domains to check' ]
 

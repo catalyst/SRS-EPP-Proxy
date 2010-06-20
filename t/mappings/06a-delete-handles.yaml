@@ -4,6 +4,7 @@ vars:
   contact_id: c_id1
 
 initial_epp_assertions:
+  class: SRS::EPP::Command::Delete::Contact
   match:
     - [ '//contact:id', 'c_id1', 'Contact correctly included in XML' ]
 

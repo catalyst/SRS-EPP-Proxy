@@ -81,6 +81,11 @@ for my $testfile ( sort @testfiles ) {
         session => $session,
     );
 
+    if ( my $class = $yaml->{initial_epp_assertions}->{class} ) {
+      # Make sure that the queue_item is the right class
+      ok( ref($queue_item) eq $class, "EPP: Object has correct class");
+    }
+
     # now get the SRS XML
     my @srs_xml = $queue_item->to_srs();
 

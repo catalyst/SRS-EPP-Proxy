@@ -4,6 +4,7 @@ vars:
   domain: chedder.co.te
 
 initial_epp_assertions:
+  class: SRS::EPP::Command::Delete::Domain
   match:
     - [ '//domain:name', 'chedder.co.te', 'Domain correctly included in XML' ]
 

@@ -32,6 +32,7 @@ vars:
     - deadbeef
 
 initial_epp_assertions:
+  class: SRS::EPP::Command::Check::Contact
   count:
     - [ '//contact:id', 4, 'Initial EPP: Four contacts to check' ]
 
