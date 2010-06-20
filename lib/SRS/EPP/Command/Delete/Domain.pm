@@ -32,6 +32,7 @@ method to_srs() {
 has 'code' => (
     is => "rw",
     isa => "Int",
+    lazy => 1,
     default => 2400,   # Command failed
 );
 
@@ -42,6 +43,10 @@ method notify( SRS::EPP::SRSResponse @rs ) {
   if ( ! $response ) {
     # Lets just assume the domain doesn't exist
     return $self->code(2303);
+  }
+
+  if ( $response->isa("XML::SRS::Error") ) {
+    return $self->code(2400);
   }
 
   if ( $response->status eq "Available" ) {

@@ -28,7 +28,7 @@ method to_srs() {
             );
 }
 
-has 'evan' => (
+has 'code' => (
     is => "rw",
     isa => "Int",
     lazy => 1,
@@ -41,12 +41,12 @@ method notify( SRS::EPP::SRSResponse @rs ) {
 
   if ( ! $response ) {
     # That means everything worked
-    return $self->evan(1000);
+    return $self->code(1000);
   }
 
   if ( $response->isa("XML::SRS::Error") ) {
     if ( $response->ErrorId() eq "HANDLE_DOES_NOT_EXIST" ) {
-      return $self->evan(2303);
+      return $self->code(2303);
     }
   }
 };
@@ -55,7 +55,7 @@ method response() {
     my $epp = $self->message;
     my $payload = $epp->message->argument->payload;
 
-    $self->make_response(code => $self->evan());
+    $self->make_response(code => $self->code());
 }
 
 1;
