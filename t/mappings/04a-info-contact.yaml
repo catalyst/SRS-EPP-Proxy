@@ -5,6 +5,7 @@ vars:
   pw: 
 
 initial_epp_assertions:
+  class: SRS::EPP::Command::Info::Contact
   count:
     - [ '//contact:id', 1, 'Initial EPP: One contact' ]
     - [ '//contact:authInfo', 0, 'Initial EPP: Zero authInfos' ]
