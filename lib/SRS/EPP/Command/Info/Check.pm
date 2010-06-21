@@ -32,13 +32,20 @@ has 'saved_response' =>
     isa => 'XML::EPP::Contact::Info::Response',
     ;
 
+has 'code' => (
+    is => "rw",
+    isa => "Int",
+    lazy => 1,
+    default => 1000,
+);
+
 method notify( SRS::EPP::SRSResponse @rs ) {
     my $message = $rs[0]->message;
     my $response = $message->response;
 
     unless ( $response ) {
         # assume the contact doesn't exist
-        return $self->code(2303);
+        return $self->code(2307);
     }
 
     # make the Info::Response object
@@ -71,7 +78,9 @@ method notify( SRS::EPP::SRSResponse @rs ) {
 };
 
 method response() {
-    print Dumper( $self->saved_response );
+    if ( $self->code ) {
+        return $self->make_response(code => $self->code());
+    }
 
     return $self->make_response(
         'Info',
