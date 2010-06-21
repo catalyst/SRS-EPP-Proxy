@@ -45,7 +45,7 @@ method notify( SRS::EPP::SRSResponse @rs ) {
 
     unless ( $response ) {
         # assume the contact doesn't exist
-        return $self->code(2307);
+        return $self->code(2303);
     }
 
     # make the Info::Response object

@@ -40,4 +40,4 @@ epp_assertions:
   match:
   match_all:
   attr_is:
-    - [ '//epp:result', 'code', 2307, 'EPP: Failure = Unimplemented object service' ]
+    - [ '//epp:result', 'code', 2303, 'EPP: Failure = Object does not exist' ]
