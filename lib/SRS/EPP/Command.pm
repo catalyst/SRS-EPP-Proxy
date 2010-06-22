@@ -117,10 +117,6 @@ method process( SRS::EPP::Session $session ) {
 		);
 }
 
-method to_srs() {
-	die("$self: EPP command must implement to_srs");
-}
-
 method notify( SRS::EPP::SRSResponse @rs ) {
 	my $result;
 	if ( my $server_id = eval {
