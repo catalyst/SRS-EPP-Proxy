@@ -22,20 +22,9 @@ method process( SRS::EPP::Session $session ) {
     my $epp = $self->message;
     my $payload = $epp->message->argument->payload;
 
-    # ToDo: check to see if the AuthInfo has been passed in and figure out what
-    # to do with it here.
-    #
-    # Do we:
-    # * throw an error here?
-    # * return something?
-
+    # we're not supporting authInfo, so get out of here with an EPP response
     if ( $payload->has_auth_info ) {
-        # What goes here? Here's a first guess
-        # $self->make_response(code => $self->code());
-        # return $self->make_response( code => 2307 );
-        # save something
-        $self->code(2307);
-        return;
+        return $self->make_response(code => 2307);
     }
 
     return XML::SRS::Handle::Query->new( handle_id_filter => $payload->id );

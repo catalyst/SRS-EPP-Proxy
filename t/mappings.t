@@ -47,6 +47,7 @@ my $session = SRS::EPP::Session->new(
     backend_url => '',
 );
 
+TESTFILE:
 for my $testfile ( sort @testfiles ) {
     diag("Reading $testfile");
     my $yaml = XMLMappingTests::read_yaml($testfile);
@@ -100,10 +101,21 @@ for my $testfile ( sort @testfiles ) {
         # now test the assertions
         XMLMappingTests::run_testset( $tx->to_xml(), $yaml->{srs_assertions} );
     }
-    elsif ( $messages[0]->isa('XML::EPP') ) {
-        die "ToDo: EPP messages from ->process() needs to be implemented"
+    elsif ( $messages[0]->isa('SRS::EPP::Response') ) {
+        # ToDo: we'll have to do something if there are multiple msgs returned
+        my $resp = $messages[0];
+
+        # print out the XML
+        print 'EPP response = ', $resp->to_xml() if $VERBOSE;
+
+        # run the epp_assertions tests
+        XMLMappingTests::run_testset( $resp->to_xml(), $yaml->{epp_assertions} );
+
+        # don't need to check the example_srs_response since we already have a proper one
+        next TESTFILE;
     }
     else {
+        print Dumper(\@messages) if $VERBOSE;
         die "Program Error: the first element of \$messages should either do 'XML::SRS::Action, 'XML::SRS::Query' or be an 'XML::EPP'";
     }
 
