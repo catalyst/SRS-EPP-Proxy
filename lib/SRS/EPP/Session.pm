@@ -586,31 +586,25 @@ method be_response( SRS::EPP::SRSMessage $rs_tx ) {
 method process_responses() {
 	while ( $self->backend_response_ready ) {
 		my ($cmd, @rs) = $self->dequeue_backend_response;
-		$self->log_info(
-			"notifying command $cmd of back-end response"
-			);
-		$cmd->notify(@rs);
-		if ( $cmd->done ) {
+		$self->log_info("notifying command $cmd of back-end response");
+		my $resp = $cmd->notify(@rs);
+		if ( $resp->isa("SRS::EPP::Response") ) {
 			$self->log_info( "command $cmd is complete" );
-			#if ( $self->stalled and $cmd->isa("SRS::EPP::Command::Login") ) {
-				#$self->stalled(0);
-			#}
 			$self->state("Prepare Response");
-			my $epp_rs = $cmd->response;
-			$self->log_debug( "response to $cmd is response $epp_rs" );
-			$self->add_command_response($epp_rs, $cmd);
+			$self->log_debug( "response to $cmd is response $resp" );
+			$self->add_command_response($resp, $cmd);
 			$self->yield("send_pending_replies")
 				if $self->response_ready;
 		}
-		else {
+		elsif ( $resp->isa("XML::SRS") ) {
 			$self->log_info( "command $cmd not yet complete" );
 			my @messages = map {
 				SRS::EPP::SRSRequest->new(
 					message => $_,
 					);
-			} $cmd->next_backend_message($self);
+			} $resp;
 			$self->log_info(
-		"command $cmd produced ".@messages." further SRS messages"
+				"command $cmd produced ".@messages." further SRS messages"
 				);
 			$self->queue_backend_request($cmd, @messages);
 			$self->yield("send_backend_queue");

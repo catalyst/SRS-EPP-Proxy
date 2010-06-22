@@ -29,36 +29,20 @@ method to_srs() {
             );
 }
 
-has 'code' => (
-    is => "rw",
-    isa => "Int",
-    lazy => 1,
-    default => 2400,   # Command failed
-);
-
 method notify( SRS::EPP::SRSResponse @rs ) {
   my $message = $rs[0]->message;
   my $response = $message->response;
 
   if ( ! $response ) {
     # Lets just assume the domain doesn't exist
-    return $self->code(2303);
-  }
-
+    return $self->make_response(code => 2303);
+  } 
   if ( $response->isa("XML::SRS::Error") ) {
-    return $self->code(2400);
-  }
-
+    return $self->make_response(code => 2400);
+  } 
   if ( $response->status eq "Available" ) {
-    return $self->code(1000);
+    return $self->make_response(code => 1000);
   }
-};
-
-method response() {
-    my $epp = $self->message;
-    my $payload = $epp->message->argument->payload;
-
-    $self->make_response(code => $self->code());
 }
 
 1;

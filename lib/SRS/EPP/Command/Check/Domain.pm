@@ -36,9 +36,6 @@ has 'avail' =>
 
 method notify( SRS::EPP::SRSResponse @rs ) {
     $self->avail([ map { $_->message->response->status } @rs ]);
-};
-
-method response() {
 	my $epp = $self->message;
     my $payload = $epp->message->argument->payload;
 
@@ -62,10 +59,6 @@ method response() {
         code => 1000,
         payload => $r,
         );
-}
-
-
-
-
+};
 
 1;

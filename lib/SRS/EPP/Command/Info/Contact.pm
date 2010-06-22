@@ -40,11 +40,6 @@ method to_srs() {
     return XML::SRS::Handle::Query->new( handle_id_filter => $payload->id );
 }
 
-has 'saved_response' =>
-    is => 'rw',
-    isa => 'XML::EPP::Contact::Info::Response',
-    ;
-
 has 'code' => (
     is => "rw",
     isa => "Int",
@@ -55,12 +50,12 @@ method notify( SRS::EPP::SRSResponse @rs ) {
     my $response = $message->response;
 
     if ( $self->code ) {
-        return $self->code( $self->code );
+        return $self->make_response(code => $self->code);
     }
 
     unless ( $response ) {
         # assume the contact doesn't exist
-        return $self->code(2303);
+        return $self->make_response(code => 2303);
     }
 
     # make the Info::Response object
@@ -89,18 +84,10 @@ method notify( SRS::EPP::SRSResponse @rs ) {
         email => $response->email,
     );
 
-    $self->saved_response($r);
-};
-
-method response() {
-    if ( $self->code ) {
-        return $self->make_response(code => $self->code());
-    }
-
     return $self->make_response(
         'Info',
         code => 1000,
-        payload => $self->saved_response,
+        payload => $r,
     );
 }
 

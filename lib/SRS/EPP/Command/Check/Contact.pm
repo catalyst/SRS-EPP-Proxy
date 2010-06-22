@@ -34,9 +34,7 @@ has 'avail' =>
 
 method notify( SRS::EPP::SRSResponse @rs ) {
     $self->avail({ map { $_->message->response->handle_id => 1 } grep { $_->message->response } @rs });
-};
 
-method response() {
     my $epp = $self->message;
     my $payload = $epp->message->argument->payload;
 

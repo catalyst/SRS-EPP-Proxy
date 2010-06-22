@@ -52,11 +52,6 @@ has "new_password" =>
 	isa => "Str",
 	;
 
-has "password_changed" =>
-	is => "rw",
-	isa => "Bool",
-	;
-
 method to_srs( SRS::EPP::Session $session ) {
 	$self->session($session);
 	my $epp = $self->message;
@@ -151,6 +146,19 @@ method notify( SRS::EPP::SRSResponse @rs ) {
 		}
 		$self->session->clear_want_user;
 		$self->session->stalled(0);
+
+		# Wrap it up...
+		if ( $self->login_ok ) {
+			if ( $self->new_password() ) {
+				return XML::SRS::Registrar::Update->new(
+					registrar_id => $self->uid,
+					epp_auth => Crypt::Password::password( $self->new_password ),
+					action_id => $self->server_id,
+					);
+			}
+			return $self->make_response(code => 1000);
+		}
+		return $self->make_response(code => 2200);
 	}
 	else {
 		# response to a password update
@@ -161,52 +169,15 @@ method notify( SRS::EPP::SRSResponse @rs ) {
 			my $ok = $auth->check($self->new_password);
 			if ( $ok ) {
 				$self->log_info("changed password successfully");
+				return $self->make_response(code => 1000);
 			}
 			else {
 				$self->log_error("failed to change password!");
+				return $self->make_response(code => 2400);
 			}
-			$self->password_changed( $ok );
 		}
 	}
+
 };
-
-method done() {
-	if ( defined $self->login_ok ) {
-		# login result is back
-		if ( $self->login_ok and $self->new_password ) {
-			defined $self->password_changed;
-		}
-		else {
-			1;
-		}
-	}
-	else {
-		0;
-	}
-}
-
-method next_backend_message ( SRS::EPP::Session $session ) {
-	die unless $self->new_password;
-	XML::SRS::Registrar::Update->new(
-		registrar_id => $self->uid,
-		epp_auth => Crypt::Password::password( $self->new_password ),
-		action_id => $self->server_id,
-	       );
-}
-
-method response() {
-	if ( $self->login_ok ) {
-		if ( defined $self->new_password
-			     and !$self->password_changed ) {
-			$self->make_response(code => 2400);
-		}
-		else {
-			$self->make_response(code => 1000);
-		}
-	}
-	else {
-		$self->make_response(code => 2200);
-	}
-}
 
 1;

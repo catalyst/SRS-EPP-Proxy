@@ -114,10 +114,7 @@ for my $testfile ( sort @testfiles ) {
 
         # these 'parts' are SRS::EPP::SRSResponse, which notify() needs an array of
         my @parts = @{$rs_tx->parts()};
-        $queue_item->notify( @parts );
-
-        # now create the EPP response
-        my $resp = $queue_item->response();
+        my $resp = $queue_item->notify( @parts );
 
         # print out the XML
         print 'EPP response = ', $resp->to_xml() if $VERBOSE;
