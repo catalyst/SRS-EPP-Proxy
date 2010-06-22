@@ -52,7 +52,7 @@ has "new_password" =>
 	isa => "Str",
 	;
 
-method to_srs( SRS::EPP::Session $session ) {
+method process( SRS::EPP::Session $session ) {
 	$self->session($session);
 	my $epp = $self->message;
 	my $login = $epp->message->argument;

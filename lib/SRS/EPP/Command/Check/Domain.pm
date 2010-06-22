@@ -14,7 +14,8 @@ sub xmlns {
     XML::EPP::Domain::Node::xmlns();
 }
 
-method to_srs() {
+method process( SRS::EPP::Session $session ) {
+    $self->session($session);
 	my $epp = $self->message;
 
     my $payload = $epp->message->argument->payload;

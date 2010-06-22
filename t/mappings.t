@@ -86,19 +86,26 @@ for my $testfile ( sort @testfiles ) {
       ok( ref($queue_item) eq $class, "EPP: Object has correct class");
     }
 
-    # now get the SRS XML
-    my @srs_xml = $queue_item->to_srs();
+    # now get the returned XML (either SRS or EPP)
+    my @messages = $queue_item->process( $session );
+    if ( $messages[0]->does('XML::SRS::Action') or $messages[0]->does('XML::SRS::Query') ) {
+        # make a new transaction, which puts these messages into an NZSRSRequest
+        my $tx = XML::SRS::Request->new(
+            version => "auto",
+            requests => [ @messages ],
+            );
 
-    # make a new transaction, which puts these messages into an NZSRSRequest
-	my $tx = XML::SRS::Request->new(
-		version => "auto",
-		requests => [ @srs_xml ],
-		);
+        print 'SRS request  = ', $tx->to_xml(), "\n" if $VERBOSE;
 
-    print 'SRS request  = ', $tx->to_xml(), "\n" if $VERBOSE;
-
-    # now test the assertions
-    XMLMappingTests::run_testset( $tx->to_xml(), $yaml->{srs_assertions} );
+        # now test the assertions
+        XMLMappingTests::run_testset( $tx->to_xml(), $yaml->{srs_assertions} );
+    }
+    elsif ( $messages[0]->isa('XML::EPP') ) {
+        die "ToDo: EPP messages from ->process() needs to be implemented"
+    }
+    else {
+        die "Program Error: the first element of \$messages should either do 'XML::SRS::Action, 'XML::SRS::Query' or be an 'XML::EPP'";
+    }
 
     ## ---
     # Step 2 - Convert the SRS message back into EPP

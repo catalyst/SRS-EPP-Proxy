@@ -340,25 +340,45 @@ method process_queue( Int $count = 1 ) {
 				);
 		}
 		else {
-			# regular message, possibly including "login"
-			my @messages = map {
-				SRS::EPP::SRSRequest->new(
-					message => $_,
-					);
-			} $command->to_srs($self);
+			# regular message which may need to talk to the SRS backend
+			my @messages = $command->process($self);
 
-			$self->log_info(
-			"command produced ".@messages." SRS messages"
-				);
-			$self->queue_backend_request($command, @messages);
-			if ( $command->isa("SRS::EPP::Command::Login") ) {
-				$self->state("Processing <login>");
-				#$self->stalled(1);
+			# check what kind of messages these are
+			if ( $messages[0]->does('XML::SRS::Action') or $messages[0]->does('XML::SRS::Query') ) {
+				@messages = map {
+					SRS::EPP::SRSRequest->new(
+						message => $_,
+						);
+					} @messages;
+				$self->log_info(
+				"command produced ".@messages." SRS messages"
+					);
+				$self->queue_backend_request($command, @messages);
+				if ( $command->isa("SRS::EPP::Command::Login") ) {
+					$self->state("Processing <login>");
+					#$self->stalled(1);
+				}
+				else {
+					$self->state("Processing Command");
+				}
+				$self->yield("send_backend_queue");
+			}
+			elsif ( $messages[0]->isa('XML::EPP') ) {
+				# add these messages to the outgoing queue
+				@messages = map {
+					SRS::EPP::EPPResponse->new(
+						message => $_,
+						);
+				} @messages;
+
+				# add to the queue
+				$self->add_command_response($_, $command)
+					for @messages;
 			}
 			else {
-				$self->state("Processing Command");
+				# not sure what these are
+				die "Really shouldn't be here\n";
 			}
-			$self->yield("send_backend_queue");
 		}
 		$self->yield("send_pending_replies")
 			if $self->response_ready;
