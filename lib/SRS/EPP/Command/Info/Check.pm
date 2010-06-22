@@ -22,7 +22,20 @@ method to_srs() {
     my $payload = $epp->message->argument->payload;
 
     # ToDo: check to see if the AuthInfo has been passed in and figure out what
-    # to do with it here
+    # to do with it here.
+    #
+    # Do we:
+    # * throw an error here?
+    # * return something?
+
+    if ( $payload->has_auth_info ) {
+        # What goes here? Here's a first guess
+        # $self->make_response(code => $self->code());
+        # return $self->make_response( code => 2307 );
+        # save something
+        $self->code(2307);
+        return;
+    }
 
     return XML::SRS::Handle::Query->new( handle_id_filter => $payload->id );
 }
@@ -35,13 +48,15 @@ has 'saved_response' =>
 has 'code' => (
     is => "rw",
     isa => "Int",
-    lazy => 1,
-    default => 1000,
 );
 
 method notify( SRS::EPP::SRSResponse @rs ) {
     my $message = $rs[0]->message;
     my $response = $message->response;
+
+    if ( $self->code ) {
+        return $self->code( $self->code );
+    }
 
     unless ( $response ) {
         # assume the contact doesn't exist
