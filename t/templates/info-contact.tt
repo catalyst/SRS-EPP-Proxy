@@ -3,7 +3,7 @@
     <contact:id>[% contact_id %]</contact:id>
 [% IF pw -%]
     <contact:authInfo>
-      <contact:pw>2fooBAR</contact:pw>
+      <contact:pw>[% pw %]</contact:pw>
     </contact:authInfo>
 [% END -%]
   </contact:info>
