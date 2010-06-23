@@ -84,7 +84,8 @@ for my $testfile ( sort @testfiles ) {
 
     if ( my $class = $yaml->{initial_epp_assertions}->{class} ) {
       # Make sure that the queue_item is the right class
-      ok( ref($queue_item) eq $class, "EPP: Object has correct class");
+      my $oClass = ref($queue_item);
+      ok( $oClass eq $class, "EPP: Correct object class ($oClass / $class)");
     }
 
     # now get the returned XML (either SRS or EPP)
