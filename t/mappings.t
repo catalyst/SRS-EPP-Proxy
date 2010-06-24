@@ -98,6 +98,7 @@ for my $testfile ( sort @testfiles ) {
           requests => [ @messages ],
           );
       my $xmlstring = $tx->to_xml();
+      print "XML = $xmlstring\n" if $VERBOSE;
       XMLMappingTests::run_testset( $xmlstring, $srs_assertions );
 
       # If the output from the proxy was SRS XML, we need to pretend to hit the SRS
