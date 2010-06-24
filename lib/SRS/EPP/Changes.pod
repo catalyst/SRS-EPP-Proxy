@@ -1,0 +1,58 @@
+=head1 CHANGELOG FOR SRS::EPP::Proxy
+
+=head2 VERSION 0.20, 25 JUNE 2010
+
+=over
+
+=item *
+
+Overhaul mappings.t test file
+
+=item *
+
+Adjust the API regarding initial processing of EPP requests
+
+=item *
+
+Adjust the API regarding how we return EPP responses
+
+=item *
+
+Add Mappings for:
+
+=over
+
+=item *
+
+Check Contact
+
+=item *
+
+Check Domain
+
+=item *
+
+Delete Contact
+
+=item *
+
+Delete Domain
+
+=item *
+
+Info Domain (work in progress)
+
+=item *
+
+Info Contact 
+
+=item *
+
+Renew Domain
+
+=back
+
+=back
+
+=cut
+
