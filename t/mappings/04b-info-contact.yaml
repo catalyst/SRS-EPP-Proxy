@@ -6,14 +6,14 @@ vars:
   contact_id: sh8013
   pw: something
 
-initial_epp_assertions:
+input_assertions:
   class: SRS::EPP::Command::Info::Contact
   count:
   match:
   match_all:
   attr_is:
 
-epp_assertions:
+output_assertions:
   count:
     - [ '//epp:result', 1, 'SRS: Check for one result' ]
   match:

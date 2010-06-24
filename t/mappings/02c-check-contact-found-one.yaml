@@ -4,38 +4,39 @@ vars:
   contact_ids:
     - find-me
 
-initial_epp_assertions:
+input_assertions:
   count:
     - [ '//contact:id', 1, 'Initial EPP: Four contacts to check' ]
 
-srs_assertions:
-  count:
-    - [ '//HandleIdFilter', 1, 'SRS: Check that there were 4 HandleIdFilters' ]
-    - [ '/NZSRSRequest/*', 1, 'SRS: Check there is only 1 command' ]
-  match:
-    - [ '//HandleIdFilter[1]', 'find-me', 'SRS: Check first contact is correct' ]
-  match_all:
-  attr_is: []
+SRS:
+  - assertions:
+      count:
+        - [ '//HandleIdFilter', 1, 'SRS: Check that there were 4 HandleIdFilters' ]
+        - [ '/NZSRSRequest/*', 1, 'SRS: Check there is only 1 command' ]
+      match:
+        - [ '//HandleIdFilter[1]', 'find-me', 'SRS: Check first contact is correct' ]
+      match_all:
+      attr_is: []
 
-example_srs_response: |-
-  <NZSRSResponse VerMajor="5" VerMinor="0">
-    <Response Action="HandleDetailsQry" FeId="8" FeSeq="4717426" OrigRegistrarId="1" RecipientRegistrarId="1" Rows="1">
-      <FeTimeStamp Day="17" Hour="12" Minute="39" Month="6" Second="44" TimeZoneOffset="+12:00" Year="2010"/>
-      <Handle Email="someone@example.com" HandleId="find-me" Name="A Person" RegistrarId="90">
-        <PostalAddress Address1="1 Acacia Ave" Address2="Treewood" City="Wellington" CountryCode="NZ" PostalCode="6021" Province="Wellington"/>
-        <Phone AreaCode="4" CountryCode="4" LocalNumber="0000000"/>
-        <AuditDetails ActionId="srsrps-1_149" RegistrarId="1">
-          <AuditTime>
-            <From Day="03" Hour="17" Minute="03" Month="6" Second="58" TimeZoneOffset="+12:00" Year="2010"/>
-          </AuditTime>
-          <AuditText><![CDATA[Handles test!
-  User Id: evan]]></AuditText>
-        </AuditDetails>
-      </Handle>
-    </Response>
-  </NZSRSResponse>
+    fake_response: |-
+      <NZSRSResponse VerMajor="5" VerMinor="0">
+        <Response Action="HandleDetailsQry" FeId="8" FeSeq="4717426" OrigRegistrarId="1" RecipientRegistrarId="1" Rows="1">
+          <FeTimeStamp Day="17" Hour="12" Minute="39" Month="6" Second="44" TimeZoneOffset="+12:00" Year="2010"/>
+          <Handle Email="someone@example.com" HandleId="find-me" Name="A Person" RegistrarId="90">
+            <PostalAddress Address1="1 Acacia Ave" Address2="Treewood" City="Wellington" CountryCode="NZ" PostalCode="6021" Province="Wellington"/>
+            <Phone AreaCode="4" CountryCode="4" LocalNumber="0000000"/>
+            <AuditDetails ActionId="srsrps-1_149" RegistrarId="1">
+              <AuditTime>
+                <From Day="03" Hour="17" Minute="03" Month="6" Second="58" TimeZoneOffset="+12:00" Year="2010"/>
+              </AuditTime>
+              <AuditText><![CDATA[Handles test!
+      User Id: evan]]></AuditText>
+            </AuditDetails>
+          </Handle>
+        </Response>
+      </NZSRSResponse>
 
-epp_assertions:
+output_assertions:
   count:
    - [ '//contact:cd', '1', 'Container' ]
    - [ '//contact:id', 1, 'Check there is 1 id' ]

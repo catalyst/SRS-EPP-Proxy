@@ -4,20 +4,29 @@ vars:
   domains:
     - cheese.co.te
 
-initial_epp_assertions:
+input_assertions:
   class:
   count:
   match:
   match_all:
   attr_is:
 
-srs_assertions:
-  count:
-  match:
-  match_all:
-  attr_is:
+SRS:
+   - assertions:
+       count:
+       match:
+       match_all:
+       attr_is:
+     fake_response: |-
+       <NZSRSResponse VerMajor="5" VerMinor="0">
+        <Response Action="Whois" FeId="4" FeSeq="1981693" OrigRegistrarId="90" RecipientRegistrarId="90">
+          <FeTimeStamp Day="10" Hour="16" Minute="33" Month="6" Second="32" TimeZoneOffset="+12:00" Year="2010"/>
+          <Domain DomainName="cheese.co.te" Status="Active"/>
+        </Response>
+       </NZSRSResponse>
 
-epp_assertions:
+
+output_assertions:
   count:
   match:
   match_all:

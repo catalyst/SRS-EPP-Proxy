@@ -4,23 +4,24 @@ vars:
   contact_id: not-found-id
   pw:
 
-initial_epp_assertions:
+input_assertions:
   class: SRS::EPP::Command::Info::Contact
 
-srs_assertions:
-  count:
-    - [ '//HandleIdFilter', 1, 'SRS: Check for only one HandleIdFilter' ]
-  match:
-    - [ '//HandleIdFilter', 'not-found-id', 'SRS: Check the first HandleIdFilter' ]
-  match_all:
-  attr_is:
+SRS:
+  - assertions:
+      count:
+        - [ '//HandleIdFilter', 1, 'SRS: Check for only one HandleIdFilter' ]
+      match:
+        - [ '//HandleIdFilter', 'not-found-id', 'SRS: Check the first HandleIdFilter' ]
+      match_all:
+      attr_is:
 
-example_srs_response: |-
-  <NZSRSResponse VerMajor="5" VerMinor="0">
-    <Response Action="HandleDetailsQry" FeId="8" FeSeq="4717426" OrigRegistrarId="1" RecipientRegistrarId="1" Rows="1">
-      <FeTimeStamp Day="17" Hour="12" Minute="39" Month="6" Second="44" TimeZoneOffset="+12:00" Year="2010"/>
-    </Response>
-  </NZSRSResponse>
+    fake_response: |-
+      <NZSRSResponse VerMajor="5" VerMinor="0">
+        <Response Action="HandleDetailsQry" FeId="8" FeSeq="4717426" OrigRegistrarId="1" RecipientRegistrarId="1" Rows="1">
+          <FeTimeStamp Day="17" Hour="12" Minute="39" Month="6" Second="44" TimeZoneOffset="+12:00" Year="2010"/>
+        </Response>
+      </NZSRSResponse>
 
 # <epp xmlns="urn:ietf:params:xml:ns:epp-1.0">
 #   <response>
@@ -34,7 +35,7 @@ example_srs_response: |-
 #   </response>
 # </epp>
 
-epp_assertions:
+output_assertions:
   count:
     - [ '//epp:resData', 0, 'EPP: No resData in the response' ]
   match:

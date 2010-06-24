@@ -17,43 +17,43 @@ vars:
     - foo.net.te
     - bar.org.te
 
-initial_epp_assertions:
+input_assertions:
   class: SRS::EPP::Command::Check::Domain
   count:
     - [ '//domain:name', 4, 'Initial EPP: Four domains to check' ]
 
-srs_assertions:
-  count:
-    - [ '//Whois', 4, 'SRS: Check that there are 4 domains' ]
-    - [ '/NZSRSRequest/*', 4, 'SRS: Check there are only 4 commands' ]
-  match: []
-  match_all:
-    - [ '//Whois/@FullResult', '0', 'SRS: Check all FullResult attributes are zero' ]
-  attr_is:
-    - [ '/NZSRSRequest/Whois[1]', 'DomainName', 'cheese.co.te', 'SRS: Check cheese is the first check' ]
-    - [ '/NZSRSRequest/Whois[4]', 'DomainName', 'bar.org.te', 'SRS: Check bar is the last check' ]
+SRS:
+  - assertions:
+      count:
+        - [ '//Whois', 4, 'SRS: Check that there are 4 domains' ]
+        - [ '/NZSRSRequest/*', 4, 'SRS: Check there are only 4 commands' ]
+      match: []
+      match_all:
+        - [ '//Whois/@FullResult', '0', 'SRS: Check all FullResult attributes are zero' ]
+      attr_is:
+        - [ '/NZSRSRequest/Whois[1]', 'DomainName', 'cheese.co.te', 'SRS: Check cheese is the first check' ]
+        - [ '/NZSRSRequest/Whois[4]', 'DomainName', 'bar.org.te', 'SRS: Check bar is the last check' ]
+    fake_response: |-
+      <NZSRSResponse VerMajor="5" VerMinor="0">
+        <Response Action="Whois" FeId="4" FeSeq="1981693" OrigRegistrarId="90" RecipientRegistrarId="90">
+          <FeTimeStamp Day="10" Hour="16" Minute="33" Month="6" Second="32" TimeZoneOffset="+12:00" Year="2010"/>
+          <Domain DomainName="cheese.co.te" Status="Active"/>
+        </Response>
+        <Response Action="Whois" FeId="4" FeSeq="1981693" OrigRegistrarId="90" RecipientRegistrarId="90">
+          <FeTimeStamp Day="10" Hour="16" Minute="33" Month="6" Second="32" TimeZoneOffset="+12:00" Year="2010"/>
+          <Domain DomainName="ffo.co.te" Status="Available"/>
+        </Response>
+        <Response Action="Whois" FeId="4" FeSeq="1981693" OrigRegistrarId="90" RecipientRegistrarId="90">
+          <FeTimeStamp Day="10" Hour="16" Minute="33" Month="6" Second="32" TimeZoneOffset="+12:00" Year="2010"/>
+          <Domain DomainName="foo.net.te" Status="Available"/>
+        </Response>
+        <Response Action="Whois" FeId="4" FeSeq="1981693" OrigRegistrarId="90" RecipientRegistrarId="90">
+          <FeTimeStamp Day="10" Hour="16" Minute="33" Month="6" Second="32" TimeZoneOffset="+12:00" Year="2010"/>
+          <Domain DomainName="bar.org.te" Status="Available"/>
+        </Response>
+      </NZSRSResponse>
 
-example_srs_response: |-
-    <NZSRSResponse VerMajor="5" VerMinor="0">
-      <Response Action="Whois" FeId="4" FeSeq="1981693" OrigRegistrarId="90" RecipientRegistrarId="90">
-        <FeTimeStamp Day="10" Hour="16" Minute="33" Month="6" Second="32" TimeZoneOffset="+12:00" Year="2010"/>
-        <Domain DomainName="cheese.co.te" Status="Active"/>
-      </Response>
-      <Response Action="Whois" FeId="4" FeSeq="1981693" OrigRegistrarId="90" RecipientRegistrarId="90">
-        <FeTimeStamp Day="10" Hour="16" Minute="33" Month="6" Second="32" TimeZoneOffset="+12:00" Year="2010"/>
-        <Domain DomainName="ffo.co.te" Status="Available"/>
-      </Response>
-      <Response Action="Whois" FeId="4" FeSeq="1981693" OrigRegistrarId="90" RecipientRegistrarId="90">
-        <FeTimeStamp Day="10" Hour="16" Minute="33" Month="6" Second="32" TimeZoneOffset="+12:00" Year="2010"/>
-        <Domain DomainName="foo.net.te" Status="Available"/>
-      </Response>
-      <Response Action="Whois" FeId="4" FeSeq="1981693" OrigRegistrarId="90" RecipientRegistrarId="90">
-        <FeTimeStamp Day="10" Hour="16" Minute="33" Month="6" Second="32" TimeZoneOffset="+12:00" Year="2010"/>
-        <Domain DomainName="bar.org.te" Status="Available"/>
-      </Response>
-    </NZSRSResponse>
-
-epp_assertions:
+output_assertions:
   count:
     - [ '//domain:cd', 4, 'Check there are 4 domains' ]
     - [ '//domain:name', 4, 'Check there are 4 domains' ]

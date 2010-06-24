@@ -3,14 +3,15 @@ template: delete-domain.tt
 vars:
   domain: chedder.co.te
 
-initial_epp_assertions:
+input_assertions:
 
-srs_assertions:
+SRS:
+  - assertions:
 
-example_srs_response: |-
-   <NZSRSResponse VerMajor="4" VerMinor="3" RegistrarId="170"><Response Action="DomainUpdate" FeId="2" FeSeq="121846163" OrigRegistrarId="170" RecipientRegistrarId="170" TransId="1277074547.5859"><FeTimeStamp Day="21" Hour="10" Minute="49" Month="6" Second="10" TimeZoneOffset="+12:00" Year="2010"/><Error Hint="INVALID_REQUEST_ERROR" ErrorId="MISSING_MANDATORY_FIELD" Severity="err"><Description><![CDATA[Mandatory Field missing from Transaction]]></Description><ErrorDetails><![CDATA[UDAI]]></ErrorDetails></Error></Response></NZSRSResponse>
+    fake_response: |-
+       <NZSRSResponse VerMajor="4" VerMinor="3" RegistrarId="170"><Response Action="DomainUpdate" FeId="2" FeSeq="121846163" OrigRegistrarId="170" RecipientRegistrarId="170" TransId="1277074547.5859"><FeTimeStamp Day="21" Hour="10" Minute="49" Month="6" Second="10" TimeZoneOffset="+12:00" Year="2010"/><Error Hint="INVALID_REQUEST_ERROR" ErrorId="MISSING_MANDATORY_FIELD" Severity="err"><Description><![CDATA[Mandatory Field missing from Transaction]]></Description><ErrorDetails><![CDATA[UDAI]]></ErrorDetails></Error></Response></NZSRSResponse>
 
 
-epp_assertions:
+output_assertions:
   attr_is:
     - [ '//epp:result', 'code', 2400, 'EPP: Unexpected failure' ]
