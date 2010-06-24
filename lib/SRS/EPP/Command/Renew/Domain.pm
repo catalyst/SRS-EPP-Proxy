@@ -39,22 +39,7 @@ method notify( SRS::EPP::SRSResponse @rs ) {
   my $message = $rs[0]->message;
   my $response = $message->response;
 
-  if ( $self->billed_until() ) {
-    # This must be a response to our update TXN
-    if ( ! $response ) {
-      # We found the bill_date of the domain, but didn't update it
-      # - Assume the domain isn't managed by this registrar
-      return $self->make_response(code => 2201);
-    }
-
-    if ( $response->can("billed_until") ) {
-      my $newBillDate = $response->billed_until();
-      # TODO, actual check for success?
-      return $self->make_response(code => 1000);
-    }
-
-    return $self->make_response(code => 2400);
-  } else {
+  if ( ! $self->billed_until() ) {
     # This must be a response to our query TXN
 
     if ( $response ) {
@@ -75,6 +60,21 @@ method notify( SRS::EPP::SRSResponse @rs ) {
     }
     return $self->make_response(code => 2400);
   }
+
+  # By now, we must be dealing with the response to our update TXN
+  if ( ! $response ) {
+    # We found the bill_date of the domain, but didn't update it
+    # - Assume the domain isn't managed by this registrar
+    return $self->make_response(code => 2201);
+  }
+
+  if ( $response->can("billed_until") ) {
+    my $newBillDate = $response->billed_until();
+    # TODO, actual check for success?
+    return $self->make_response(code => 1000);
+  }
+
+  return $self->make_response(code => 2400);
 }
 
 1;
