@@ -39,21 +39,18 @@ method notify( SRS::EPP::SRSResponse @rs ) {
     my $whois = $rs[0]->message->response;
     my $domain = $rs[1]->message->response;
 
-    #print 'whois=' . $whois->to_xml() if $whois;
-    #print 'domain=' . $domain->to_xml() if $domain;
-
-    # here we have a few choices:
-    # - if Whois Status="Available", then we don't have a domain to report on
-    # - if Whois Status="Active", then we _may_ have a domain to report on
-    # - - if DomainDetails suceeded, we report the details
-    # - - if DomainDetails failed, the user isn't allowed to see it
-
+    # if status is available, then the object doesn't exist
     if ( $whois->status eq 'Available' ) {
         # since this is available, we already know the result
         return $self->make_response(code => 2303);
     }
 
-    # make the Info::Response object
+    # if there was no domain, this registrar doesn't have access to it
+    unless ( $domain ) {
+        return $self->make_response(code => 2201);
+    }
+
+    # we have a domain, therefore we have a full response :)
     my $r = XML::EPP::Domain::Info::Response->new();
 
     return $self->make_response(
