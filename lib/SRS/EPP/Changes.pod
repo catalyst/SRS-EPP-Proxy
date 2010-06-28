@@ -32,6 +32,10 @@ Check Domain
 
 =item *
 
+Create Contact
+
+=item *
+
 Delete Contact
 
 =item *
@@ -40,11 +44,11 @@ Delete Domain
 
 =item *
 
-Info Domain (work in progress)
+Info Contact 
 
 =item *
 
-Info Contact 
+Info Domain
 
 =item *
 
