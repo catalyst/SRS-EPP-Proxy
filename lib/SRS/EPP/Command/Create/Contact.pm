@@ -49,26 +49,29 @@ method process( SRS::EPP::Session $session ) {
     cc => $postalInfoAddr->cc,
     postcode => $postalInfoAddr->pc,
   );
-  if ( !$address ) {
-    return $self->make_response(code => 2400);
-  }
-  if ( $street->[1] ) {
-    $address->address2($street->[1]);
+  if ( $address ) {
+    if ( $street->[1] ) {
+      $address->address2($street->[1]);
+    }
+
+    # and finally, an SRS update is (hopefully) produced..
+    my $txn = {
+      handle_id => $payload->id(),
+      name => $postalInfo->name(),
+      phone => $payload->voice()->content(),
+      address => $address,
+      email => $payload->email(),
+      action_id => $message->client_id || sprintf("auto.%x",time()),
+    };
+    if ( $payload->fax()->content() ) {
+      $txn->{fax} = $payload->fax()->content();
+    }
+    if ( my $srsTxn =  XML::SRS::Handle::Create->new(%$txn) ) {
+      return $srsTxn;
+    }
   }
 
-  # and finally, an SRS update is (hopefully) produced..
-  my $srsTxn =  XML::SRS::Handle::Create->new(
-    handle_id => $payload->id(),
-    name => $postalInfo->name(),
-    phone => $payload->voice()->content(),
-    address => $address,
-    email => $payload->email(),
-    action_id => $message->client_id || sprintf("auto.%x",time()),
-  );
-  if ( $payload->fax()->content() ) {
-    $srsTxn->fax($payload->fax()->content());
-  }
-  return $srsTxn;
+  return $self->make_response(code => 2400);
 }
 
 
@@ -80,8 +83,11 @@ method notify( SRS::EPP::SRSResponse @rs ) {
   my $message = $rs[0]->message;
   my $response = $message->response;
 
-  # TODO: detect errors
-  return $self->make_response(code => 1000);
+  if ( $response->isa("XML::SRS::Handle") ) {
+    return $self->make_response(code => 1000);
+  }
+
+  return $self->make_response(code => 2400);
 }
 
 1;
