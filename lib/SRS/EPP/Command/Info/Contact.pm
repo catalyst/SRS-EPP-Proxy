@@ -65,7 +65,7 @@ method notify( SRS::EPP::SRSResponse @rs ) {
             ),
         ) ],
         voice => XML::EPP::Contact::E164->new(
-            content => $response->phone->cc . $response->phone->ndc . $response->phone->subscriber,
+            content => "+" . $response->phone->cc . "." . $response->phone->ndc . $response->phone->subscriber,
         ),
         #fax => XML::EPP::Contact::E164->new(
         #    content => $response->phone->cc . $response->phone->ndc . $response->phone->subscriber,
