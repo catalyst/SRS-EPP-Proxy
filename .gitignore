@@ -9,6 +9,9 @@ pm_to_blib
 /inc
 cover_db
 /SIGNATURE
+debian/libsrs-epp-proxy*
+debian/files
+debian/watch
 /SRS-EPP-Proxy-*
 debian
 .includepath

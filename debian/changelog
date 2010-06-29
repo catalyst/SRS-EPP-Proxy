@@ -1,0 +1,59 @@
+libsrs-epp-proxy-perl (0.20) unstable; urgency=low
+
+  * Update to latest tagged release
+
+ -- Evan Giles <evan@groening.wgtn.cat-it.co.nz>  Tue, 29 Jun 2010 14:02:33 +1200
+
+libsrs-epp-proxy-perl (0.12-1) unstable; urgency=low
+
+  * Update to latest tagged release
+
+ -- Sam Vilain <sam.vilain@catalyst.net.nz>  Thu, 13 May 2010 20:23:18 +1200
+
+libsrs-epp-proxy-perl (0.11-1) unstable; urgency=low
+
+  * Update to latest tagged release
+
+ -- Sam Vilain <sam.vilain@catalyst.net.nz>  Thu, 13 May 2010 20:06:07 +1200
+
+libsrs-epp-proxy-perl (0.01-01-40-gf9f80a5-1) unstable; urgency=low
+
+  * Fix dependencies
+
+ -- Sam Vilain <sam.vilain@catalyst.net.nz>  Thu, 13 May 2010 19:08:58 +1200
+
+libsrs-epp-proxy-perl (0.01-01-39-gdf50728-1) unstable; urgency=low
+
+  * git pull
+
+ -- Sam Vilain <sam.vilain@catalyst.net.nz>  Thu, 13 May 2010 18:54:24 +1200
+
+libsrs-epp-proxy-perl (0.00-01-5-g35c0481-1) unstable; urgency=low
+
+  * git pull
+
+ -- Sam Vilain <sam.vilain@catalyst.net.nz>  Thu, 06 May 2010 09:27:29 +1200
+
+libsrs-epp-proxy-perl (0.00-01-3-g0e3fc38-1) unstable; urgency=low
+
+  * git pull
+
+ -- Sam Vilain <sam.vilain@catalyst.net.nz>  Wed, 05 May 2010 18:33:19 +1200
+
+libsrs-epp-proxy-perl (0.00-01-1-g9debd53-2) unstable; urgency=low
+
+  * Add a few missing dependencies
+
+ -- Sam Vilain <sam.vilain@catalyst.net.nz>  Mon, 03 May 2010 16:21:37 +1200
+
+libsrs-epp-proxy-perl (0.00-01-1-g9debd53-1) unstable; urgency=low
+
+  * git pull
+
+ -- Sam Vilain <sam.vilain@catalyst.net.nz>  Mon, 03 May 2010 16:14:45 +1200
+
+libsrs-epp-proxy-perl (0.00-01-1) unstable; urgency=low
+
+  * Initial Release.
+
+ -- Sam Vilain <sam.vilain@catalyst.net.nz>  Fri, 30 Apr 2010 16:08:14 +1200
