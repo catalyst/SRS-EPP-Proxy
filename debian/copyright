@@ -1,0 +1,14 @@
+This is the debian package for the SRS-EPP-Proxy module.
+It was created by Sam Vilain <sam.vilain@catalyst.net.nz> using dh-make-perl.
+
+It was downloaded from http://search.cpan.org/dist/SRS-EPP-Proxy/
+
+This copyright info was automatically extracted from the perl module.
+It may not be accurate, so you better check the module sources
+if you don't want to get into legal troubles.
+
+The upstream author is: Catalyst SRS Team <team-srs@catalyst.net.nz>.
+
+
+The Debian packaging is (C) 2010, Sam Vilain <sam.vilain@catalyst.net.nz> and
+is licensed under the same terms as the software itself (see above).
