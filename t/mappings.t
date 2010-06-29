@@ -28,6 +28,7 @@ use FindBin qw($Bin);
 use lib $Bin;
 use Mock;
 use XMLMappingTests;
+use t::Log4test;
 
 our @testfiles = XMLMappingTests::find_tests;
 
@@ -92,17 +93,21 @@ for my $testfile ( sort @testfiles ) {
 
     for my $srs_loop ( @{$yaml->{SRS}} ) {
       # Assert against last output from proxy (@messages)
-      my $srs_assertions = $srs_loop->{assertions};
-      my $tx = XML::SRS::Request->new(
-          version => "auto",
-          requests => [ @messages ],
-          );
-      my $xmlstring = $tx->to_xml();
-      print "XML = $xmlstring\n" if $VERBOSE;
-      XMLMappingTests::run_testset( $xmlstring, $srs_assertions );
+      
+      my $srs_message = ($messages[0]->does("XML::SRS::Query") or $messages[0]->does("XML::SRS::Action"));
+      ok($srs_message,"Sane test: got SRS input when we expected it");
 
-      # If the output from the proxy was SRS XML, we need to pretend to hit the SRS
-      if ( $messages[0]->does('XML::SRS::Action') or $messages[0]->does('XML::SRS::Query') ) {
+      if ( $srs_message ) {
+        my $tx = XML::SRS::Request->new(
+            version => "auto",
+            requests => [ @messages ],
+            );
+        my $xmlstring = $tx->to_xml();
+        print "XML = $xmlstring\n" if $VERBOSE;
+        my $srs_assertions = $srs_loop->{assertions};
+        XMLMappingTests::run_testset( $xmlstring, $srs_assertions );
+
+        # If the output from the proxy was SRS XML, we need to pretend to hit the SRS
         if ( my $fake_response = $srs_loop->{fake_response} ) {
           my $message = XML::SRS::Response->parse($srs_loop->{fake_response});
           my $rs_tx = SRS::EPP::SRSMessage->new( message => $message );
@@ -113,7 +118,7 @@ for my $testfile ( sort @testfiles ) {
       }
     }
 
-    ok( $messages[0]->isa('SRS::EPP::Response'), 'test definition sane' );
+    ok( $messages[0]->isa('SRS::EPP::Response'),"Final response has sensible class"); 
     if ( $messages[0]->isa('SRS::EPP::Response') ) {
         # ToDo: we'll have to do something if there are multiple msgs returned
         my $resp = $messages[0];
