@@ -110,11 +110,7 @@ method process( SRS::EPP::Session $session ) {
 	$self->session($session);
 
 	# default handler is to return an unimplemented message
-	return SRS::EPP::Response::Error->new(
-		id => 2101,
-		server_id => $self->server_id,
-		extra => "Sorry, command not yet implemented.",
-		);
+	return $self->make_response(code => 2101);
 }
 
 method notify( SRS::EPP::SRSResponse @rs ) {
@@ -126,12 +122,7 @@ method notify( SRS::EPP::SRSResponse @rs ) {
 		$self->server_id($server_id);
 	}
 }
-method next_backend_message() {
-	die("$self: EPP command must implement next_backend_message (if it's going to un-set 'done')");
-}
-method response() {
-	die("$self: EPP command must implement response to reply");
-}
+
 sub make_response {
 	my $self = shift;
 	my $type = "SRS::EPP::Response";
