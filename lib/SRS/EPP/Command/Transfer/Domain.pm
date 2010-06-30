@@ -43,15 +43,8 @@ method process( SRS::EPP::Session $session ) {
   }
 
   if ( $op eq "query" ) {
-    return (
-      XML::SRS::Whois->new(
-        domain => $payload->name,
-        full => 0,
-      ),
-      XML::SRS::Domain::Query->new(
-        domain_name_filter => $payload->name,
-      ),
-    );
+    my $msg = "This server does support pending transfers";
+    return $self->make_response(code => 2306, extra => $msg);
   }
 
   return $self->make_response(code => 2400);
@@ -73,11 +66,6 @@ method notify( SRS::EPP::SRSResponse @rs ) {
       if ( $message->action() eq "DomainUpdate" ) {
         if ( $response->isa("XML::SRS::Domain") ) {
           return $self->make_response(code => 1000);
-        }
-      }
-      if ( $message->action() eq "DomainDetailsQry" ) {
-        if ( $response->status eq "Active" ) {
-          # Then the transfer must have gone ok....
         }
       }
     }

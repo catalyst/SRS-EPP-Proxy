@@ -12,7 +12,7 @@ Add Mappings for
 
 =item *
 
-Transfer Domain (request)
+Transfer Domain (request and query)
 
 =back
 
