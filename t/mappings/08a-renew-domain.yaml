@@ -76,17 +76,17 @@ SRS:
           <Server FQDN="ns1.moca.co.nz"/>
           <Server FQDN="ns2.discountdomains.co.nz"/>
         </NameServers>
-        <RegistrantContact Name="Ibex International" Email="ingridc@ibex-int.co.nz">
-          <PostalAddress Address1="76 Maleme St" City="Tauranga" CountryCode="NZ"/>
-          <Phone AreaCode="7" CountryCode="64" LocalNumber="9277700"/>
+        <RegistrantContact Name="Funsies International" Email="ingridc@silly-int.co.nz">
+          <PostalAddress Address1="6 boring road" City="Middlesex" CountryCode="NZ"/>
+          <Phone AreaCode="3" CountryCode="64" LocalNumber="9266660"/>
         </RegistrantContact>
-        <AdminContact Name="Ibex International" Email="ingridc@ibex-int.co.nz">
-          <PostalAddress Address1="76 Maleme St" City="Tauranga" CountryCode="NZ"/>
-          <Phone AreaCode="7" CountryCode="64" LocalNumber="9277700"/>
+        <AdminContact Name="Funsies International" Email="ingridc@silly-int.co.nz">
+          <PostalAddress Address1="6 boring road" City="Middlesex" CountryCode="NZ"/>
+          <Phone AreaCode="3" CountryCode="64" LocalNumber="9666600"/>
         </AdminContact>
-        <TechnicalContact Name="Ibex International" Email="ingridc@ibex-int.co.nz">
-          <PostalAddress Address1="76 Maleme St" City="Tauranga" CountryCode="NZ"/>
-          <Phone AreaCode="7" CountryCode="64" LocalNumber="9277700"/>
+        <TechnicalContact Name="Funsies International" Email="ingridc@silly-int.co.nz">
+          <PostalAddress Address1="6 boring road" City="Middlesex" CountryCode="NZ"/>
+          <Phone AreaCode="3" CountryCode="64" LocalNumber="9666600"/>
         </TechnicalContact>
         <BilledUntil Day="28" Hour="11" Minute="31" Month="7" Second="37" TimeZoneOffset="+12:00" Year="2011"/>
         <RegisteredDate Day="28" Hour="11" Minute="31" Month="7" Second="37" TimeZoneOffset="+12:00" Year="2009"/>

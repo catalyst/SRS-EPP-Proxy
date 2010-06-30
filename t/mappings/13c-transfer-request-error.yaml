@@ -1,0 +1,44 @@
+template: transfer-domain.tt
+
+vars:
+  domain: mozzarella.co.te
+  auth: UDAjUDAj
+
+input_assertions:
+  class: SRS::EPP::Command::Transfer::Domain
+  match:
+    - [ '//domain:name', 'mozzarella.co.te', 'Domain correctly included in XML' ]
+    - [ '//domain:pw', 'UDAjUDAj', 'found auth info data' ]
+
+SRS:
+ - assertions:
+     count:
+       - [ '//Whois', 1, 'SRS: generated Whois' ]
+       - [ '//DomainUpdate', 1, 'SRS: generated DomainUpdate' ]
+     match:
+       - [ '//DomainNameFilter', 'mozzarella.co.te', 'SRS: Updating correct domain' ]
+   fake_response: |-
+     <NZSRSResponse VerMajor="4" VerMinor="3" RegistrarId="104">
+     <Response Action="Whois" FeId="8" FeSeq="4775126" OrigRegistrarId="1" RecipientRegistrarId="1">
+       <FeTimeStamp Day="1" Hour="08" Minute="50" Month="7" Second="34" TimeZoneOffset="+12:00" Year="2010"/>
+       <Domain DomainName="mozzarella.co.te" Status="Active"/>
+     </Response>
+     <Response Action="DomainUpdate" FeId="8" FeSeq="4775126" OrigRegistrarId="1" RecipientRegistrarId="1" TransId="20100701 1">
+       <FeTimeStamp Day="1" Hour="08" Minute="50" Month="7" Second="34" TimeZoneOffset="+12:00" Year="2010"/>
+       <Error Hint="INVALID_REQUEST_ERROR" ErrorId="UDAI_DOMAIN_MISMATCH" Severity="err">
+          <Description>
+            <![CDATA[The given UDAI does not match the requested domain]]>
+          </Description>
+          <ErrorDetails>
+            <![CDATA[mozzarella.co.te]]>
+          </ErrorDetails>
+       </Error>
+     </Response>
+     </NZSRSResponse>
+
+   
+output_assertions:
+  attr_is:
+    - [ '//epp:result', 'code', 2400, 'EPP: Correct response code' ]
+
+
