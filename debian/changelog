@@ -1,3 +1,9 @@
+libsrs-epp-proxy-perl (0.20.1-2) lucid; urgency=low
+
+  * Fix dependencies - pull in new XML::SRS & XML::EPP
+
+ -- Sam Vilain <sam.vilain@catalyst.net.nz>  Thu, 01 Jul 2010 20:04:19 +1200
+
 libsrs-epp-proxy-perl (0.20.1-1) lucid; urgency=low
 
   * Package new version
