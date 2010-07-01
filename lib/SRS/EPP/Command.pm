@@ -70,6 +70,7 @@ sub BUILD {
 			$class = action_class($epp->message->action);
 		}
 		if ( $class ) {
+			#FIXME: use ->meta->rebless_instance
 			bless $self, $class;
 			$self->REBLESS;
 		}
