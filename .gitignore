@@ -13,3 +13,4 @@ debian/libsrs-epp-proxy*
 debian/files
 debian/watch
 /SRS-EPP-Proxy-*
+*-stamp
