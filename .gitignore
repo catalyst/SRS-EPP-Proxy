@@ -13,8 +13,7 @@ debian/libsrs-epp-proxy*
 debian/files
 debian/watch
 /SRS-EPP-Proxy-*
+*-stamp
 debian
 .includepath
 .project
-build-stamp
-install-stamp
