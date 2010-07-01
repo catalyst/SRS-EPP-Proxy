@@ -119,11 +119,11 @@ for my $testfile ( sort @testfiles ) {
       }
     }
 
-    ok( $messages[0]->isa('SRS::EPP::Response'),"Final response has sensible class"); 
-    if ( $messages[0]->isa('SRS::EPP::Response') ) {
+    my $epp_response = $messages[0];
+    ok( $epp_response->isa('SRS::EPP::Response'),"Final response has sensible class"); 
+    if ( $epp_response->isa('SRS::EPP::Response') ) {
         # ToDo: we'll have to do something if there are multiple msgs returned
-        my $resp = $messages[0];
-        my $xml = $resp->to_xml();
+        my $xml = $epp_response->to_xml();
 
         # print out the XML
         print "EPP response = $xml\n" if $VERBOSE;

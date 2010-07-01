@@ -12,12 +12,6 @@ use Data::Dumper;
 use XML::EPP::Common;
 use XML::EPP::Domain::NS::List;
 
-my $status_map = {
-    Active => 'ok',
-    PendingRelease => 'pendingRenew',
-    # shouldn't ever need this one
-    Available => '',
-};
 
 # for plugin system to connect
 sub xmlns {
@@ -66,32 +60,14 @@ method notify( SRS::EPP::SRSResponse @rs ) {
     my $payload = $self->message->message->argument->payload;
     # print Dumper($domain);
 
-    # Status:
-    my @status;
-    if ( $domain->delegate() == 0 ) {
-        push @status, 'inactive';
-    }
-    elsif ( $domain->status eq 'PendingRelease' ) {
-        push @status, 'pendingDelete';
-    }
-    elsif ( defined $domain->locked_date() ) {
-        push @status, qw( serverDeleteProhibited serverHold serverRenewProhibited serverTransferProhibited serverUpdateProhibited );
-    }
-    else {
-        push @status, 'ok';
-    }
-
     # get some things out to make it easier on the eye below
-    # @status = map { XML::EPP::Domain::Status->new( status => $_ ) } @status;
     my @nameservers = map { $_->fqdn } @{$domain->nameservers->nameservers};
 
     my $r = XML::EPP::Domain::Info::Response->new(
         name => $payload->name->value,
         roid => substr(md5_hex($payload->name->value), 0, 12) . '-DOM',
         # status => \@status,
-        status => [
-            map { XML::EPP::Domain::Status->new( status => $_ ) } @status
-        ],
+        status => [ getEppStatuses($domain) ],
         # registrant # skipping, since contacts can't be seen from EPP
         # contact    # skipping, since contacts can't be seen from EPP
         ns => XML::EPP::Domain::NS::List->new( ns => [ @nameservers ] ),
@@ -111,6 +87,26 @@ method notify( SRS::EPP::SRSResponse @rs ) {
         code => 1000,
         payload => $r,
     );
+}
+
+sub getEppStatuses {
+  my ($domain) = @_;
+
+  my @status;
+  if ( $domain->delegate() == 0 ) {
+      push @status, 'inactive';
+  }
+  elsif ( $domain->status eq 'PendingRelease' ) {
+      push @status, 'pendingDelete';
+  }
+  elsif ( defined $domain->locked_date() ) {
+      push @status, qw( serverDeleteProhibited serverHold serverRenewProhibited serverTransferProhibited serverUpdateProhibited );
+  }
+  else {
+      push @status, 'ok';
+  }
+
+  return map { XML::EPP::Domain::Status->new( status => $_ ) } @status
 }
 
 sub srs_date_to_epp_date {
