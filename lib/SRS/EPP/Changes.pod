@@ -6,7 +6,7 @@
 
 =item *
 
-Add Mappings for
+Add Mappings for:
 
 =over
 
