@@ -51,7 +51,7 @@ method process( SRS::EPP::Session $session ) {
 
   if ( $op eq "query" ) {
     my $msg = "This server does support pending transfers";
-    return $self->make_response(code => 2306, extra => $msg);
+    return $self->make_response(code => 2102, extra => $msg);
   }
 
   return $self->make_response(code => 2400);

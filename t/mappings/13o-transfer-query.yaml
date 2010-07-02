@@ -10,6 +10,6 @@ input_assertions:
 
 output_assertions:
   attr_is:
-    - [ '//epp:result', 'code', 2306, 'EPP: Correct response code' ]
+    - [ '//epp:result', 'code', 2102, 'EPP: Correct response code' ]
 
 
