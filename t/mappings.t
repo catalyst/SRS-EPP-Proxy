@@ -46,6 +46,7 @@ my $session = SRS::EPP::Session->new(
     event => undef,
     proxy => Mock::Proxy->new(),
     backend_url => '',
+    user => 11,
 );
 
 for my $testfile ( sort @testfiles ) {
