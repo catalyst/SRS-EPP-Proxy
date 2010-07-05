@@ -12,6 +12,10 @@ Add Mappings for:
 
 =item *
 
+Transfer Contact
+
+=item *
+
 Transfer Domain (request and query)
 
 =back
