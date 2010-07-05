@@ -71,6 +71,17 @@ has 'sockets' =>
 use constant EPP_DEFAULT_TCP_PORT => 700;
 use constant EPP_DEFAULT_LOCAL_PORT => "epp(".EPP_DEFAULT_TCP_PORT.")";
 
+sub fmt_addr_port {
+	my $addr = shift;
+	my $port = shift;
+	if ( $addr =~ m{:} ) {
+		"[$addr]:$port";
+	}
+	else {
+		"$addr:$port";
+	}
+}
+
 method init() {
 
 	my @sockets;
@@ -99,11 +110,17 @@ method init() {
 				ReuseAddr => 1,
 			       );
 
+			my $addr_port = fmt_addr_port($addr,$port);
+
 			if ( !$socket ) {
-				$self->log_error("Failed to listen on $addr:$port; $!");
+				$self->log_error(
+				"Failed to listen on $addr_port; $!",
+				       );
 			}
 			else {
-				$self->log_info("Listening on $addr port $port");
+				$self->log_info(
+					"Listening on $addr_port",
+				       );
 				push @sockets, $socket;
 			}
 		}
