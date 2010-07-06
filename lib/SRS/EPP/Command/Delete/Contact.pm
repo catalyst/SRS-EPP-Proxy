@@ -39,7 +39,7 @@ method notify( SRS::EPP::SRSResponse @rs ) {
   }
 
   if ( $response->isa("XML::SRS::Error") ) {
-    if ( $response->ErrorId() eq "HANDLE_DOES_NOT_EXIST" ) {
+    if ( $response->error_id() eq "HANDLE_DOES_NOT_EXIST" ) {
       return $self->make_response(code => 2303);
     }
   }
