@@ -86,7 +86,6 @@ method notify( SRS::EPP::SRSResponse @rs ) {
     );
 
     return $self->make_response(
-        'Create',
         code => 1000,
         payload => $r,
     );

@@ -56,7 +56,6 @@ method notify( SRS::EPP::SRSResponse @rs ) {
 
     # from SRS::EPP::Response::Check
     return $self->make_response(
-        'Check',
         code => 1000,
         payload => $r,
         );
