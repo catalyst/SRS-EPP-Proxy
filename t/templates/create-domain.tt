@@ -2,10 +2,8 @@
   <domain:create xmlns:domain="urn:ietf:params:xml:ns:domain-1.0">
     <domain:name>[% domain %]</domain:name>
       <domain:ns>
-        [%~ FOREACH dns in ns %]
-        <domain:hostAttr>
-          <domain:hostName>[% dns %]</domain:hostName>
-        </domain:hostAttr>
+        [%~ FOREACH dns IN ns %]
+        <domain:hostObj>[% dns %]</domain:hostObj>
         [%~ END %]
       </domain:ns>
     <domain:registrant>[% owner %]</domain:registrant>

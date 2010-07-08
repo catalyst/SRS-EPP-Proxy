@@ -8,6 +8,8 @@ use MooseX::Method::Signatures;
 use Crypt::Password;
 use Data::Dumper;
 
+use XML::SRS::Types;
+
 with 'MooseX::Log::Log4perl::Easy';
 
 sub action {
@@ -69,7 +71,7 @@ method process( SRS::EPP::Session $session ) {
 	       ),
 		XML::SRS::ACL::Query->new(
 			Resource => "epp_connect",
-			List => "allow",
+			List => "whitelist",
 			Type => "registrar_ip",
 			filter_types => ["AddressFilter", "RegistrarIdFilter"],
 			filter => [$session->peerhost, $uid],
@@ -78,7 +80,7 @@ method process( SRS::EPP::Session $session ) {
 			 (
 			XML::SRS::ACL::Query->new(
 			Resource => "epp_client_certs",
-			List => "allow",
+			List => "whitelist",
 			Type => "registrar_domain",
 			filter_types => ["DomainNameFilter", "RegistrarIdFilter"],
 			filter => [$session->peer_cn, $uid],

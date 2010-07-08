@@ -28,6 +28,15 @@ has 'extra' =>
 	isa => "Str",
 	;
 
+has 'msgQ' =>
+	is => "ro",
+	isa => "XML::EPP::msgQType";
+	;
+
+has 'payload' =>
+	is => "ro",
+	;
+
 use XML::EPP;
 has "+message" =>
 	isa => "XML::EPP",
@@ -47,12 +56,20 @@ has "+message" =>
 			($msg ? (msg => $msg) : ()),
 			code => $self->code,
 		       );
+		my $payload;
+		if ( $self->payload ) {
+			$payload = XML::EPP::SubResponse->new(
+				payload => $self->payload,
+			);
+		}
 		XML::EPP->new(
 			message => XML::EPP::Response->new(
 				result => [ $result ],
+				($payload ? (response => $payload) : ()),
+				($self->msgQ ? (msgQ => $self->msgQ) : ()),
 				($tx_id ? (tx_id => $tx_id) : () ),
-			       ),
-		       );
+			),
+		);
 	},
 	;
 

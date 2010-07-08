@@ -1,5 +1,27 @@
 =head1 CHANGELOG FOR SRS::EPP::Proxy
 
+=head2 VERSION 0.21, ?? ???? 2010
+
+=over
+
+=item *
+
+Add Mappings for:
+
+=over
+
+=item *
+
+Transfer Contact
+
+=item *
+
+Transfer Domain (request and query)
+
+=back
+
+=back
+
 =head2 VERSION 0.20, 25 JUNE 2010
 
 =over

@@ -4,6 +4,7 @@ package SRS::EPP::Command::Renew::Domain;
 
 use Moose;
 extends 'SRS::EPP::Command::Renew';
+
 use MooseX::Method::Signatures;
 use Crypt::Password;
 use SRS::EPP::Session;

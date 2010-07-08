@@ -1,8 +1,5 @@
-<transfer op="request">
+<transfer op="query">
   <domain:transfer xmlns:domain="urn:ietf:params:xml:ns:domain-1.0">
     <domain:name>[% domain %]</domain:name>
-    <domain:authInfo>
-          <domain:pw>[% auth %]</domain:pw>
-    </domain:authInfo>
   </domain:transfer>
 </transfer>

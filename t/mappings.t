@@ -28,8 +28,11 @@ use FindBin qw($Bin);
 use lib $Bin;
 use Mock;
 use XMLMappingTests;
+use t::Log4test;
 
-our @testfiles = XMLMappingTests::find_tests;
+my @files = map { s|^t/||; $_ } @ARGV;
+
+our @testfiles = @files ? @files : XMLMappingTests::find_tests;
 
 # get an XML parser
 my $parser = XML::LibXML->new();
@@ -41,10 +44,15 @@ my $tt = Template->new({
 });
 
 # create an SRS::EPP::Session
+my $proxy = Mock::Proxy->new();
+$proxy->rfc_compliant_ssl(1);
 my $session = SRS::EPP::Session->new(
     event => undef,
-    proxy => Mock::Proxy->new(),
+    proxy => $proxy,
     backend_url => '',
+    user => 11,
+    peerhost => '192.168.1.1',
+    peer_cn => 'peer_cn',
 );
 
 for my $testfile ( sort @testfiles ) {
@@ -92,17 +100,21 @@ for my $testfile ( sort @testfiles ) {
 
     for my $srs_loop ( @{$yaml->{SRS}} ) {
       # Assert against last output from proxy (@messages)
-      my $srs_assertions = $srs_loop->{assertions};
-      my $tx = XML::SRS::Request->new(
-          version => "auto",
-          requests => [ @messages ],
-          );
-      my $xmlstring = $tx->to_xml();
-      print "XML = $xmlstring\n" if $VERBOSE;
-      XMLMappingTests::run_testset( $xmlstring, $srs_assertions );
+      
+      my $srs_message = ($messages[0]->does("XML::SRS::Query") or $messages[0]->does("XML::SRS::Action"));
+      ok($srs_message,"Sane test: got SRS input when we expected it");
 
-      # If the output from the proxy was SRS XML, we need to pretend to hit the SRS
-      if ( $messages[0]->does('XML::SRS::Action') or $messages[0]->does('XML::SRS::Query') ) {
+      if ( $srs_message ) {
+        my $tx = XML::SRS::Request->new(
+            version => "auto",
+            requests => [ @messages ],
+            );
+        my $xmlstring = $tx->to_xml();
+        print "XML = $xmlstring\n" if $VERBOSE;
+        my $srs_assertions = $srs_loop->{assertions};
+        XMLMappingTests::run_testset( $xmlstring, $srs_assertions );
+
+        # If the output from the proxy was SRS XML, we need to pretend to hit the SRS
         if ( my $fake_response = $srs_loop->{fake_response} ) {
           my $message = XML::SRS::Response->parse($srs_loop->{fake_response});
           my $rs_tx = SRS::EPP::SRSMessage->new( message => $message );
@@ -113,11 +125,11 @@ for my $testfile ( sort @testfiles ) {
       }
     }
 
-    ok( $messages[0]->isa('SRS::EPP::Response'), 'test definition sane' );
-    if ( $messages[0]->isa('SRS::EPP::Response') ) {
+    my $epp_response = $messages[0];
+    ok( $epp_response->isa('SRS::EPP::Response'),"Final response has sensible class"); 
+    if ( $epp_response->isa('SRS::EPP::Response') ) {
         # ToDo: we'll have to do something if there are multiple msgs returned
-        my $resp = $messages[0];
-        my $xml = $resp->to_xml();
+        my $xml = $epp_response->to_xml();
 
         # print out the XML
         print "EPP response = $xml\n" if $VERBOSE;
