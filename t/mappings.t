@@ -30,7 +30,9 @@ use Mock;
 use XMLMappingTests;
 use t::Log4test;
 
-our @testfiles = XMLMappingTests::find_tests;
+my @files = map { s|^t/||; $_ } @ARGV;
+
+our @testfiles = @files ? @files : XMLMappingTests::find_tests;
 
 # get an XML parser
 my $parser = XML::LibXML->new();
