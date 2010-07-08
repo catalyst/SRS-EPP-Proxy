@@ -9,7 +9,7 @@ Homepage: http://search.cpan.org/dist/SRS-EPP-Proxy/
 
 Package: libsrs-epp-proxy-perl
 Architecture: all
-Depends: perl (>= 5.10.0), ${misc:Depends}, libmoosex-getopt-perl, libmoose-perl (>= 1.00), libmoosex-simpleconfig-perl, libxml-epp-perl (>= 0.04.1-1), libmoosex-singleton-perl, libmoosex-method-signatures-perl, libxml-srs-perl (>= 0.04.1-2), libcrypt-password-perl (>= 0.05), libmoosex-log-log4perl-perl, libnet-ssleay-oo-perl, libmoosex-daemonize-perl, libcrypt-openpgp-perl, libmoosex-configfromfile-perl, libevent-perl
+Depends: perl (>= 5.10.0), ${misc:Depends}, libmoosex-getopt-perl, libmoose-perl (>= 1.00), libmoosex-simpleconfig-perl, libxml-epp-perl (>= 0.04.1-1), libmoosex-singleton-perl, libmoosex-method-signatures-perl, libxml-srs-perl (>= 0.04.1-2), libcrypt-password-perl (>= 0.05), libmoosex-log-log4perl-perl, libnet-ssleay-oo-perl, libmoosex-daemonize-perl, libcrypt-openpgp-perl, libmoosex-configfromfile-perl, libevent-perl, liblog-dispatch-perl, libdata-buffer-perl, libmath-pari-perl  
 Description: EPP <=> SRS XML proxy server
  This module is a base class for EPP commands; these are messages sent
  from the client to the server.
