@@ -42,11 +42,15 @@ my $tt = Template->new({
 });
 
 # create an SRS::EPP::Session
+my $proxy = Mock::Proxy->new();
+$proxy->rfc_compliant_ssl(1);
 my $session = SRS::EPP::Session->new(
     event => undef,
-    proxy => Mock::Proxy->new(),
+    proxy => $proxy,
     backend_url => '',
     user => 11,
+    peerhost => '192.168.1.1',
+    peer_cn => 'peer_cn',
 );
 
 for my $testfile ( sort @testfiles ) {
