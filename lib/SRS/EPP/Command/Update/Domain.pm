@@ -59,9 +59,7 @@ method notify( SRS::EPP::SRSResponse @rs ) {
         return $self->make_response(code => 2400);
     }
 
-    # we have a response, so let's check it looks ok
-    die 'Not yet implemented';
-
+    # everything looks ok, so let's return a successful message
     return $self->make_response(code => 1000);
 }
 
