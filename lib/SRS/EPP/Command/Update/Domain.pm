@@ -27,8 +27,6 @@ method process( SRS::EPP::Session $session ) {
     # the first thing we're going to check for is a change to the registrant
     if ( $payload->change ) {
         if ( $payload->change->registrant ) {
-            use Data::Dumper;
-            print Dumper($payload->change);
             # changing the registrant, so let's remember that
             $registrant = $payload->change->registrant;
         }
@@ -48,8 +46,6 @@ method notify( SRS::EPP::SRSResponse @rs ) {
 
     my $message = $rs[0]->message;
     my $responses = $message->responses;
-
-    # print Dumper($message);
 
     # if we get no response, then it's likely the domain name doesn't exist
     # ie. the DomainNameFilter didn't match anything
