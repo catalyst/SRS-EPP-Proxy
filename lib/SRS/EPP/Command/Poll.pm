@@ -101,12 +101,7 @@ sub extract_fact {
 
   # didn't notice anything specifically interesting, so we'll default to
   # returning a full info response...
-  return XML::EPP::Domain::Info::Response->new(
-    name => $domain->name,
-    roid => substr(md5_hex($domain->name), 0, 12) . '-DOM',
-    status => [ SRS::EPP::Command::Info::Domain::getEppStatuses($domain) ],
-    # EXG TODO
-  );
+  return SRS::EPP::Command::Info::Domain::buildInfoResponse($domain);
 }
 
 method notify( SRS::EPP::SRSResponse @rs ) {
@@ -131,7 +126,6 @@ method notify( SRS::EPP::SRSResponse @rs ) {
     }
 
     if ( $response->isa("XML::SRS::Message") ) {
-
       my $record = $response->result();
 
       my $id = sprintf("%04d%s",$record->by_id,$record->client_id);
