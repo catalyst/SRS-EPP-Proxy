@@ -54,7 +54,8 @@ method notify( SRS::EPP::SRSResponse @rs ) {
     # if we get no response, then it's likely the domain name doesn't exist
     # ie. the DomainNameFilter didn't match anything
     unless ( @$responses ) {
-        return $self->make_response(code => 2400);
+        # Object does not exist
+        return $self->make_response(code => 2303);
     }
 
     # check the response wasn't an error
