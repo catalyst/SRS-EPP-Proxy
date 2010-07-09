@@ -13,7 +13,7 @@ SRS:
        - [ '/NZSRSRequest/GetMessages/TypeFilter', 2, 'SRS: there are both typefilters' ]
      attr_is:
        - [ '/NZSRSRequest/GetMessages', 'QueueMode', '1', 'SRS: Get message correct' ]
-       - [ '/NZSRSRequest/GetMessages', 'MaxResults', '10', 'SRS: request wants just one row' ]
+       - [ '/NZSRSRequest/GetMessages', 'MaxResults', '1', 'SRS: request wants just one row' ]
    fake_response: |-
        <NZSRSResponse VerMajor="5" VerMinor="0">
        <Response Action="GetMessages" FeId="8" FeSeq="4798908" OrigRegistrarId="90" RecipientRegistrarId="90" Rows="1">
@@ -54,7 +54,7 @@ output_assertions:
   count:
     - [ '//domain:infData/domain:name', 1, 'EPP: found the domain name that was renewed' ]
   attr_is:
-    - [ '//epp:msgQ', 'id', 'srsrps-1_378', 'EPP: found msg id' ]
+    - [ '//epp:msgQ', 'id', '0001srsrps-1_378', 'EPP: found msg id' ]
     - [ '//epp:result', 'code', 1301, 'EPP: Correct response code' ]
   match:
     - [ '//domain:pw', 'PqC9VFP8',  'EPP: found the new UDAI' ]
