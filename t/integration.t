@@ -7,7 +7,6 @@ use warnings;
 
 use Test::More;
 use FindBin qw($Bin);
-use Brause;
 use YAML qw(LoadFile);
 use lib $Bin;
 use XMLMappingTests;
@@ -50,6 +49,7 @@ foreach my $testfile (sort @testfiles) {
         ],
     };
     
+    require Brause;
     my $res = Brause::talk($test, \%conf);
     
     my $response = $res->{response}[1];
