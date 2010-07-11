@@ -13,7 +13,7 @@ SRS:
        - [ '/NZSRSRequest/GetMessages/TypeFilter', 2, 'SRS: there are both typefilters' ]
      attr_is:
        - [ '/NZSRSRequest/GetMessages', 'QueueMode', '1', 'SRS: Get message correct' ]
-       - [ '/NZSRSRequest/GetMessages', 'MaxResults', '10', 'SRS: request wants just one row' ]
+       - [ '/NZSRSRequest/GetMessages', 'MaxResults', '1', 'SRS: request wants just one row' ]
    fake_response: |-
        <NZSRSResponse VerMajor="5" VerMinor="0">
        <Response Action="GetMessages" FeId="8" FeSeq="4798881" MoreRowsAvailable="1" OrigRegistrarId="171" RecipientRegistrarId="171" Rows="1">
@@ -60,6 +60,6 @@ output_assertions:
    - [ '//domain:infData/domain:exDate', 1, 'EPP: found the new domain expiry date' ]
   attr_is:
     - [ '//epp:result', 'code', 1301, 'EPP: Correct response code' ]
-    - [ '//epp:msgQ', 'id', 'RenewDomains-2010-07-06 23:30:00-tasty.co.te', 'EPP: found msg id' ]
+    - [ '//epp:msgQ', 'id', '0050RenewDomains-2010-07-06 23:30:00-tasty.co.te', 'EPP: found msg id' ]
 
 

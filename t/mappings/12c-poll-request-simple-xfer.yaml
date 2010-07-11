@@ -13,7 +13,7 @@ SRS:
        - [ '/NZSRSRequest/GetMessages/TypeFilter', 2, 'SRS: there are both typefilters' ]
      attr_is:
        - [ '/NZSRSRequest/GetMessages', 'QueueMode', '1', 'SRS: Get message correct' ]
-       - [ '/NZSRSRequest/GetMessages', 'MaxResults', '10', 'SRS: request wants just one row' ]
+       - [ '/NZSRSRequest/GetMessages', 'MaxResults', '1', 'SRS: request wants just one row' ]
    fake_response: |-
      <NZSRSResponse VerMajor="5" VerMinor="0">
      <Response Action="GetMessages" FeId="8" FeSeq="479" OrigRegistrarId="90" RecipientRegistrarId="90" Rows="1">

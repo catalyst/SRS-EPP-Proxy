@@ -17,7 +17,7 @@ use SRS::EPP::Command::Info::Domain;
 
 with 'SRS::EPP::Command::PayloadClass';
 
-has 'query_results' =>
+has 'remaining' =>
   is => 'rw',
   isa => 'Int',
   default => 10,
@@ -43,7 +43,7 @@ method process( SRS::EPP::Session $session ) {
   if ( $op eq "req" ) {
     return XML::SRS::GetMessages->new(
       queue => 1,
-      max_results => $self->query_results(),
+      max_results => 1,
       type_filter => [
         XML::SRS::GetMessages::TypeFilter->new(Type => "third-party"),
         XML::SRS::GetMessages::TypeFilter->new(Type => "server-generated-data"),
@@ -53,9 +53,10 @@ method process( SRS::EPP::Session $session ) {
 
   if ( $op eq "ack" ) {
     my $msgId = $message->argument->msgID;
+    my ($registrar_id,$client_id) = $msgId =~ m/(....)(.*)/;
     return XML::SRS::AckMessage->new(
-      transaction_id => $msgId,
-      originating_registrar => $session->user,
+      transaction_id => $client_id,
+      originating_registrar => $registrar_id+0,
       action_id => $message->client_id || sprintf("auto.%x",time()),
     );
   }
@@ -100,12 +101,7 @@ sub extract_fact {
 
   # didn't notice anything specifically interesting, so we'll default to
   # returning a full info response...
-  return XML::EPP::Domain::Info::Response->new(
-    name => $domain->name,
-    roid => substr(md5_hex($domain->name), 0, 12) . '-DOM',
-    status => [ SRS::EPP::Command::Info::Domain::getEppStatuses($domain) ],
-    # EXG TODO
-  );
+  return SRS::EPP::Command::Info::Domain::buildInfoResponse($domain);
 }
 
 method notify( SRS::EPP::SRSResponse @rs ) {
@@ -114,26 +110,35 @@ method notify( SRS::EPP::SRSResponse @rs ) {
   my $message = $rs[0]->message;
   my $responses = $message->responses;
 
-  # There are likely to be several responses, but we are
-  # only going to deal with the first one
-  $self->query_results(scalar @$responses);
-
-  if ( ! $self->query_results() ) {
+  if ( !(scalar @$responses) ) {
     return $self->make_response(code => 1300);
   }
 
   if ( my $response = $responses->[0] ) {
-    my $record = $response->result();
 
-    my $msgQ = XML::EPP::MsgQ->new(
-      count => $self->query_results(), 
-      id => $record->client_id() || 'EXG TODO',
-    );
+    if ( $response->isa("XML::SRS::Message::Ack::Response") ) {
+      $self->remaining($response->remaining());
+      my $msgQ = XML::EPP::MsgQ->new(
+        count => $self->remaining(), 
+        id => sprintf("%04d%s",$response->registrar_id(),$response->tx_id()),
+      );
+      return $self->make_response(code => 1000, msgQ => $msgQ);
+    }
 
-    my $action = $record->action();
-    for my $resp ( $record->response() ) {
-      if ( my $fact = $self->extract_fact($action,$resp) ) {
-        return $self->make_response(code => 1301, payload => $fact, msgQ => $msgQ);
+    if ( $response->isa("XML::SRS::Message") ) {
+      my $record = $response->result();
+
+      my $id = sprintf("%04d%s",$record->by_id,$record->client_id);
+      my $msgQ = XML::EPP::MsgQ->new(
+        count => $self->remaining(), 
+        id => $id,
+      );
+
+      for my $resp ( $record->response() ) {
+        my $action = $record->action();
+        if ( my $fact = $self->extract_fact($action,$resp) ) {
+          return $self->make_response(code => 1301, payload => $fact, msgQ => $msgQ);
+        }
       }
     }
   }
