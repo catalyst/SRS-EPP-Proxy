@@ -1,3 +1,10 @@
+libsrs-epp-proxy-perl (0.20.1-2.1) lucid; urgency=low
+
+  * Testing enhancements
+  * Completion of polling  
+
+ --  <samc@samc-pc>  Sun, 11 Jul 2010 22:35:03 +0000
+
 libsrs-epp-proxy-perl (0.20.1-2) lucid; urgency=low
 
   [ Sam Vilain ]
