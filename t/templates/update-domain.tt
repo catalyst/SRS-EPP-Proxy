@@ -1,27 +1,34 @@
 <update>
   <domain:update xmlns:domain="urn:ietf:params:xml:ns:domain-1.0">
     <domain:name>[% domain %]</domain:name>
-    [%~ IF owner %] 
+    [%~ IF owner %]
     <domain:chg>
       <domain:registrant>[% owner %]</domain:registrant>
     </domain:chg>
     [%~ END %]
-    [%~ IF admin %] 
+
+    [%~ IF admin OR tech %]
     <domain:add>
-      <domain:contact type="admin">[% admin %]</domain:registrant>
+      [%~ IF admin %]
+      <domain:contact type="admin">[% admin %]</domain:contact>
+      [%~ END %]
+      [%~ IF tech %]
+      <domain:contact type="tech">[% tech %]</domain:contact>
+      [%~ END %]
     </domain:add>
+    [%~ END %]
+
+    [%~ IF admin_old OR tech_old %]
     <domain:rem>
-      <domain:contact type="admin">[% admin_old %]</domain:registrant>
+      [%~ IF admin_old %]
+      <domain:contact type="admin">[% admin_old %]</domain:contact>
+      [%~ END %]
+      [%~ IF tech_old %]
+      <domain:contact type="tech">[% tech_old %]</domain:contact>
+      [%~ END %]
     </domain:rem>
     [%~ END %]
-    [%~ IF tech %] 
-    <domain:add>
-      <domain:contact type="tech">[% tech %]</domain:registrant>
-    </domain:add>
-    <domain:rem>
-      <domain:contact type="tech">[% tech_old %]</domain:registrant>
-    </domain:rem>
-    [%~ END %]
+
     [%~ IF ns %]
     <domain:chg>
       <domain:ns>
