@@ -5,6 +5,10 @@ extends 'SRS::EPP::Command::Update';
 use MooseX::Method::Signatures;
 use Crypt::Password;
 
+my $allowed = {
+    action => { add => 1, remove => 1 },
+};
+
 # for plugin system to connect
 sub xmlns {
     return XML::EPP::Domain::Node::xmlns();
@@ -22,7 +26,8 @@ method process( SRS::EPP::Session $session ) {
         return $self->make_response(code => 2002);
     }
 
-    my $registrant;
+    # create some vars we'll fill in shortly
+    my ($registrant, $admin, $admin_old, $tech, $tech_old);
 
     # the first thing we're going to check for is a change to the registrant
     if ( $payload->change ) {
@@ -32,11 +37,48 @@ method process( SRS::EPP::Session $session ) {
         }
     }
 
+    # get the admin contacts (if there)
+    $admin = extract_contact( $payload, 'add', 'admin' );
+    $admin_old = extract_contact( $payload, 'remove', 'admin' );
+
+    # get the tech contacts (if there)
+    $tech = extract_contact( $payload, 'add', 'tech' );
+    $tech_old = extract_contact( $payload, 'remove', 'tech' );
+
+    # make sure that we have neither or both admin contacts
+    if ( $admin xor $admin_old ) {
+        # something is wrong since only one is defined and the other isn't
+        return $self->make_response(code => 2002);
+    }
+
+    # make sure that we have neither or both tech contacts
+    if ( $tech xor $tech_old ) {
+        # something is wrong since only one is defined and the other isn't
+        return $self->make_response(code => 2002);
+    }
+
     return XML::SRS::Domain::Update->new(
         filter => [ $payload->name() ],
         ( $registrant ? ( registrant_id => $registrant ) : () ),
         action_id => $message->client_id || sprintf('auto.%x', time()),
     );
+}
+
+sub extract_contact {
+    my ($payload, $action, $type ) = @_;
+
+    # check the input
+    die q{Program error: '$action' should be 'add' or 'remove'}
+        unless $allowed->{action}{$action};
+
+    # check that action is there
+    return unless $payload->$action;
+
+    my $contacts = $payload->$action->contact;
+    foreach my $c ( @$contacts ) {
+        return $c->value if $c->type eq $type;
+    }
+    return;
 }
 
 method notify( SRS::EPP::SRSResponse @rs ) {
