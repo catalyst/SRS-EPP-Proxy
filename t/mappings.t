@@ -65,7 +65,7 @@ for my $testfile ( sort @testfiles ) {
 		'frame.tt', $yaml->{vars}, \$epp_xml_str,
 	       );
 
-	print 'EPP request  = ', $epp_xml_str if $VERBOSE;
+	print 'EPP request  = ', $epp_xml_str if $VERBOSE>0;
 
 	# test this XML against our initial assertions
 	XMLMappingTests::run_testset(
@@ -117,7 +117,7 @@ for my $testfile ( sort @testfiles ) {
 				requests => [ @messages ],
 			       );
 			my $xmlstring = $tx->to_xml();
-			print "XML = $xmlstring\n" if $VERBOSE;
+			print "XML = $xmlstring\n" if $VERBOSE>0;
 			my $srs_assertions = $srs_loop->{assertions};
 			XMLMappingTests::run_testset(
 				$xmlstring, $srs_assertions,
@@ -153,7 +153,7 @@ for my $testfile ( sort @testfiles ) {
 		my $xml = $epp_response->to_xml();
 
 		# print out the XML
-		print "EPP response = $xml\n" if $VERBOSE;
+		print "EPP response = $xml\n" if $VERBOSE>0;
 
 		# run the output_assertions tests
 		XMLMappingTests::run_testset(
