@@ -1,3 +1,11 @@
+libsrs-epp-proxy-perl (0.21) unstable; urgency=low
+
+  * Poll Ack
+  * Create Domain
+  * Transfer Contact
+
+ --  <andy@catalyst.net.nz>  Tue, 13 Jul 2010 14:54:03 +0000
+
 libsrs-epp-proxy-perl (0.20.1-2.1) lucid; urgency=low
 
   * Testing enhancements

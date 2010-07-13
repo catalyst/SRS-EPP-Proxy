@@ -1,7 +1,7 @@
 Source: libsrs-epp-proxy-perl
 Section: perl
 Priority: optional
-Build-Depends: debhelper (>= 5), libevent-perl, libxml-epp-perl (>= 0.04), libxml-srs-perl (>= 0.04), libmoosex-log-log4perl-perl, libevent-perl, libxml-assert-perl (>= 0.01)
+Build-Depends: debhelper (>= 5), libevent-perl, libxml-epp-perl (>= 0.05), libxml-srs-perl (>= 0.06), libmoosex-log-log4perl-perl, libevent-perl, libxml-assert-perl (>= 0.02)
 Build-Depends-Indep: perl (>= 5.10.0)
 Maintainer: Sam Vilain <sam.vilain@catalyst.net.nz>
 Standards-Version: 3.8.0
@@ -9,7 +9,7 @@ Homepage: http://search.cpan.org/dist/SRS-EPP-Proxy/
 
 Package: libsrs-epp-proxy-perl
 Architecture: all
-Depends: perl (>= 5.10.0), ${misc:Depends}, libmoosex-getopt-perl, libmoose-perl (>= 1.00), libmoosex-simpleconfig-perl, libxml-epp-perl (>= 0.04.1-1), libmoosex-singleton-perl, libmoosex-method-signatures-perl, libxml-srs-perl (>= 0.04.1-2), libcrypt-password-perl (>= 0.05), libmoosex-log-log4perl-perl, libnet-ssleay-oo-perl, libmoosex-daemonize-perl, libcrypt-openpgp-perl, libmoosex-configfromfile-perl, libevent-perl, liblog-dispatch-perl, libdata-buffer-perl, libmath-pari-perl, libcrypt-rsa-perl, libtie-encryptedhash-perl, libcrypt-dsa-perl, libmath-bigint-gmp-perl
+Depends: perl (>= 5.10.0), ${misc:Depends}, libmoosex-getopt-perl, libmoose-perl (>= 1.00), libmoosex-simpleconfig-perl, libxml-epp-perl (>= 0.05), libmoosex-singleton-perl, libmoosex-method-signatures-perl, libxml-srs-perl (>= 0.06), libcrypt-password-perl (>= 0.05), libmoosex-log-log4perl-perl, libnet-ssleay-oo-perl, libmoosex-daemonize-perl, libcrypt-openpgp-perl, libmoosex-configfromfile-perl, libevent-perl, liblog-dispatch-perl, libdata-buffer-perl, libmath-pari-perl, libcrypt-rsa-perl, libtie-encryptedhash-perl, libcrypt-dsa-perl, libmath-bigint-gmp-perl
 Description: EPP <=> SRS XML proxy server
  This module is a base class for EPP commands; these are messages sent
  from the client to the server.
