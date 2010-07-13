@@ -11,6 +11,7 @@ vars:
   phone: +64.44798699
   fax: +64.44798699
   email: a@smartarse.co.te
+  contact_id: reject1
 
 input_assertions:
   class: SRS::EPP::Command::Create::Contact

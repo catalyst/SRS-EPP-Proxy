@@ -10,6 +10,7 @@ vars:
   phone: +64.48017211
   fax: +64.48017211
   email: a@smartarse.co.te
+  contact_id: full1
 
 input_assertions:
   class: SRS::EPP::Command::Create::Contact
@@ -18,7 +19,7 @@ input_assertions:
 SRS:
  - assertions:
      attr_is:
-       - [ '/NZSRSRequest/HandleCreate', 'HandleId', 'auto', 'SRS: create handle' ]
+       - [ '/NZSRSRequest/HandleCreate', 'HandleId', 'full1', 'SRS: create handle' ]
        - [ '/NZSRSRequest/HandleCreate', 'Name', 'Albert Einstein', 'SRS: got the name' ]
        - [ '/NZSRSRequest/HandleCreate', 'Email', 'a@smartarse.co.te', 'SRS: got the email' ]
        - [ '/NZSRSRequest/HandleCreate/PostalAddress', 'Address1', 'electric avenue', 'SRS: got the street' ]
