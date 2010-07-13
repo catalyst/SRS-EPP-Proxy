@@ -33,6 +33,13 @@ our @testfiles = @files ? @files : XMLMappingTests::find_tests('mappings');
 
 foreach my $testfile (sort @testfiles) {
     my $data = XMLMappingTests::read_yaml($testfile);
+    
+    if ($data->{integration_skip}) {
+        SKIP: {
+            skip "Skipping in integration mode", 1;   
+        }
+        next;
+    }
 
     my $vars = $data->{vars};
     $vars->{command} = $data->{template};
