@@ -1,6 +1,6 @@
 =head1 CHANGELOG FOR SRS::EPP::Proxy
 
-=head2 VERSION 0.21, ?? ???? 2010
+=head2 VERSION 0.21, 12 JULY 2010
 
 =over
 
@@ -9,6 +9,14 @@
 Add Mappings for:
 
 =over
+
+=item *
+
+Poll (Ack)
+
+=item *
+
+Create Domain
 
 =item *
 
