@@ -37,6 +37,7 @@ foreach my $testfile (sort @testfiles) {
     my $vars = $data->{vars};
     $vars->{command} = $data->{template};
     $vars->{command} =~ s/\.tt$//;
+    $vars->{transaction_id} = time;
     
     my $test = {
         step => [
