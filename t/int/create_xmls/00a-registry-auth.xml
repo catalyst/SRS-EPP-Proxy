@@ -1,0 +1,21 @@
+ <NZSRSRequest VerMajor="1" VerMinor="0" RegistrarId="1"> 
+   <RegistrarUpdate ActionId="1">
+
+  <Roles>
+    <Role RoleName="Registry"/>
+    <Role RoleName="Supervisor"/>
+    <Role RoleName="Registrar"/>
+    <Role RoleName="Connect"/>
+    <Role RoleName="Whois"/>
+    <Role RoleName="Query"/>
+    <Role RoleName="CreateDomain"/>
+    <Role RoleName="UpdateDomain"/>
+    <Role RoleName="TransferDomain"/>
+    <Role RoleName="CancelDomain"/>
+    <Role RoleName="UncancelDomain"/>
+    <Role RoleName="UpdateRegistrar"/>
+    <Role RoleName="QueryACL"/>
+    <Role RoleName="UpdateACL"/>
+   </Roles>
+   </RegistrarUpdate>
+ </NZSRSRequest>

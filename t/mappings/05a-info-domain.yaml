@@ -1,7 +1,7 @@
 template: info-domain.tt
 
 vars:
-  domain_name: cheese.co.te
+  domain_name: cheese123.co.te
   pw:
 
 initial_epp_assertions:
@@ -17,7 +17,7 @@ SRS:
         - [ '/NZSRSRequest/*[1]', 'Whois', 'SRS: The first request should be a Whois' ]
         - [ '/NZSRSRequest/*[2]', 'DomainDetailsQry', 'SRS: The second request should be a DomainDetailsQry' ]
       match:
-        - [ '//DomainNameFilter', 'cheese.co.te', 'SRS: Check the domain name' ]
+        - [ '//DomainNameFilter', 'cheese123.co.te', 'SRS: Check the domain name' ]
       match_all:
       attr_is:
 
@@ -25,11 +25,11 @@ SRS:
       <NZSRSResponse VerMajor="5" VerMinor="0">
         <Response Action="Whois" FeId="8" FeSeq="4739879" OrigRegistrarId="90" RecipientRegistrarId="90">
           <FeTimeStamp Day="23" Hour="14" Minute="49" Month="6" Second="20" TimeZoneOffset="+12:00" Year="2010"/>
-          <Domain DomainName="cheese.co.te" Status="Active"/>
+          <Domain DomainName="cheese123.co.te" Status="Active"/>
         </Response>
         <Response Action="DomainDetailsQry" FeId="8" FeSeq="4739999" OrigRegistrarId="1" RecipientRegistrarId="1" Rows="1">
           <FeTimeStamp Day="23" Hour="17" Minute="29" Month="6" Second="44" TimeZoneOffset="+12:00" Year="2010"/>
-          <Domain Delegate="1" DomainName="cheese.co.te" RegistrarId="123" Status="Active" Term="1">
+          <Domain Delegate="1" DomainName="cheese123.co.te" RegistrarId="123" Status="Active" Term="1">
             <NameServers>
               <Server FQDN="ns1.everydns.net"/>
               <Server FQDN="ns2.everydns.net"/>
@@ -65,8 +65,8 @@ output_assertions:
     - [ '//epp:resData', 1, 'EPP: Check for resData' ]
     - [ '//domain:hostObj', '4', 'EPP: Four nameservers' ]
   match:
-    - [ '//domain:name', 'cheese.co.te', 'EPP: Check domain name is correct' ]
-    - [ '//domain:roid', '0ff28ead946d-DOM', 'EPP: Check domain roid is correct' ]
+    - [ '//domain:name', 'cheese123.co.te', 'EPP: Check domain name is correct' ]
+    - [ '//domain:roid', 'a6e226cce5cb-DOM', 'EPP: Check domain roid is correct' ]
     - [ '//domain:crDate', '2007-11-19T19:45:02+13:00', 'EPP: Check created date' ]
     - [ '//domain:upDate', '2009-12-31T02:27:47+13:00', 'EPP: Check updated date' ]
     - [ '//domain:exDate', '2011-11-19T19:45:02+13:00', 'EPP: Check expiry date' ]
