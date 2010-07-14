@@ -344,7 +344,9 @@ method process_queue( Int $count = 1 ) {
 			my @messages = $command->process($self);
 
 			# check what kind of messages these are
-			if ( $messages[0]->does('XML::SRS::Action') or $messages[0]->does('XML::SRS::Query') ) {
+			if ( $messages[0] and
+			     $messages[0]->does('XML::SRS::Action') or
+			     $messages[0]->does('XML::SRS::Query') ) {
 				@messages = map {
 					SRS::EPP::SRSRequest->new(
 						message => $_,
@@ -353,7 +355,9 @@ method process_queue( Int $count = 1 ) {
 				$self->log_info(
 				"command produced ".@messages." SRS messages"
 					);
-				$self->queue_backend_request($command, @messages);
+				$self->queue_backend_request(
+					$command, @messages,
+					);
 				if ( $command->isa("SRS::EPP::Command::Login") ) {
 					$self->state("Processing <login>");
 					#$self->stalled(1);
@@ -457,11 +461,15 @@ has 'user_agent' =>
 			poll => 'r',
 			cb => sub {
 				if ( $self->user_agent ) {
-					$self->log_trace("UA input event fired, calling backend_response");
+					$self->log_trace(
+			"UA input event fired, calling backend_response",
+						);
 					$self->backend_response;
 				}
 				else {
-					$self->log_trace("canceling UA watcher");
+					$self->log_trace(
+						"canceling UA watcher",
+						);
 					$w->cancel;
 				}
 			},
@@ -611,7 +619,9 @@ method process_responses() {
 		if ( $resp->isa("SRS::EPP::Response") ) {
 			$self->log_info( "command $cmd is complete" );
 			$self->state("Prepare Response");
-			$self->log_debug( "response to $cmd is response $resp" );
+			$self->log_debug(
+				"response to $cmd is response $resp",
+				);
 			$self->add_command_response($resp, $cmd);
 			$self->yield("send_pending_replies")
 				if $self->response_ready;
@@ -624,7 +634,8 @@ method process_responses() {
 					);
 			} $resp;
 			$self->log_info(
-				"command $cmd produced ".@messages." further SRS messages"
+				"command $cmd produced ".@messages
+					." further SRS messages"
 				);
 			$self->queue_backend_request($cmd, @messages);
 			$self->yield("send_backend_queue");
@@ -732,7 +743,8 @@ method output_event() {
 			last;
 		}
 		else {
-			$written += $wrote;  # thankfully, this is returned in bytes.
+			# thankfully, this is returned in bytes.
+			$written += $wrote;
 			if ( $wrote < bytes::length $datum ) {
 				unshift @$oq, bytes::substr $datum, $wrote;
 				last;
