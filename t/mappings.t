@@ -68,9 +68,11 @@ for my $testfile ( sort @testfiles ) {
 	print 'EPP request  = ', $epp_xml_str if $VERBOSE>0;
 
 	# test this XML against our initial assertions
-	XMLMappingTests::run_testset(
-		$epp_xml_str, $yaml->{input_assertions},
-	       );
+	if ( $yaml->{input_assertions} ) {
+		XMLMappingTests::run_testset(
+			$epp_xml_str, $yaml->{input_assertions},
+		       );
+	}
 
 	# parse the XML to get an XML::EPP object
 	my $xml_epp = XML::EPP->parse( $epp_xml_str );
