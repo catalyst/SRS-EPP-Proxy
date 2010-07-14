@@ -11,7 +11,7 @@
 template: create-domain.tt
 
 vars:
-  domain: cheese.co.te
+  domain: wicked-yeah2.co.te
   ns:
     - ns1.hidns.com
     - ns2.hidns.com
@@ -39,7 +39,7 @@ SRS:
       match:
       match_all:
       attr_is:
-        - [ '//DomainCreate', 'DomainName', 'cheese.co.te', 'SRS: Check the domain name to be registered' ]
+        - [ '//DomainCreate', 'DomainName', 'wicked-yeah2.co.te', 'SRS: Check the domain name to be registered' ]
         - [ '//DomainCreate', 'Term', '1', 'SRS: Check the term is one' ]
         - [ '//RegistrantContact', 'HandleId', 'id123', 'SRS: RegistrantContact handle' ]
         - [ '//AdminContact', 'HandleId', 'shazzam1234', 'SRS: AdminContact handle' ]
@@ -49,7 +49,7 @@ SRS:
       <NZSRSResponse VerMajor="5" VerMinor="0">
         <Response Action="DomainCreate" FeId="8" FeSeq="4794946" OrigRegistrarId="90" RecipientRegistrarId="90" TransId="brause2348">
           <FeTimeStamp Day="6" Hour="13" Minute="19" Month="7" Second="58" TimeZoneOffset="+12:00" Year="2010"/>
-          <Domain Delegate="1" DomainName="wicked-yeah.co.nz" RegistrarId="90" Status="Active" Term="1" UDAI="HMsXwv3M">
+          <Domain Delegate="1" DomainName="wicked-yeah2.co.te" RegistrarId="90" Status="Active" Term="1" UDAI="HMsXwv3M">
             <NameServers>
               <Server FQDN="ns1.hidns.com"/>
               <Server FQDN="ns2.hidns.com"/>
@@ -86,7 +86,7 @@ output_assertions:
   count:
     - [ '//domain:creData', 1, 'SRS: Check for one creData' ]
   match:
-    - [ '//domain:name', 'wicked-yeah.co.nz', 'SRS: Check domain name' ]
+    - [ '//domain:name', 'wicked-yeah2.co.te', 'SRS: Check domain name' ]
     - [ '//domain:crDate', '2010-07-06T13:19:58+12:00', 'SRS: Check crDate' ]
     - [ '//domain:exDate', '2010-08-06T13:19:58+12:00', 'SRS: Check exDate' ]
   attr_is:

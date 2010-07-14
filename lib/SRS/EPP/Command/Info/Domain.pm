@@ -60,32 +60,39 @@ method notify( SRS::EPP::SRSResponse @rs ) {
     my $payload = $self->message->message->argument->payload;
     # print Dumper($domain);
 
-    # get some things out to make it easier on the eye below
-    my @nameservers = map { $_->fqdn } @{$domain->nameservers->nameservers};
-
-    my $r = XML::EPP::Domain::Info::Response->new(
-        name => $payload->name->value,
-        roid => substr(md5_hex($payload->name->value), 0, 12) . '-DOM',
-        # status => \@status,
-        status => [ getEppStatuses($domain) ],
-        # registrant # skipping, since contacts can't be seen from EPP
-        # contact    # skipping, since contacts can't be seen from EPP
-        ns => XML::EPP::Domain::NS::List->new( ns => [ @nameservers ] ),
-        # host # not doing this
-        client_id => $domain->registrar_id(), # clID
-        # crID => '',
-        created => srs_date_to_epp_date($domain->registered_date()), # crDate
-        expiry_date => srs_date_to_epp_date($domain->billed_until()), # exDate
-        # upID
-        updated => srs_date_to_epp_date($domain->audit->when->begin()), # upDate
-        # trDate
-        # authInfo
-    );
-
     return $self->make_response(
         code => 1000,
-        payload => $r,
+        payload => buildInfoResponse($domain),
     );
+}
+
+sub buildInfoResponse {
+  my ($domain) = @_;
+
+  # get some things out to make it easier on the eye below
+  my $nsList;
+  if ( $domain->nameservers ) {
+      my @nameservers = map { $_->fqdn } @{$domain->nameservers->nameservers};
+      $nsList = XML::EPP::Domain::NS::List->new( ns => [ @nameservers ] );
+  }
+
+  return XML::EPP::Domain::Info::Response->new(
+      name => $domain->name,
+      roid => substr(md5_hex($domain->name), 0, 12) . '-DOM',
+      status => [ getEppStatuses($domain) ],
+      # registrant # skipping, since contacts can't be seen from EPP
+      # contact    # skipping, since contacts can't be seen from EPP
+      ($nsList ? (ns => $nsList) : ()),
+      # host # not doing this
+      client_id => sprintf("%03d",$domain->registrar_id()), # clID
+      # crID => '',
+      created => ($domain->registered_date())->timestamptz, # crDate
+      expiry_date => ($domain->billed_until())->timestamptz, # exDate
+      # upID
+      updated => ($domain->audit->when->begin())->timestamptz, # upDate
+      # trDate
+      # authInfo
+  );
 }
 
 sub getEppStatuses {
@@ -106,25 +113,6 @@ sub getEppStatuses {
   }
 
   return map { XML::EPP::Domain::Status->new( status => $_ ) } @status
-}
-
-sub srs_date_to_epp_date {
-    my ($srs) = @_;
-
-    return
-        $srs->year
-        . '-'
-        . $srs->month
-        . '-'
-        . $srs->day
-        . 'T'
-        . $srs->hour
-        . ':'
-        . $srs->minute
-        . ':'
-        . $srs->second
-        . $srs->tz_offset
-    ;
 }
 
 1;

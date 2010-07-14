@@ -7,6 +7,7 @@ vars:
   ccode: NZ
   phone: +64.44798699
   email: a@smartarse.co.te
+  contact_id: error1
 
 input_assertions:
   class: SRS::EPP::Command::Create::Contact
@@ -15,7 +16,7 @@ input_assertions:
 SRS:
  - assertions:
      attr_is:
-       - [ '/NZSRSRequest/HandleCreate', 'HandleId', 'auto', 'SRS: create handle' ]
+       - [ '/NZSRSRequest/HandleCreate', 'HandleId', 'error1', 'SRS: create handle' ]
    fake_response: |-
        <NZSRSResponse VerMajor="4" VerMinor="3" RegistrarId="170">
        <Response Action="HandleCreate" FeId="2" FeSeq="126163" OrigRegistrarId="170" RecipientRegistrarId="170" TransId="12770745">
