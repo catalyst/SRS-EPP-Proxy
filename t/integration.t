@@ -54,6 +54,10 @@ foreach my $testfile (sort @testfiles) {
                 pass => 'foobar',   
             },
             $vars,
+            {
+                command => 'logout',  
+            },
+            
         ],
     };
     
