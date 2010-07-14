@@ -1,9 +1,7 @@
 
 template: login.tt
 
-# Don't run as an integration test, since we always log in to run those
-#  (and logging in twice will fail)
-integration_skip: 1
+no_auto_login: 1
 
 vars:
   user: 100

@@ -46,13 +46,15 @@ foreach my $testfile (sort @testfiles) {
     $vars->{command} =~ s/\.tt$//;
     $vars->{transaction_id} = time;
     
+    my $login = {
+        command => 'login',
+        user => '100',
+        pass => 'foobar',   
+    };
+    
     my $test = {
         step => [
-            {
-                command => 'login',
-                user => '100',
-                pass => 'foobar',   
-            },
+            $data->{no_auto_login} ? () : $login,
             $vars,
             {
                 command => 'logout',  
@@ -64,7 +66,7 @@ foreach my $testfile (sort @testfiles) {
     require Brause;
     my $res = Brause::talk($test, \%conf);
     
-    my $response = $res->{response}[1];
+    my $response = $res->{response}[$data->{no_auto_login} ? 0 : 1];
     
     XMLMappingTests::run_testset( $response, $data->{output_assertions} );
 }
