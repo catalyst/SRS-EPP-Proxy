@@ -17,10 +17,10 @@ getopt_lenient( "test-grep|t=s" => \$grep );
 # get an XML parser
 my $parser = XML::LibXML->new();
 my $xmlns = {
-    epp => 'urn:ietf:params:xml:ns:epp-1.0',
-    domain => 'urn:ietf:params:xml:ns:domain-1.0',
-    host => 'urn:ietf:params:xml:ns:host-1.0',
-    contact => 'urn:ietf:params:xml:ns:contact-1.0',
+	epp => 'urn:ietf:params:xml:ns:epp-1.0',
+	domain => 'urn:ietf:params:xml:ns:domain-1.0',
+	host => 'urn:ietf:params:xml:ns:host-1.0',
+	contact => 'urn:ietf:params:xml:ns:contact-1.0',
 };
 
 sub find_tests {
@@ -55,41 +55,51 @@ sub read_yaml {
 }
 
 sub run_testset {
-    my ($xml, $testset) = @_;
+	my ($xml, $testset) = @_;
 
-    # firstly, make an XML document with the input $xml
-    my $doc = $parser->parse_string( $xml )->documentElement();
+	# firstly, make an XML document with the input $xml
+	my $doc = $parser->parse_string( $xml )->documentElement();
 
-    # if we have some count tests, run those first
-    if ( defined $testset->{count} ) {
-        for my $t ( @{$testset->{count}} ) {
-            # print Dumper($t);
-            # print "Doing test $t->[2]\n";
-            is_xpath_count( $doc, $xmlns, $t->[0], $t->[1], $t->[2] );
-            # print "Done\n";
-        }
-    }
+	# if we have some count tests, run those first
+	if ( defined $testset->{count} ) {
+		for  my $t ( @{$testset->{count}} ) {
+			# print Dumper($t);
+			# print "Doing test $t->[2]\n";
+			is_xpath_count(
+				$doc, $xmlns, $t->[0], $t->[1], $t->[2],
+			       );
+			# print "Done\n";
+		}
+	}
 
-    # if we have some matches
-    if ( defined $testset->{match} ) {
-        for my $t ( @{$testset->{match}} ) {
-            does_xpath_value_match( $doc, $xmlns, $t->[0], $t->[1], $t->[2] );
-        }
-    }
+	# if we have some matches
+	if ( defined $testset->{match} ) {
+		for  my $t ( @{$testset->{match}} ) {
+			does_xpath_value_match(
+				$doc, $xmlns, $t->[0], $t->[1], $t->[2],
+			       );
+		}
+	}
 
-    # if we have some match_all
-    if ( defined $testset->{match_all} ) {
-        for my $t ( @{$testset->{match_all}} ) {
-            do_xpath_values_match( $doc, $xmlns, $t->[0], $t->[1], $t->[2] );
-        }
-    }
+	# if we have some match_all
+	if ( defined $testset->{match_all} ) {
+		for  my $t ( @{$testset->{match_all}} ) {
+			do_xpath_values_match(
+				$doc, $xmlns, $t->[0], $t->[1], $t->[2],
+			       );
+		}
+	}
 
-    # if we some attribute checks
-    if ( defined $testset->{attr_is} ) {
-        for my $t ( @{$testset->{attr_is}} ) {
-            does_attr_value_match( $doc, $xmlns, $t->[0], $t->[1], $t->[2], $t->[3] );
-        }
-    }
+	# if we some attribute checks
+	if ( defined $testset->{attr_is} ) {
+		for  my $t ( @{$testset->{attr_is}} ) {
+			does_attr_value_match(
+				$doc, $xmlns,
+				$t->[0], $t->[1], $t->[2], $t->[3],
+			       );
+		}
+	}
 }
+
 
 1;
