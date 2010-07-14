@@ -57,6 +57,10 @@ method process( SRS::EPP::Session $session ) {
 	my $epp = $self->message;
 	my $login = $epp->message->argument;
 	my $uid = $login->client_id;
+	if ( $uid !~ m{^\d+$} ) {
+		return 2200;
+	}
+	$uid += 0;  # remove leading 0's
 	$self->password($login->password);
 	$self->new_password($login->new_password)
 		if $login->new_password;
