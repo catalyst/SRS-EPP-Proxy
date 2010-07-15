@@ -1,5 +1,10 @@
+description: set ACL roles for registry
+registrar: 1
+
+
+request: |-
  <NZSRSRequest VerMajor="1" VerMinor="0" RegistrarId="1"> 
-   <RegistrarUpdate ActionId="1">
+   <RegistrarUpdate ActionId="[% actionid %]">
 
   <Roles>
     <Role RoleName="Registry"/>
@@ -19,3 +24,7 @@
    </Roles>
    </RegistrarUpdate>
  </NZSRSRequest>
+
+
+assertions:
+ - xpath_matches: [ '//Error', '0', 'No errors' ]

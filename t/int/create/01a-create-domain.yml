@@ -1,5 +1,10 @@
-<NZSRSRequest VerMajor="4" VerMinor="4" RegistrarId="100">
-  <DomainCreate Delegate="1" DomainName="cheese.co.te" Term="1" ActionId="1">
+description: set up domain
+registrar: 1
+
+
+request: |-
+ <NZSRSRequest VerMajor="4" VerMinor="4" RegistrarId="100">
+  <DomainCreate Delegate="1" DomainName="cheese.co.te" Term="1" ActionId="[% actionid %]">
     <RegistrantContact Email="e@xample.com" Name="Mr Ben">
       <PostalAddress Address1="52 Festive Rd" Address2="Putney" City="London" CountryCode="NZ"/>
       <Phone AreaCode="207" CountryCode="44" LocalNumber="000000"/>
@@ -20,4 +25,8 @@
     </NameServers>
     <AuditText><![CDATA[Domain Agent Update]]></AuditText>
   </DomainCreate>
-</NZSRSRequest>
+ </NZSRSRequest>
+
+
+assertions:
+ - xpath_matches: [ '//Error', '0', 'No errors' ]

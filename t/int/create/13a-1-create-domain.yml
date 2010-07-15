@@ -1,7 +1,11 @@
-<NZSRSRequest VerMajor="4" VerMinor="4" RegistrarId="100">
+description: set up domain
+registrar: 1
+
+request: |-
+ <NZSRSRequest VerMajor="4" VerMinor="4" RegistrarId="101">
    <DomainCreate
-       Term="12" ActionId="1" Delegate="1"
-       DomainName="chedder.co.nz" RegistrantRef="RefRuff"
+       Term="12" ActionId="[% actionid %]" Delegate="1"
+       DomainName="mozzarella.co.te" RegistrantRef="RefRuff"
        >
       <RegistrantContact
           Name="Loopdigga"
@@ -29,4 +33,7 @@
       <AdminContact />
       <TechnicalContact />
     </DomainCreate>
-</NZSRSRequest>
+ </NZSRSRequest>
+
+assertions:
+ - xpath_matches: [ '//Error', '0', 'No errors' ]
