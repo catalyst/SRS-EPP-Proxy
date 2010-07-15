@@ -60,6 +60,8 @@ method process( SRS::EPP::Session $session ) {
     return XML::SRS::Domain::Update->new(
         filter => [ $payload->name() ],
         ( $registrant ? ( registrant_id => $registrant ) : () ),
+        ( $admin ? (contact_admin => XML::SRS::Contact->new( handle_id => $admin )) : () ),
+        ( $tech ? (contact_technical => XML::SRS::Contact->new( handle_id => $tech )) : () ),
         action_id => $message->client_id || sprintf('auto.%x', time()),
     );
 }
