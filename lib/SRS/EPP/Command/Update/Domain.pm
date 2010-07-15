@@ -45,25 +45,32 @@ method process( SRS::EPP::Session $session ) {
     $tech = extract_contact( $payload, 'add', 'tech' );
     $tech_old = extract_contact( $payload, 'remove', 'tech' );
 
-    # make sure that we have neither or both admin contacts
-    if ( $admin xor $admin_old ) {
-        # something is wrong since only one is defined and the other isn't
-        return $self->make_response(code => 2002);
-    }
-
-    # make sure that we have neither or both tech contacts
-    if ( $tech xor $tech_old ) {
-        # something is wrong since only one is defined and the other isn't
-        return $self->make_response(code => 2002);
-    }
+    # make the contact elements if we need them
+    my $contact_admin = make_contact($admin, $admin_old);
+    my $contact_tech = make_contact($tech, $tech_old);
 
     return XML::SRS::Domain::Update->new(
         filter => [ $payload->name() ],
         ( $registrant ? ( registrant_id => $registrant ) : () ),
-        ( $admin ? (contact_admin => XML::SRS::Contact->new( handle_id => $admin )) : () ),
-        ( $tech ? (contact_technical => XML::SRS::Contact->new( handle_id => $tech )) : () ),
+        ( $contact_admin ? ( contact_admin => $contact_admin ) : () ),
+        ( $contact_tech ? ( contact_technical => $contact_tech ) : () ),
         action_id => $message->client_id || sprintf('auto.%x', time()),
     );
+}
+
+sub make_contact {
+    my ($new, $old) = @_;
+
+    # if we have a new contact, replace it (independent of $old)
+    return XML::SRS::Contact->new( handle_id => $new )
+        if $new;
+
+    # return an empty contact element so that the handle gets deleted
+    return XML::SRS::Contact->new()
+        if $old;
+
+    # if neither of the above, there is nothing to do
+    return;
 }
 
 sub extract_contact {
