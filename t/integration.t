@@ -24,7 +24,7 @@ my %conf = (
     template_path => $Bin . '/templates', 
     debug => $VERBOSE ? 1 : 0,
     ssl_key => $Bin . '/auth/host.key',
-    ssl_cert => $Bin . '/auth/host.crt',
+    #ssl_cert => $Bin . '/auth/host.crt',
 );
 
 my @files = map { s|^t/||; $_ } @ARGV;
