@@ -58,7 +58,7 @@ my $session = SRS::EPP::Session->new(
 for my $testfile ( sort @testfiles ) {
     diag("Reading $testfile");
     my $yaml = XMLMappingTests::read_yaml($testfile);
-    
+
     if ($yaml->{skip}) {
         SKIP: {
             skip "$testfile - " . $yaml->{skip}, 1;

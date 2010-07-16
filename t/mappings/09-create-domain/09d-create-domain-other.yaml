@@ -14,8 +14,7 @@ input_assertions:
   class: SRS::EPP::Command::Create::Domain
 
 SRS:
-  - assertions:
-
+  - assertions: {}
     fake_response: |-
       <NZSRSResponse VerMajor="5" VerMinor="0">
         <Response Action="DomainCreate" FeId="8" FeSeq="4794857" OrigRegistrarId="90" RecipientRegistrarId="90" TransId="brause2345">

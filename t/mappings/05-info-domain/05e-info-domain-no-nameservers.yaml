@@ -4,7 +4,7 @@ vars:
   domain_name: cheese.co.te
   pw:
 
-initial_epp_assertions:
+input_assertions:
   class: SRS::EPP::Command::Info::Domain
 
 SRS:

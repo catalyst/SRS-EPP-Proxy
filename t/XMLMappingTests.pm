@@ -67,6 +67,10 @@ sub run_testset {
     
     my $failure = 0;
 
+    # then check that we actually have something to test (this should always be
+    # defined)
+    ok(ref $testset eq 'HASH', 'Check that this testset actually has been passed something');
+
     # if we have some count tests, run those first
     if ( defined $testset->{count} ) {
         for my $t ( @{$testset->{count}} ) {
