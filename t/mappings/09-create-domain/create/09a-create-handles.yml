@@ -1,5 +1,9 @@
-<NZSRSRequest VerMajor="4" VerMinor="4" RegistrarId="100">
-    <HandleCreate Email="Loopdigga@handlethis-orz.co.te" ActionId="1" HandleId="id123" Name="FooBar">
+description: set up handles
+registrar: 1
+
+request: |-
+ <NZSRSRequest VerMajor="4" VerMinor="4" RegistrarId="100">
+    <HandleCreate Email="Loopdigga@handlethis-orz.co.te" ActionId="[% actionid %] 1" HandleId="id123" Name="FooBar">
        <PostalAddress
                 Address1="1400 E 8 Mile Rd"
                 Address2="Highland Park"
@@ -14,7 +18,7 @@
             LocalNumber="Registrant phone s1c1"
             />
     </HandleCreate> 
-    <HandleCreate Email="Loopdigga@handlethis-orz.co.te" ActionId="2" HandleId="shazzam1234" Name="FooBar">
+    <HandleCreate Email="Loopdigga@handlethis-orz.co.te" ActionId="[% actionid %] 2" HandleId="shazzam1234" Name="FooBar">
        <PostalAddress
                 Address1="1400 E 8 Mile Rd"
                 Address2="Highland Park"
@@ -29,7 +33,7 @@
             LocalNumber="Registrant phone s1c1"
             />
     </HandleCreate> 
-    <HandleCreate Email="Loopdigga@handlethis-orz.co.te" ActionId="3" HandleId="alcatraz367" Name="FooBar">
+    <HandleCreate Email="Loopdigga@handlethis-orz.co.te" ActionId="[% actionid %] 3" HandleId="alcatraz367" Name="FooBar">
        <PostalAddress
                 Address1="1400 E 8 Mile Rd"
                 Address2="Highland Park"
@@ -44,4 +48,7 @@
             LocalNumber="Registrant phone s1c1"
             />
     </HandleCreate>         
-</NZSRSRequest>
+ </NZSRSRequest>
+
+assertions:
+ - xpath_matches: [ '//Error', '0', 'No errors' ]

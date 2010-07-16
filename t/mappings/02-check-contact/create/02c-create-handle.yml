@@ -1,5 +1,10 @@
-<NZSRSRequest VerMajor="4" VerMinor="4" RegistrarId="100">
-    <HandleCreate Email="Loopdigga@handlethis-orz.co.te" ActionId="1" HandleId="find-me" Name="FooBar">
+description: set up domain
+registrar: 1
+
+
+request: |-
+ <NZSRSRequest VerMajor="4" VerMinor="4" RegistrarId="100">
+    <HandleCreate Email="Loopdigga@handlethis-orz.co.te" ActionId="[% actionid %]" HandleId="find-me" Name="FooBar">
        <PostalAddress
                 Address1="1400 E 8 Mile Rd"
                 Address2="Highland Park"
@@ -14,4 +19,8 @@
             LocalNumber="Registrant phone s1c1"
             />
     </HandleCreate> 
-</NZSRSRequest>
+ </NZSRSRequest>
+
+
+assertions:
+ - xpath_matches: [ '//Error', '0', 'No errors' ]

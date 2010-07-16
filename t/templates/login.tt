@@ -1,6 +1,7 @@
 <login>
   <clID>[% user %]</clID>
   <pw>[% pass %]</pw>
+  [% IF new_password %]<newPW>[% new_password %]</newPW>[% END %]
   <options>
     <version>1.0</version>
     <lang>en</lang>

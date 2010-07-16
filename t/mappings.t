@@ -59,6 +59,13 @@ for my $testfile ( sort @testfiles ) {
 	diag("Reading $testfile");
 	my $yaml = XMLMappingTests::read_yaml($testfile);
 
+	if ($yaml->{skip}) {
+        SKIP: {
+			skip "$testfile - " . $yaml->{skip}, 1;
+		}
+		next;
+	}
+
 	# this 'command' is wrapped by frame.tt
 	$yaml->{vars}{command} = $yaml->{template};
 
@@ -152,8 +159,10 @@ for my $testfile ( sort @testfiles ) {
 	}
 
 	my $epp_response = $messages[0];
-	ok( $epp_response->isa('SRS::EPP::Response'),
-	    "Final response has sensible class");
+	isa_ok(
+		$epp_response, 'SRS::EPP::Response',
+		"Final response has sensible class",
+	       );
 	if ( $epp_response->isa('SRS::EPP::Response') ) {
 
 		# ToDo: we'll have to do something if there are

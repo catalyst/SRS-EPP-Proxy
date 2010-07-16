@@ -10,6 +10,7 @@ use strict;
 use YAML qw(LoadFile Load Dump);
 use XML::LibXML;
 use Test::XML::Assert;
+use Test::More;
 
 our $grep;
 getopt_lenient( "test-grep|t=s" => \$grep );
@@ -39,6 +40,7 @@ sub find_tests {
 
 sub read_xml {
 	my $test = shift;
+	
 	open XML, "<$Bin/$test";
 	binmode XML, ":utf8";
 	my $xml = do {
@@ -51,7 +53,10 @@ sub read_xml {
 
 sub read_yaml {
 	my $test = shift;
-	LoadFile "$Bin/$test";
+
+	my $file = $test =~ m|^/| ? $test : "$Bin/$test"; 
+
+	LoadFile $file;
 }
 
 sub run_testset {
@@ -60,12 +65,14 @@ sub run_testset {
 	# firstly, make an XML document with the input $xml
 	my $doc = $parser->parse_string( $xml )->documentElement();
 
+	my $failure = 0;
+
 	# if we have some count tests, run those first
 	if ( defined $testset->{count} ) {
-		for  my $t ( @{$testset->{count}} ) {
+		for my $t ( @{$testset->{count}} ) {
 			# print Dumper($t);
 			# print "Doing test $t->[2]\n";
-			is_xpath_count(
+			$failure ||= ! is_xpath_count(
 				$doc, $xmlns, $t->[0], $t->[1], $t->[2],
 			       );
 			# print "Done\n";
@@ -74,8 +81,8 @@ sub run_testset {
 
 	# if we have some matches
 	if ( defined $testset->{match} ) {
-		for  my $t ( @{$testset->{match}} ) {
-			does_xpath_value_match(
+		for my $t ( @{$testset->{match}} ) {
+			$failure ||= ! does_xpath_value_match(
 				$doc, $xmlns, $t->[0], $t->[1], $t->[2],
 			       );
 		}
@@ -83,8 +90,8 @@ sub run_testset {
 
 	# if we have some match_all
 	if ( defined $testset->{match_all} ) {
-		for  my $t ( @{$testset->{match_all}} ) {
-			do_xpath_values_match(
+		for my $t ( @{$testset->{match_all}} ) {
+			$failure ||= ! do_xpath_values_match(
 				$doc, $xmlns, $t->[0], $t->[1], $t->[2],
 			       );
 		}
@@ -92,12 +99,16 @@ sub run_testset {
 
 	# if we some attribute checks
 	if ( defined $testset->{attr_is} ) {
-		for  my $t ( @{$testset->{attr_is}} ) {
-			does_attr_value_match(
+		for my $t ( @{$testset->{attr_is}} ) {
+			$failure ||= ! does_attr_value_match(
 				$doc, $xmlns,
 				$t->[0], $t->[1], $t->[2], $t->[3],
 			       );
 		}
+	}
+
+	if ($failure) {
+		diag "Epp response: $xml";   
 	}
 }
 

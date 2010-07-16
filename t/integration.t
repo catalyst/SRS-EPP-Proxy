@@ -24,7 +24,7 @@ my %conf = (
     template_path => $Bin . '/templates', 
     debug => $VERBOSE ? 1 : 0,
     ssl_key => $Bin . '/auth/host.key',
-    ssl_cert => $Bin . '/auth/host.crt',
+    #ssl_cert => $Bin . '/auth/host.crt',
 );
 
 my @files = map { s|^t/||; $_ } @ARGV;
@@ -33,27 +33,47 @@ our @testfiles = @files ? @files : XMLMappingTests::find_tests('mappings');
 
 foreach my $testfile (sort @testfiles) {
     my $data = XMLMappingTests::read_yaml($testfile);
+    
+    diag("Processing: " . $testfile);
+    
+    if ($data->{integration_skip}) {
+        SKIP: {
+            skip "Skipping in integration mode", 1;   
+        }
+        next;
+    }
 
     my $vars = $data->{vars};
     $vars->{command} = $data->{template};
     $vars->{command} =~ s/\.tt$//;
     $vars->{transaction_id} = time;
     
+    my $login = {
+        command => 'login',
+        user => '100',
+        pass => 'foobar',   
+    };
+    
     my $test = {
         step => [
-            {
-                command => 'login',
-                user => '100',
-                pass => 'foobar',   
-            },
+            $data->{no_auto_login} ? () : $login,
             $vars,
+            {
+                command => 'logout',  
+            },
+            
         ],
     };
     
     require Brause;
-    my $res = Brause::talk($test, \%conf);
+    my $res = eval { Brause::talk($test, \%conf) };
+    if ($@) {
+        fail("Couldn't talk to Epp proxy: $@");   
+    }
     
-    my $response = $res->{response}[1];
+    my $response = $res->{response}[$data->{no_auto_login} ? 0 : 1];
+    
+    fail("No response received") unless $response;
     
     XMLMappingTests::run_testset( $response, $data->{output_assertions} );
 }

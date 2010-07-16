@@ -1,7 +1,7 @@
 template: create-domain.tt
 
 vars:
-  domain: cheese.co.te
+  domain: cheese.co.nz
   ns:
     - ns1.hidns.com
     - ns2.hidns.com
