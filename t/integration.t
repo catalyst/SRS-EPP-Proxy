@@ -66,9 +66,14 @@ foreach my $testfile (sort @testfiles) {
     };
     
     require Brause;
-    my $res = Brause::talk($test, \%conf);
+    my $res = eval { Brause::talk($test, \%conf) };
+    if ($@) {
+        fail("Couldn't talk to Epp proxy: $@");   
+    }
     
     my $response = $res->{response}[$data->{no_auto_login} ? 0 : 1];
+    
+    fail("No response received") unless $response;
     
     XMLMappingTests::run_testset( $response, $data->{output_assertions} );
 }
