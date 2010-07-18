@@ -1,13 +1,9 @@
 <update>
   <domain:update xmlns:domain="urn:ietf:params:xml:ns:domain-1.0">
-    <domain:name>[% domain %]</domain:name>
-    [%~ IF owner %]
-    <domain:chg>
-      <domain:registrant>[% owner %]</domain:registrant>
-    </domain:chg>
-    [%~ END %]
 
-    [%~ IF admin OR tech %]
+    <domain:name>[% domain %]</domain:name>
+
+    [%~ IF admin OR tech OR nslist %]
     <domain:add>
       [%~ IF admin %]
       <domain:contact type="admin">[% admin %]</domain:contact>
@@ -15,10 +11,17 @@
       [%~ IF tech %]
       <domain:contact type="tech">[% tech %]</domain:contact>
       [%~ END %]
+      [%~ IF nslist %]
+      <domain:ns>
+        [%~ FOREACH ns IN nslist %]
+        <domain:hostObj>[% ns %]</domain:hostObj>
+        [%~ END %]
+      </domain:ns>
+      [%~ END %]
     </domain:add>
     [%~ END %]
 
-    [%~ IF admin_old OR tech_old %]
+    [%~ IF admin_old OR tech_old OR nslist_old %]
     <domain:rem>
       [%~ IF admin_old %]
       <domain:contact type="admin">[% admin_old %]</domain:contact>
@@ -26,19 +29,21 @@
       [%~ IF tech_old %]
       <domain:contact type="tech">[% tech_old %]</domain:contact>
       [%~ END %]
+      [%~ IF nslist_old %]
+      <domain:ns>
+        [%~ FOREACH ns IN nslist_old %]
+        <domain:hostObj>[% ns %]</domain:hostObj>
+        [%~ END %]
+      </domain:ns>
+      [%~ END %]
     </domain:rem>
     [%~ END %]
 
-    [%~ IF ns %]
+    [%~ IF owner %]
     <domain:chg>
-      <domain:ns>
-        [%~ FOREACH dns in ns %]
-        <domain:hostAttr>
-          <domain:hostName>[% dns %]</domain:hostName>
-        </domain:hostAttr>
-        [%~ END %]
-      </domain:ns>
+      <domain:registrant>[% owner %]</domain:registrant>
     </domain:chg>
     [%~ END %]
+
   </domain:update>
 </update>

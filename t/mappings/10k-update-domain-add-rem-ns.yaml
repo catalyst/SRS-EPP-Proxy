@@ -1,0 +1,29 @@
+template: update-domain.tt
+
+vars:
+  domain: cheese.co.te
+  nslist:
+    - ns5.everydns.net
+  nslist_old:
+    - ns1.everydns.net
+
+input_assertions:
+  class: SRS::EPP::Command::Update::Domain
+  count:
+    - [ '//domain:name', 1, 'SRS: Check for the domain' ]
+    - [ '//domain:add/domain:ns', 1, 'SRS: Check there is a new ns to add' ]
+    - [ '//domain:rem/domain:ns', 1, 'SRS: Check there is an old ns to remove' ]
+    - [ '//domain:hostObj', 2, 'SRS: Check there are two hostObjects' ]
+  match:
+    - [ '//domain:name', 'cheese.co.te', 'SRS: Check the domain name' ]
+    - [ '//domain:add/domain:ns/domain:hostObj', 'ns5.everydns.net', 'SRS: Check the new ns' ]
+    - [ '//domain:rem/domain:ns/domain:hostObj', 'ns1.everydns.net', 'SRS: Check the old ns' ]
+  match_all:
+
+SRS:
+
+output_assertions:
+  count:
+    - [ '//epp:result', 1, 'SRS: Check for one result' ]
+  attr_is:
+    - [ '//epp:result', 'code', 2002, 'SRS: Check for correct result code' ]

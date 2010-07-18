@@ -26,6 +26,12 @@ method process( SRS::EPP::Session $session ) {
         return $self->make_response(code => 2002);
     }
 
+    # for now, return the fact that we're not dealing with Nameservers
+    if ( ( $payload->add and $payload->add->ns )
+         or ( $payload->remove and $payload->remove->ns ) ) {
+        return $self->make_response(code => 2002);
+    }
+
     # create some vars we'll fill in shortly
     my ($registrant, $admin, $admin_old, $tech, $tech_old);
 
