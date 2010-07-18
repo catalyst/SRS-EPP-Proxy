@@ -38,16 +38,16 @@ method process( SRS::EPP::Session $session ) {
     }
 
     # get the admin contacts (if there)
-    $admin = extract_contact( $payload, 'add', 'admin' );
-    $admin_old = extract_contact( $payload, 'remove', 'admin' );
+    $admin = _extract_contact( $payload, 'add', 'admin' );
+    $admin_old = _extract_contact( $payload, 'remove', 'admin' );
 
     # get the tech contacts (if there)
-    $tech = extract_contact( $payload, 'add', 'tech' );
-    $tech_old = extract_contact( $payload, 'remove', 'tech' );
+    $tech = _extract_contact( $payload, 'add', 'tech' );
+    $tech_old = _extract_contact( $payload, 'remove', 'tech' );
 
     # make the contact elements if we need them
-    my $contact_admin = make_contact($admin, $admin_old);
-    my $contact_tech = make_contact($tech, $tech_old);
+    my $contact_admin = _make_contact($admin, $admin_old);
+    my $contact_tech = _make_contact($tech, $tech_old);
 
     return XML::SRS::Domain::Update->new(
         filter => [ $payload->name() ],
@@ -58,7 +58,7 @@ method process( SRS::EPP::Session $session ) {
     );
 }
 
-sub make_contact {
+sub _make_contact {
     my ($new, $old) = @_;
 
     # if we have a new contact, replace it (independent of $old)
@@ -73,7 +73,7 @@ sub make_contact {
     return;
 }
 
-sub extract_contact {
+sub _extract_contact {
     my ($payload, $action, $type ) = @_;
 
     # check the input
