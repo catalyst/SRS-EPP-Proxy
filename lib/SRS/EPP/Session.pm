@@ -59,7 +59,7 @@ has 'socket' =>
 
 has user =>
 	is => "rw",
-	isa => "Str",
+	isa => "Maybe[Str]",
 	;
 
 # hack for login message
