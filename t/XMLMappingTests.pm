@@ -1,7 +1,9 @@
 
 package XMLMappingTests;
 
-BEGIN { *$_ = \&{"main::$_"} for qw(ok diag) }
+BEGIN {
+	*$_ = \&{"main::$_"} for qw(ok diag fail pass);
+}
 
 use Scriptalicious;
 use File::Find;
@@ -16,13 +18,22 @@ our $grep;
 getopt_lenient( "test-grep|t=s" => \$grep );
 
 # get an XML parser
-my $parser = XML::LibXML->new();
+our $parser = XML::LibXML->new();
+
+# namespaces, used for various XML::Compare etc tests
 my $xmlns = {
 	epp => 'urn:ietf:params:xml:ns:epp-1.0',
 	domain => 'urn:ietf:params:xml:ns:domain-1.0',
 	host => 'urn:ietf:params:xml:ns:host-1.0',
 	contact => 'urn:ietf:params:xml:ns:contact-1.0',
 };
+
+# get a template object
+use Template;
+our $tt = Template->new({
+	# FIXME: this shouldn't be relative
+	INCLUDE_PATH => $Bin.'/templates/',
+});
 
 sub find_tests {
 	my $group = shift || ($Script=~/(.*)\.t$/)[0];
@@ -40,7 +51,7 @@ sub find_tests {
 
 sub read_xml {
 	my $test = shift;
-	
+
 	open XML, "<$Bin/$test";
 	binmode XML, ":utf8";
 	my $xml = do {
@@ -59,8 +70,8 @@ sub read_yaml {
 	LoadFile $file;
 }
 
-sub run_testset {
-	my ($xml, $testset) = @_;
+sub check_xml_assertions {
+	my ($xml, $testset, $desc) = @_;
 
 	# firstly, make an XML document with the input $xml
 	my $doc = $parser->parse_string( $xml )->documentElement();
@@ -73,7 +84,8 @@ sub run_testset {
 			# print Dumper($t);
 			# print "Doing test $t->[2]\n";
 			$failure ||= ! is_xpath_count(
-				$doc, $xmlns, $t->[0], $t->[1], $t->[2],
+				$doc, $xmlns, $t->[0], $t->[1],
+				"$desc - $t->[2]",
 			       );
 			# print "Done\n";
 		}
@@ -83,7 +95,8 @@ sub run_testset {
 	if ( defined $testset->{match} ) {
 		for my $t ( @{$testset->{match}} ) {
 			$failure ||= ! does_xpath_value_match(
-				$doc, $xmlns, $t->[0], $t->[1], $t->[2],
+				$doc, $xmlns, $t->[0], $t->[1],
+				"$desc - $t->[2]",
 			       );
 		}
 	}
@@ -92,7 +105,8 @@ sub run_testset {
 	if ( defined $testset->{match_all} ) {
 		for my $t ( @{$testset->{match_all}} ) {
 			$failure ||= ! do_xpath_values_match(
-				$doc, $xmlns, $t->[0], $t->[1], $t->[2],
+				$doc, $xmlns, $t->[0], $t->[1],
+				"$desc - $t->[2]",
 			       );
 		}
 	}
@@ -102,15 +116,374 @@ sub run_testset {
 		for my $t ( @{$testset->{attr_is}} ) {
 			$failure ||= ! does_attr_value_match(
 				$doc, $xmlns,
-				$t->[0], $t->[1], $t->[2], $t->[3],
+				$t->[0], $t->[1], $t->[2],
+				"$desc - $t->[3]",
 			       );
 		}
 	}
 
 	if ($failure) {
-		diag "Epp response: $xml";   
+		diag "Epp response: $xml";
 	}
 }
 
+{
+	package XMLMappingTest;
+	use Moose;
+	has filename => (
+		is => "ro",
+		isa => "Str",
+		required => 1,
+	       );
+	has desc => (
+		is => "ro",
+		isa => "Str",
+		lazy => 1,
+		default => sub {
+			my $self = shift;
+			my $desc = $self->filename;
+			$desc =~ s{.*/}{};
+			$desc =~ s{\.yaml$}{};
+			$desc;
+		},
+		);
+	has data => (
+		is => "ro",
+		lazy => 1,
+		default => sub {
+			my $self = shift;
+			XMLMappingTests::read_yaml($self->filename);
+		},
+	       );
+	has template => (
+		is => "ro",
+		lazy => 1,
+		default => sub {
+			my $self = shift;
+			$self->data->{template};
+		}
+	       );
+	has vars => (
+		is => "ro",
+		lazy => 1,
+		default => sub {
+			my $self = shift;
+			my $vars = $self->data->{vars} ||= {};
+			$vars->{command} = $self->template;
+			$vars;
+		},
+	       );
+	has 'xml' => (
+		is => "ro",
+		lazy => 1,
+		default => sub {
+			my $self = shift;
+			my $xml_str;
+			$XMLMappingTests::tt->process(
+				'frame.tt',
+				$self->vars,
+				\$xml_str,
+			       );
+			$xml_str;
+		},
+	       );
+	has 'input_assertions' => (
+		is => "ro",
+		lazy => 1,
+		default => sub {
+			my $self = shift;
+			$self->data->{input_assertions};
+		},
+	       );
+	has 'expected_cycles' => (
+		is => "ro",
+		lazy => 1,
+		default => sub {
+			my $self = shift;
+			scalar @{ $self->data->{SRS}||[] };
+		},
+	       );
+	has 'session' => (
+		is => "rw",
+		isa => "SRS::EPP::Session",
+		weak_ref => 1,
+	       );
+	has 'command_object' => (
+		is => "rw",
+		isa => "SRS::EPP::Command",
+	       );
+}
+
+sub load_test {
+	my $test_name = shift;
+
+	my $test = XMLMappingTest->new(filename => $test_name);
+
+	print 'EPP request  = ', $test->xml if $VERBOSE>0;
+
+	# test this XML against our initial assertions
+	if ( $test->input_assertions ) {
+		check_xml_assertions(
+			$test->xml, $test->input_assertions,
+			"load $test_name",
+		       );
+	}
+
+	return $test;
+}
+
+# input_packet_test: tests the input parsing and mapping machinery
+#
+# true return means that a packet was queued; false means nothing was
+# and subsequent tests should be skipped.
+sub input_packet_test {
+	my $test = shift;
+	my $session = shift;
+	if ( $session ) {
+		$test->session($session);
+	}
+	else {
+		$session = $test->session;
+	}
+	my $desc = $test->desc;
+
+	my $queue_size = $session->commands_queued;
+
+	$session->input_packet( $test->xml );
+
+	my $commands_queued = $session->commands_queued - $queue_size;
+
+	if ( !$commands_queued ) {
+		# hoist the main::fail!
+		main::fail("$desc: no command queued");
+		return;
+	}
+	elsif ( $commands_queued > 1 ) {
+		diag("$desc: multiple commands queued");
+	}
+
+	my $queued_command = $session->processing_queue->queue->[-1];
+	$test->command_object($queued_command);
+
+	if ( my $class = eval{$test->input_assertions->{class}} ) {
+		# Make sure that the queue_item is the right class
+		isa_ok( $queued_command, $class, "$desc queued command");
+	}
+	return 1;
+}
+
+sub _test_backend_messages {
+	my $messages = shift;
+	my $srs_assertions = shift;
+	my $desc = shift;
+
+	# back-end messages were queued; test them.
+	my $tx = XML::SRS::Request->new(
+		version => "auto",
+		requests => [ map { $_->message } @$messages ],
+	       );
+	my $xmlstring = $tx->to_xml();
+
+	XMLMappingTests::check_xml_assertions(
+		$xmlstring, $srs_assertions, $desc,
+	       );
+}
+
+sub _test_response {
+	my $test = shift;
+	my $rs = shift;
+
+	if ( my $class = $test->data->{output_assertions}{class} ) {
+		isa_ok( $rs, $class, $test->desc." rs" );
+	}
+
+	check_xml_assertions(
+		$rs->message->to_xml, $test->input_assertions,
+		$test->desc." rs",
+	       );
+}
+
+sub _test_session_change {
+	my $test = shift;
+	my $session = shift;
+	my $index = shift;
+	my $pre_be_queue_size = shift;
+	my $desc = $test->desc;
+
+	my $be_q = $session->backend_queue;
+	my $cmd_q = $session->processing_queue;
+
+	if ( my $messages = $be_q->queue->[$pre_be_queue_size] ) {
+
+		# process resulted in a new command.  should they have?
+		my $assertions = eval{$test->data->{SRS}[$index]{assertions}};
+		if ( $@ ) {
+			fail("$desc - unexpected SRS cycle");
+			return;
+		}
+
+		# yes - go ahead and test them.
+		_test_backend_messages(
+			$messages,
+			$assertions,
+			"$desc - SRS messages",
+		       );
+
+		# FIXME - somewhat inelegant; copied from
+		# Session::next_message
+		my @next = $session->backend_next(
+			$session->backend_queue->queue_size,
+		       );
+		my $tx = XML::SRS::Request->new(
+			version => "auto",
+			requests => [ map { $_->message } @next ],
+		       );
+		my $rq = SRS::EPP::SRSMessage->new(
+			message => $tx,
+			parts => \@next,
+		       );
+		$session->active_request($rq);
+
+		return 2;
+	}
+	elsif ( my $rs = $cmd_q->responses->[ $cmd_q->next-1 ] ) {
+		# process resulted in an immediate response (eg, an
+		# error)
+		_test_response( $test, $rs, "$desc - rs", );
+		return 1;
+	}
+	else {
+		# neither happened - not even an internal error wtf?
+		fail("$desc: nothing queued/returned from mapping");
+		return;
+	}
+}
+
+# process_command_test : test that a command becomes the expected
+# set of SRS messages and/or response messages.
+# return: 1: response ready.  2: back-end cycle required
+sub process_command_test {
+	my $test = shift;
+	my $desc = $test->desc;
+
+	my $session = $test->session;
+
+	my $cmd_q = $session->processing_queue;
+
+	my $c;
+	while ( $cmd_q->commands_queued > ($cmd_q->next+1) ) {
+		# junk extra commands, try to skip them.
+		$session->process_queue(1);
+		die if ++$c > 10;
+	}
+
+	my $be_q = $session->backend_queue;
+	my $pre_queue_size = scalar(@{ $be_q->queue });
+
+	# first time around, just fire the 'process_queue'
+	# event, this will do what is required.
+	$session->process_queue();
+
+	_test_session_change(
+		$test,
+		$session,
+		0,
+		$pre_queue_size,
+	       );
+}
+
+# test a return cycle.
+sub backend_return_test {
+	my $test = shift;
+	my $cycle = shift;
+	my $rs = shift;
+	my $desc = $test->desc;
+
+	if ( !$rs ) {
+		$rs = $test->data->{SRS}[$cycle-1]{fake_response};
+		if ( !$rs ) {
+			my $rs_filename = $test->filename;
+			$rs_filename =~ s{\.ya?ml$}{.$cycle.xml};
+			$rs = read_xml($rs_filename);
+		}
+	}
+
+	#FIXME: split backend_response so as not to duplicate it here.
+	my $message = XML::SRS::Response->parse($rs);
+	my $rs_tx = SRS::EPP::SRSMessage->new( message => $message );
+
+	my $session = $test->session;
+	my $be_q = $session->backend_queue;
+	my $pre_queue_size = scalar(@{ $be_q->queue });
+
+	$session->be_response($rs_tx);
+	$session->process_responses;
+
+	_test_session_change(
+		$test,
+		$session,
+		$cycle-1,
+		$pre_queue_size,
+	       );
+}
+
+sub response_test {
+	my $test = shift;
+	my $desc = $test->desc;
+
+	my $response = $test->session->dequeue_response;
+	if ( !$response ) {
+		return fail( "$desc: no response ready" );
+	}
+
+	my $rs_xml = $response->message->to_xml;
+	check_xml_assertions(
+		$rs_xml,
+		$test->data->{output_assertions},
+		$desc,
+	       );
+}
+
+use Storable qw(dclone);
+sub run_unit_tests {
+	my $gen_session = shift;
+	my @testfiles = @_;
+
+	for my $testfile ( sort @testfiles ) {
+		diag("Reading $testfile");
+		my $test = load_test($testfile);
+		my $session = $gen_session->();
+		if ( exists $test->data->{user} ) {
+			$session->user($test->data->{user});
+		}
+	SKIP:{
+			input_packet_test($test, $session)
+				or skip "no command logged", 1;
+
+			my $test_rs = process_command_test($test)
+				or skip "processing failed", 1;
+
+			my $cycle = 1;
+			do {
+				$test_rs = backend_return_test(
+					$test,
+					$cycle,
+				       )
+					or skip "processing failed", 1;
+				$cycle++;
+			} while ( $test_rs == 2 );
+
+			response_test($test);
+		}
+	}
+}
+
+no strict;
+use Sub::Exporter -setup => {
+	exports => [
+		grep { !/^_/ && defined &$_ }
+			keys %{__PACKAGE__.::},
+	       ],
+  };
 
 1;
