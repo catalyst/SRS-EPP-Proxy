@@ -234,7 +234,8 @@ method input_packet( Str $data ) {
 	$self->queue_command($queue_item);
 	if ( $error ) {
 		my $error_rs = SRS::EPP::Response::Error->new(
-			client_id => $queue_item->client_id,
+			($queue_item->client_id ?
+				 (client_id => $queue_item->client_id) : ()),
 			server_id => $self->new_server_id,
 			code => 2001,
 			exception => $error,
