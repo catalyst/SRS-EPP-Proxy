@@ -1,7 +1,8 @@
 Source: libsrs-epp-proxy-perl
 Section: perl
 Priority: optional
-Build-Depends: debhelper (>= 5), libevent-perl, libxml-epp-perl (>= 0.05), libxml-srs-perl (>= 0.06), libmoosex-log-log4perl-perl, libevent-perl, libxml-assert-perl (>= 0.02)
+Build-Depends: debhelper (>= 5)
+#, libevent-perl, libxml-epp-perl (>= 0.05), libxml-srs-perl (>= 0.06), libmoosex-log-log4perl-perl, libevent-perl, libxml-assert-perl (>= 0.02)
 Build-Depends-Indep: perl (>= 5.10.0)
 Maintainer: Sam Vilain <sam.vilain@catalyst.net.nz>
 Standards-Version: 3.8.0
