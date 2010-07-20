@@ -347,7 +347,7 @@ method process_queue( Int $count = 1 ) {
 
 			# check what kind of messages these are
 			if ( $messages[0] and
-			     $messages[0]->does('XML::SRS::Action') or
+			     $messages[0]->does('XML::SRS::Action') ||
 			     $messages[0]->does('XML::SRS::Query') ) {
 				@messages = map {
 					SRS::EPP::SRSRequest->new(
