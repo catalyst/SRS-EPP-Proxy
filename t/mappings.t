@@ -23,6 +23,9 @@ use Log4test;
 
 use SRS::EPP::Command;
 
+use Scriptalicious;
+getopt;
+
 my @files = map { s|^t/||; $_ } @ARGV;
 
 our @testfiles = @files ? @files : find_tests ;

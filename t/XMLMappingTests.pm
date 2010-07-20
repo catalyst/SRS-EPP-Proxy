@@ -450,7 +450,7 @@ sub run_unit_tests {
 	my @testfiles = @_;
 
 	for my $testfile ( sort @testfiles ) {
-		diag("Reading $testfile");
+		diag("Reading $testfile") if $main::VERBOSE>0;
 		my $test = load_test($testfile);
 		my $session = $gen_session->();
 		if ( exists $test->data->{user} ) {
