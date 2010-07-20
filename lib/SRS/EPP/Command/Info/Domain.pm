@@ -67,7 +67,6 @@ method notify( SRS::EPP::SRSResponse @rs ) {
     # we have a domain, therefore we have a full response :)
     # let's do this one bit at a time
     my $payload = $self->message->message->argument->payload;
-    # print Dumper($domain);
 
     return $self->make_response(
         code => 1000,
