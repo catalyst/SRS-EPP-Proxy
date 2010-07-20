@@ -344,63 +344,8 @@ method process_queue( Int $count = 1 ) {
 		}
 		else {
 			# regular message which may need to talk to the SRS backend
-			my @messages = $command->process($self);
-
-			# check what kind of messages these are
-			if ( $messages[0] and
-			     $messages[0]->does('XML::SRS::Action') ||
-			     $messages[0]->does('XML::SRS::Query') ) {
-				@messages = map {
-					SRS::EPP::SRSRequest->new(
-						message => $_,
-						);
-					} @messages;
-				$self->log_info(
-				"command produced ".@messages." SRS messages"
-					);
-				$self->queue_backend_request(
-					$command, @messages,
-					);
-				if ( $command->isa("SRS::EPP::Command::Login") ) {
-					$self->state("Processing <login>");
-					#$self->stalled(1);
-				}
-				else {
-					$self->state("Processing Command");
-				}
-				$self->yield("send_backend_queue");
-			}
-			elsif ( $messages[0] and
-			        $messages[0]->isa('XML::EPP') ) {
-				# add these messages to the outgoing queue
-				die "wrong" if @messages > 1;
-				my $response = SRS::EPP::EPPResponse->new(
-					message => $messages[0],
-					);
-
-				# add to the queue
-				$self->add_command_response(
-					$response, $command,
-					);
-			}
-			else {
-				# something else, or default response.
-				my $rs;
-
-				if ( defined $messages[0] and
-				     $messages[0] =~ /^\d{4}$/ ) {
-					# error code.
-					my $rs = $command->make_response(
-						@messages,
-						);
-					$self->add_command_response(
-						SRS::EPP::EPPResponse->new(
-							message => $rs,
-							),
-						$command,
-						);
-				}
-			}
+			my @messages = eval { $command->process($self) };
+			$self->process_result($command, @messages);
 		}
 		$self->yield("send_pending_replies")
 			if $self->response_ready;
@@ -629,35 +574,78 @@ method be_response( SRS::EPP::SRSMessage $rs_tx ) {
 	$self->yield("process_responses");
 }
 
+method process_result( SRS::EPP::Command $command, @messages) {
+
+	# check what kind of messages these are
+	if ( $messages[0] and
+	     $messages[0]->does('XML::SRS::Action') ||
+	     $messages[0]->does('XML::SRS::Query') ) {
+		@messages = map {
+			SRS::EPP::SRSRequest->new(
+				message => $_,
+				);
+		} @messages;
+		$self->log_info(
+			"command produced ".@messages." SRS messages"
+			);
+		$self->queue_backend_request(
+			$command, @messages,
+			);
+		if ( $command->isa("SRS::EPP::Command::Login") ) {
+			$self->state("Processing <login>");
+			#$self->stalled(1);
+		}
+		else {
+			$self->state("Processing Command");
+		}
+		$self->yield("send_backend_queue");
+	}
+	elsif ( $messages[0] and
+			$messages[0]->isa('XML::EPP') ) {
+		# add these messages to the outgoing queue
+		die "wrong" if @messages > 1;
+		my $response = SRS::EPP::Response->new(
+			message => $messages[0],
+			);
+
+		# add to the queue
+		$self->add_command_response(
+			$response, $command,
+			);
+	}
+	elsif ( $messages[0] and
+			$messages[0]->isa('SRS::EPP::Response') ) {
+		die "wrong" if @messages > 1;
+		# fully cooked response
+		$self->add_command_response(
+			$messages[0], $command,
+			);
+	}
+	else {
+		# something else / error
+		my $rs;
+		if ( defined $messages[0] and
+			     $messages[0] =~ /^\d{4}$/ ) {
+			# error code.
+			my $rs = $command->make_response(
+				@messages,
+				);
+			$self->add_command_response(
+				SRS::EPP::EPPResponse->new(
+					message => $rs,
+					),
+				$command,
+				);
+		}
+	}
+}
+
 method process_responses() {
 	while ( $self->backend_response_ready ) {
 		my ($cmd, @rs) = $self->dequeue_backend_response;
 		$self->log_info("notifying command $cmd of back-end response");
-		my $resp = $cmd->notify(@rs);
-		if ( $resp->isa("SRS::EPP::Response") ) {
-			$self->log_info( "command $cmd is complete" );
-			$self->state("Prepare Response");
-			$self->log_debug(
-				"response to $cmd is response $resp",
-				);
-			$self->add_command_response($resp, $cmd);
-			$self->yield("send_pending_replies")
-				if $self->response_ready;
-		}
-		elsif ( $resp->isa("XML::SRS") ) {
-			$self->log_info( "command $cmd not yet complete" );
-			my @messages = map {
-				SRS::EPP::SRSRequest->new(
-					message => $_,
-					);
-			} $resp;
-			$self->log_info(
-				"command $cmd produced ".@messages
-					." further SRS messages"
-				);
-			$self->queue_backend_request($cmd, @messages);
-			$self->yield("send_backend_queue");
-		}
+		my @messages = eval { $cmd->notify(@rs) };
+		$self->process_result($cmd, @messages);
 	}
 }
 
