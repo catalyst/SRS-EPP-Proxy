@@ -298,7 +298,7 @@ sub _test_response {
 	}
 
 	check_xml_assertions(
-		$rs->message->to_xml, $test->input_assertions,
+		$rs->message->to_xml, $test->data->{output_assertions},
 		$test->desc." rs",
 	       );
 }
