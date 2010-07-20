@@ -11,7 +11,7 @@ use Data::Dumper;
 
 use XML::EPP::Common;
 use XML::EPP::Domain::NS::List;
-
+use XML::SRS::FieldList;
 
 # for plugin system to connect
 sub xmlns {
@@ -34,7 +34,16 @@ method process( SRS::EPP::Session $session ) {
             full => 0,
         ),
         XML::SRS::Domain::Query->new(
-            domain_name_filter => $payload->name->value
+            domain_name_filter => $payload->name->value,
+            field_list => XML::SRS::FieldList->new(
+                delegate        => 1,
+                name_servers    => 1,
+                registered_date => 1,
+                registrar_id    => 1,
+                billed_until    => 1,
+                audit_text      => 1,
+                effective_from  => 1,
+            ),
         )
     );
 }
@@ -58,7 +67,6 @@ method notify( SRS::EPP::SRSResponse @rs ) {
     # we have a domain, therefore we have a full response :)
     # let's do this one bit at a time
     my $payload = $self->message->message->argument->payload;
-    # print Dumper($domain);
 
     return $self->make_response(
         code => 1000,
