@@ -369,21 +369,36 @@ method process_queue( Int $count = 1 ) {
 				}
 				$self->yield("send_backend_queue");
 			}
-			elsif ( $messages[0]->isa('XML::EPP') ) {
+			elsif ( $messages[0] and
+			        $messages[0]->isa('XML::EPP') ) {
 				# add these messages to the outgoing queue
-				@messages = map {
-					SRS::EPP::EPPResponse->new(
-						message => $_,
-						);
-				} @messages;
+				die "wrong" if @messages > 1;
+				my $response = SRS::EPP::EPPResponse->new(
+					message => $messages[0],
+					);
 
 				# add to the queue
-				$self->add_command_response($_, $command)
-					for @messages;
+				$self->add_command_response(
+					$response, $command,
+					);
 			}
 			else {
-				# not sure what these are
-				die "Really shouldn't be here\n";
+				# something else, or default response.
+				my $rs;
+
+				if ( defined $messages[0] and
+				     $messages[0] =~ /^\d{4}$/ ) {
+					# error code.
+					my $rs = $command->make_response(
+						@messages,
+						);
+					$self->add_command_response(
+						SRS::EPP::EPPResponse->new(
+							message => $rs,
+							),
+						$command,
+						);
+				}
 			}
 		}
 		$self->yield("send_pending_replies")
