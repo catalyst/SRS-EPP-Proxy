@@ -464,14 +464,14 @@ sub run_unit_tests {
 				or skip "processing failed", 1;
 
 			my $cycle = 1;
-			do {
+			while ( $test_rs == 2 ) {
 				$test_rs = backend_return_test(
 					$test,
 					$cycle,
 				       )
 					or skip "processing failed", 1;
 				$cycle++;
-			} while ( $test_rs == 2 );
+			}
 
 			response_test($test);
 		}
