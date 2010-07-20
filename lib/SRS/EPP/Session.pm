@@ -256,6 +256,7 @@ method input_packet( Str $data ) {
 #----
 # queues
 has 'processing_queue' =>
+	is => "ro",
 	default => sub {
 		my $self = shift;
 		SRS::EPP::Session::CmdQ->new();
@@ -266,6 +267,7 @@ has 'processing_queue' =>
 	;
 
 has 'backend_queue' =>
+	is => "ro",
 	default => sub {
 		my $self = shift;
 		SRS::EPP::Session::BackendQ->new();
