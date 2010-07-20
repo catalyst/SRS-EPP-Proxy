@@ -123,7 +123,7 @@ sub check_xml_assertions {
 	}
 
 	if ($failure) {
-		diag "Epp response: $xml";
+		diag "failed $desc:\n".$doc->toString(1);
 	}
 }
 
