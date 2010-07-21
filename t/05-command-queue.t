@@ -131,6 +131,9 @@ while ( @rq_q or @rs_q ) {
 push @output_q, [ $cq->dequeue_response ]
 	while $cq->response_ready;
 
+is($cq->next, 0,
+   "->next not decremented even if the commands were not dequeued");
+
 ok(!(grep{
 	my $rv = (
 	!$output_q[$_]

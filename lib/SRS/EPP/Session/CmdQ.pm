@@ -75,7 +75,9 @@ method dequeue_response() {
 	if ( $self->response_ready ) {
 		my $cmd = shift @{ $self->queue };
 		my $response = shift @{ $self->responses };
-		$self->add_next(-1);
+		if ( $self->next ) {
+			$self->add_next(-1);
+		}
 		if ( wantarray ) {
 			($response, $cmd);
 		}
