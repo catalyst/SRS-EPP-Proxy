@@ -42,7 +42,7 @@ foreach my $testfile (sort @testfiles) {
         }
         next;
     }
-
+    
     my $vars = $data->{vars};
     $vars->{command} = $data->{template};
     $vars->{command} =~ s/\.tt$//;
@@ -73,9 +73,13 @@ foreach my $testfile (sort @testfiles) {
     
     my $response = $res->{response}[$data->{no_auto_login} ? 0 : 1];
     
-    fail("No response received") unless $response;
+    if ($response) {    
+        XMLMappingTests::run_testset( $response, $data->{output_assertions} );
+    }
+    else {
+        fail("No response received") 
+    }
     
-    XMLMappingTests::run_testset( $response, $data->{output_assertions} );
 }
 
 done_testing();
