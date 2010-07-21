@@ -103,7 +103,7 @@ sub run_testset {
     }
     
     if ($failure) {
-        diag "Epp response: $xml";   
+        diag "Epp response: " . $doc->toString(2);   
     }
 }
 
