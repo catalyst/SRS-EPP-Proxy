@@ -75,7 +75,7 @@ foreach my $testfile (sort @testfiles) {
     
     fail("No response received") unless $response;
     
-    XMLMappingTests::run_testset( $response, $data->{output_assertions} );
+    XMLMappingTests::check_xml_assertions( $response, $data->{output_assertions}, $testfile );
 }
 
 done_testing();
