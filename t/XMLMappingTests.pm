@@ -52,7 +52,7 @@ sub find_tests {
 sub read_xml {
 	my $test = shift;
 
-	open XML, "<$Bin/$test";
+	open XML, "<$Bin/$test" or return undef;
 	binmode XML, ":utf8";
 	my $xml = do {
 		local($/);
@@ -259,7 +259,7 @@ sub input_packet_test {
 		return;
 	}
 	elsif ( $commands_queued > 1 ) {
-		diag("$desc: multiple commands queued");
+		main::fail("$desc: multiple commands queued");
 	}
 
 	my $queued_command = $session->processing_queue->queue->[-1];
@@ -269,7 +269,7 @@ sub input_packet_test {
 		# Make sure that the queue_item is the right class
 		isa_ok( $queued_command, $class, "$desc queued command");
 	}
-	return 1;
+	main::pass("$desc: command queued");
 }
 
 sub _test_backend_messages {
@@ -292,14 +292,15 @@ sub _test_backend_messages {
 sub _test_response {
 	my $test = shift;
 	my $rs = shift;
+	my $desc = shift;
 
 	if ( my $class = $test->data->{output_assertions}{class} ) {
-		isa_ok( $rs, $class, $test->desc." rs" );
+		isa_ok( $rs, $class, $desc );
 	}
 
 	check_xml_assertions(
 		$rs->message->to_xml, $test->data->{output_assertions},
-		$test->desc." rs",
+		$desc,
 	       );
 }
 
@@ -307,27 +308,32 @@ sub _test_session_change {
 	my $test = shift;
 	my $session = shift;
 	my $index = shift;
-	my $pre_be_queue_size = shift;
+	my $cycle = $index + 1;
+	my $pre_be_queue_tip = shift;
 	my $desc = $test->desc;
 
 	my $be_q = $session->backend_queue;
 	my $cmd_q = $session->processing_queue;
+	my $new_tip = $be_q->queue->[-1];
 
-	if ( my $messages = $be_q->queue->[$pre_be_queue_size] ) {
+	if ( do { no warnings 'uninitialized'; $new_tip != $pre_be_queue_tip }
+		     and $new_tip ) {
 
+		my $messages = $new_tip;
 		# process resulted in a new command.  should they have?
 		my $assertions = eval{$test->data->{SRS}[$index]{assertions}};
-		if ( $@ ) {
-			fail("$desc - unexpected SRS cycle");
+		if ( $@ or !$test->data->{SRS}[$index] ) {
+			fail("$desc - unexpected SRS cycle ($cycle)");
 			return;
 		}
+		pass("$desc: back-end cycle ($cycle)");
 
 		# yes - go ahead and test them.
 		_test_backend_messages(
 			$messages,
 			$assertions,
-			"$desc - SRS messages",
-		       );
+			"$desc - SRS rq ($cycle)",
+		       ) if $assertions;
 
 		# FIXME - somewhat inelegant; copied from
 		# Session::next_message
@@ -349,12 +355,15 @@ sub _test_session_change {
 	elsif ( my $rs = $cmd_q->responses->[ $cmd_q->next-1 ] ) {
 		# process resulted in an immediate response (eg, an
 		# error)
-		_test_response( $test, $rs, "$desc - rs", );
+		ok( !$test->data->{SRS}[$index],
+		    "$desc: epp response timely");
+		_test_response( $test, $rs, "$desc - epp rs", );
 		return 1;
 	}
 	else {
 		# neither happened - not even an internal error wtf?
-		fail("$desc: nothing queued/returned from mapping");
+		fail("$desc: nothing queued/returned from "
+			     ."mapping (cycle $cycle)");
 		return;
 	}
 }
@@ -378,17 +387,18 @@ sub process_command_test {
 	}
 
 	my $be_q = $session->backend_queue;
-	my $pre_queue_size = scalar(@{ $be_q->queue });
+	my $queue_tip = $be_q->queue->[-1];
 
 	# first time around, just fire the 'process_queue'
 	# event, this will do what is required.
+	$DB::single = 1;
 	$session->process_queue();
 
 	_test_session_change(
 		$test,
 		$session,
 		0,
-		$pre_queue_size,
+		$queue_tip,
 	       );
 }
 
@@ -406,6 +416,10 @@ sub backend_return_test {
 			$rs_filename =~ s{\.ya?ml$}{.$cycle.xml};
 			$rs = read_xml($rs_filename);
 		}
+		if ( !$rs ) {
+			fail("no response in test case for cycle $cycle");
+			return 0;
+		}
 	}
 
 	#FIXME: split backend_response so as not to duplicate it here.
@@ -414,16 +428,17 @@ sub backend_return_test {
 
 	my $session = $test->session;
 	my $be_q = $session->backend_queue;
-	my $pre_queue_size = scalar(@{ $be_q->queue });
+	my $queue_tip = $be_q->queue->[-1];
 
 	$session->be_response($rs_tx);
+	$DB::single = 1;
 	$session->process_responses;
 
 	_test_session_change(
 		$test,
 		$session,
-		$cycle-1,
-		$pre_queue_size,
+		$cycle,
+		$queue_tip,
 	       );
 }
 
@@ -472,8 +487,6 @@ sub run_unit_tests {
 					or skip "processing failed", 1;
 				$cycle++;
 			}
-
-			response_test($test);
 		}
 	}
 }
