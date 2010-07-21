@@ -377,7 +377,7 @@ method process_queue( Int $count = 1 ) {
 			}
 			else {
 				# not sure what these are
-				die "Really shouldn't be here\n";
+				confess "Really shouldn't be here\n";
 			}
 		}
 		$self->yield("send_pending_replies")
