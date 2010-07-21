@@ -31,6 +31,11 @@ has 'next' =>
 method next_command() {
 	my $q = $self->queue;
 	my $next = $self->next;
+	while ( $self->responses->[$next] ) {
+		# no processing needed?  skip
+		$self->add_next(1);
+		$next++;
+	}
 	if ( my $item = $q->[$next] ) {
 		$self->add_next(1);
 		return $item;

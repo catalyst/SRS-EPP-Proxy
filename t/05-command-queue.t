@@ -154,6 +154,12 @@ ok(!(grep{
 	   diag("results: ".Data::Dumper::Dumper(\@output_q));
    };
 
+$cq->queue_command( $command_rq[0] );
+$cq->add_command_response($command_rs[0]);
+
+is($cq->next_command, undef,
+   "commands with immediate responses not returned by ->next_command");
+
 # Copyright (C) 2009  NZ Registry Services
 #
 # This program is free software: you can redistribute it and/or modify
