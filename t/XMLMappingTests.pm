@@ -40,7 +40,7 @@ sub find_tests {
 
 	my @tests;
 	find(sub {
-		     if ( m{\.(?:x|ya)ml$} && (!$grep||m{$grep}) ) {
+		     if ( m{\.yaml$} && (!$grep||m{$grep}) ) {
 			     my $name = $File::Find::name;
 			     $name =~ s{^\Q$Bin\E/}{} or die;
 			     push @tests, $name;
