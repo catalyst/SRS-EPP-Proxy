@@ -283,6 +283,9 @@ sub _test_backend_messages {
 		requests => [ map { $_->message } @$messages ],
 	       );
 	my $xmlstring = $tx->to_xml();
+	if ( $main::VERBOSE > 0 ) {
+		main::diag("back-end message:\n".$tx->to_xml(1));
+	}
 
 	XMLMappingTests::check_xml_assertions(
 		$xmlstring, $srs_assertions, $desc,
@@ -298,6 +301,9 @@ sub _test_response {
 		isa_ok( $rs, $class, $desc );
 	}
 
+	if ( $main::VERBOSE > 0 ) {
+		main::diag("response:\n".$rs->message->to_xml(1));
+	}
 	check_xml_assertions(
 		$rs->message->to_xml, $test->data->{output_assertions},
 		$desc,
