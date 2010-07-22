@@ -9,8 +9,11 @@
 use strict;
 use warnings;
 
+use 5.010;
+
 package SRS::EPP::Response::Error;
 use Moose;
+use MooseX::StrictConstructor;
 extends 'SRS::EPP::Response';
 
 has 'exception' =>
@@ -26,14 +29,19 @@ has '+server_id' =>
 	required => 1,
 	;
 
-after 'message_trigger' => sub {
+around 'build_response' => sub {
+	my $orig = shift;
 	my $self = shift;
+
+	my $message = $self->$orig(@_);
+	my $result = $message->message->result;
+
 	my $bad_node = $self->bad_node;
-	my $result = $self->message->message->result;
-	if ( my $except = $self->exception ) {
-		# permit validation errors to be returned.
-		if ( blessed $except and
-			     $except->isa("PRANG::Graph::Context::Error") ) {
+	my $except = $self->exception;
+	given ($except) {
+		when (!blessed($_)) {
+		}
+		when ($_->isa("PRANG::Graph::Context::Error") ) {
 			my $error = XML::EPP::Error->new(
 				value => $except->node,
 				reason => "XML validation error at "
@@ -42,7 +50,20 @@ after 'message_trigger' => sub {
 				);
 			$result->add_error($error);
 		}
+		when ($_->isa("XML::LibXML::Error") ) {
+			while ( $except ) {
+				my $error = XML::EPP::Error->new(
+					value => $except->context || "(n/a)",
+					reason => $except->message,
+					);
+				$result->[0]->add_error( $error );
+				# though called '_prev', this function
+				# is documented.
+				$except = $except->_prev;
+			}
+		}
 	}
+	$message;
 };
 
 no Moose;

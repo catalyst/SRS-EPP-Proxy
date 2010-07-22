@@ -94,8 +94,11 @@ sub check_xml_assertions {
 	# if we have some matches
 	if ( defined $testset->{match} ) {
 		for my $t ( @{$testset->{match}} ) {
+			if ( $t->[1] =~ m{^/(.*)/$} ) {
+				$t->[1] = qr/$1/;
+			}
 			$failure ||= ! does_xpath_value_match(
-				$doc, $xmlns, $t->[0], $t->[1],
+				$doc, $xmlns, $t->[0], eval{$t->[1]}||$t->[1],
 				"$desc - $t->[2]",
 			       );
 		}
