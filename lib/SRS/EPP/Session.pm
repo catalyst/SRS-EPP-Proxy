@@ -59,7 +59,7 @@ has 'socket' =>
 
 has user =>
 	is => "rw",
-	isa => "Str",
+	isa => "Maybe[Str]",
 	;
 
 # hack for login message
@@ -234,7 +234,8 @@ method input_packet( Str $data ) {
 	$self->queue_command($queue_item);
 	if ( $error ) {
 		my $error_rs = SRS::EPP::Response::Error->new(
-			client_id => $queue_item->client_id,
+			($queue_item->client_id ?
+				 (client_id => $queue_item->client_id) : ()),
 			server_id => $self->new_server_id,
 			code => 2001,
 			exception => $error,
@@ -256,6 +257,7 @@ method input_packet( Str $data ) {
 #----
 # queues
 has 'processing_queue' =>
+	is => "ro",
 	default => sub {
 		my $self = shift;
 		SRS::EPP::Session::CmdQ->new();
@@ -266,6 +268,7 @@ has 'processing_queue' =>
 	;
 
 has 'backend_queue' =>
+	is => "ro",
 	default => sub {
 		my $self = shift;
 		SRS::EPP::Session::BackendQ->new();
@@ -341,44 +344,8 @@ method process_queue( Int $count = 1 ) {
 		}
 		else {
 			# regular message which may need to talk to the SRS backend
-			my @messages = $command->process($self);
-
-			# check what kind of messages these are
-			if ( $messages[0]->does('XML::SRS::Action') or $messages[0]->does('XML::SRS::Query') ) {
-				@messages = map {
-					SRS::EPP::SRSRequest->new(
-						message => $_,
-						);
-					} @messages;
-				$self->log_info(
-				"command produced ".@messages." SRS messages"
-					);
-				$self->queue_backend_request($command, @messages);
-				if ( $command->isa("SRS::EPP::Command::Login") ) {
-					$self->state("Processing <login>");
-					#$self->stalled(1);
-				}
-				else {
-					$self->state("Processing Command");
-				}
-				$self->yield("send_backend_queue");
-			}
-			elsif ( $messages[0]->isa('XML::EPP') ) {
-				# add these messages to the outgoing queue
-				@messages = map {
-					SRS::EPP::EPPResponse->new(
-						message => $_,
-						);
-				} @messages;
-
-				# add to the queue
-				$self->add_command_response($_, $command)
-					for @messages;
-			}
-			else {
-				# not sure what these are
-				die "Really shouldn't be here\n";
-			}
+			my @messages = eval { $command->process($self) };
+			$self->process_result($command, @messages);
 		}
 		$self->yield("send_pending_replies")
 			if $self->response_ready;
@@ -457,11 +424,15 @@ has 'user_agent' =>
 			poll => 'r',
 			cb => sub {
 				if ( $self->user_agent ) {
-					$self->log_trace("UA input event fired, calling backend_response");
+					$self->log_trace(
+			"UA input event fired, calling backend_response",
+						);
 					$self->backend_response;
 				}
 				else {
-					$self->log_trace("canceling UA watcher");
+					$self->log_trace(
+						"canceling UA watcher",
+						);
 					$w->cancel;
 				}
 			},
@@ -603,32 +574,78 @@ method be_response( SRS::EPP::SRSMessage $rs_tx ) {
 	$self->yield("process_responses");
 }
 
+method process_result( SRS::EPP::Command $command, @messages) {
+
+	# check what kind of messages these are
+	if ( $messages[0] and
+	     $messages[0]->does('XML::SRS::Action') ||
+	     $messages[0]->does('XML::SRS::Query') ) {
+		@messages = map {
+			SRS::EPP::SRSRequest->new(
+				message => $_,
+				);
+		} @messages;
+		$self->log_info(
+			"command produced ".@messages." SRS messages"
+			);
+		$self->queue_backend_request(
+			$command, @messages,
+			);
+		if ( $command->isa("SRS::EPP::Command::Login") ) {
+			$self->state("Processing <login>");
+			#$self->stalled(1);
+		}
+		else {
+			$self->state("Processing Command");
+		}
+		$self->yield("send_backend_queue");
+	}
+	elsif ( $messages[0] and
+			$messages[0]->isa('XML::EPP') ) {
+		# add these messages to the outgoing queue
+		die "wrong" if @messages > 1;
+		my $response = SRS::EPP::Response->new(
+			message => $messages[0],
+			);
+
+		# add to the queue
+		$self->add_command_response(
+			$response, $command,
+			);
+	}
+	elsif ( $messages[0] and
+			$messages[0]->isa('SRS::EPP::Response') ) {
+		die "wrong" if @messages > 1;
+		# fully cooked response
+		$self->add_command_response(
+			$messages[0], $command,
+			);
+	}
+	else {
+		# something else / error
+		my $rs;
+		if ( defined $messages[0] and
+			     $messages[0] =~ /^\d{4}$/ ) {
+			# error code.
+			my $rs = $command->make_response(
+				@messages,
+				);
+			$self->add_command_response(
+				SRS::EPP::EPPResponse->new(
+					message => $rs,
+					),
+				$command,
+				);
+		}
+	}
+}
+
 method process_responses() {
 	while ( $self->backend_response_ready ) {
 		my ($cmd, @rs) = $self->dequeue_backend_response;
 		$self->log_info("notifying command $cmd of back-end response");
-		my $resp = $cmd->notify(@rs);
-		if ( $resp->isa("SRS::EPP::Response") ) {
-			$self->log_info( "command $cmd is complete" );
-			$self->state("Prepare Response");
-			$self->log_debug( "response to $cmd is response $resp" );
-			$self->add_command_response($resp, $cmd);
-			$self->yield("send_pending_replies")
-				if $self->response_ready;
-		}
-		elsif ( $resp->isa("XML::SRS") ) {
-			$self->log_info( "command $cmd not yet complete" );
-			my @messages = map {
-				SRS::EPP::SRSRequest->new(
-					message => $_,
-					);
-			} $resp;
-			$self->log_info(
-				"command $cmd produced ".@messages." further SRS messages"
-				);
-			$self->queue_backend_request($cmd, @messages);
-			$self->yield("send_backend_queue");
-		}
+		my @messages = eval { $cmd->notify(@rs) };
+		$self->process_result($cmd, @messages);
 	}
 }
 
@@ -732,7 +749,8 @@ method output_event() {
 			last;
 		}
 		else {
-			$written += $wrote;  # thankfully, this is returned in bytes.
+			# thankfully, this is returned in bytes.
+			$written += $wrote;
 			if ( $wrote < bytes::length $datum ) {
 				unshift @$oq, bytes::substr $datum, $wrote;
 				last;

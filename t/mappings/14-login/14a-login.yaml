@@ -1,7 +1,7 @@
 
 template: login.tt
 
-no_auto_login: 1
+user: ~
 
 vars:
   user: 100
