@@ -17,21 +17,6 @@ SRS:
  - assertions:
      attr_is:
        - [ '/NZSRSRequest/HandleCreate', 'HandleId', 'error1', 'SRS: create handle' ]
-   fake_response: |-
-       <NZSRSResponse VerMajor="4" VerMinor="3" RegistrarId="170">
-       <Response Action="HandleCreate" FeId="2" FeSeq="126163" OrigRegistrarId="170" RecipientRegistrarId="170" TransId="12770745">
-       <FeTimeStamp Day="21" Hour="10" Minute="49" Month="6" Second="10" TimeZoneOffset="+12:00" Year="2010"/>
-       <Error Hint="INVALID_REQUEST_ERROR" ErrorId="MISSING_MANDATORY_FIELD" Severity="err">
-       <Description>
-       <![CDATA[Mandatory Field missing from Transaction]]>
-       </Description>
-       <ErrorDetails>
-       <![CDATA[UDAI]]>
-       </ErrorDetails>
-       </Error>
-       </Response>
-       </NZSRSResponse>
-   
 output_assertions:
   attr_is:
     - [ '//epp:result', 'code', 2400, 'EPP: Correct response code' ]

@@ -14,6 +14,7 @@ use Mock;
 use XML::EPP;
 use XML::EPP::Host;
 use XML::SRS;
+use XML::SRS::Keyring;
 
 use t::Log4test;
 
@@ -130,15 +131,20 @@ use Crypt::Password;
 # fake some responses.
 $event->ignore("send_backend_queue");
 
-# these objects are missing fields and would not serialize; but for
-# this test it doesn't matter.  We must only provide the attributes
-# marked "required"
+my $contact = XML::SRS::Contact->new(
+	name => "Bob",
+	email => 'bob@gmail.com',
+	);
 my @action_rs = (
 	XML::SRS::Registrar->new(
 		id => "123",
 		name => "Model Registrar",
 		account_reference => "xx",
 		epp_auth => password("foo-BAR2"),
+		contact_public => $contact,
+		contact_private => $contact,
+		contact_technical => $contact,
+		keyring => XML::SRS::Keyring->new(),
 	       ),
 	XML::SRS::ACL->new(
 		Resource => "epp_connect",

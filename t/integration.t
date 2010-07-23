@@ -74,7 +74,7 @@ foreach my $testfile (sort @testfiles) {
     my $response = $res->{response}[$data->{no_auto_login} ? 0 : 1];
     
     if ($response) {    
-        XMLMappingTests::run_testset( $response, $data->{output_assertions} );
+        XMLMappingTests::check_xml_assertions( $response, $data->{output_assertions}, $testfile );
     }
     else {
         fail("No response received") 

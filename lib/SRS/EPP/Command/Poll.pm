@@ -53,7 +53,8 @@ method process( SRS::EPP::Session $session ) {
 
   if ( $op eq "ack" ) {
     my $msgId = $message->argument->msgID;
-    my ($registrar_id,$client_id) = $msgId =~ m/(....)(.*)/;
+    my ($registrar_id,$client_id) = $msgId =~ m/(....)(.*)/
+	    or return;
     return XML::SRS::AckMessage->new(
       transaction_id => $client_id,
       originating_registrar => $registrar_id+0,

@@ -40,38 +40,43 @@ has 'payload' =>
 use XML::EPP;
 has "+message" =>
 	isa => "XML::EPP",
+	lazy => 1,
 	default => sub {
 		my $self = shift;
-		my $server_id = $self->server_id;
-		my $client_id = $self->client_id;
-		my $tx_id;
-		if ( $server_id ) {
-			$tx_id = XML::EPP::TrID->new(
-				server_id => $server_id,
-				($client_id ? (client_id => $client_id) : () ),
-				);
-		}
-		my $msg = $self->extra;
-		my $result = XML::EPP::Result->new(
-			($msg ? (msg => $msg) : ()),
-			code => $self->code,
-		       );
-		my $payload;
-		if ( $self->payload ) {
-			$payload = XML::EPP::SubResponse->new(
-				payload => $self->payload,
-			);
-		}
-		XML::EPP->new(
-			message => XML::EPP::Response->new(
-				result => [ $result ],
-				($payload ? (response => $payload) : ()),
-				($self->msgQ ? (msgQ => $self->msgQ) : ()),
-				($tx_id ? (tx_id => $tx_id) : () ),
-			),
-		);
+		$self->build_response;
 	},
 	;
+
+method build_response() {
+	my $server_id = $self->server_id;
+	my $client_id = $self->client_id;
+	my $tx_id;
+	if ( $server_id ) {
+		$tx_id = XML::EPP::TrID->new(
+			server_id => $server_id,
+			($client_id ? (client_id => $client_id) : () ),
+			);
+	}
+	my $msg = $self->extra;
+	my $result = XML::EPP::Result->new(
+		($msg ? (msg => $msg) : ()),
+		code => $self->code,
+		);
+	my $payload;
+	if ( $self->payload ) {
+		$payload = XML::EPP::SubResponse->new(
+			payload => $self->payload,
+			);
+	}
+	XML::EPP->new(
+		message => XML::EPP::Response->new(
+			result => [ $result ],
+			($payload ? (response => $payload) : ()),
+			($self->msgQ ? (msgQ => $self->msgQ) : ()),
+			($tx_id ? (tx_id => $tx_id) : () ),
+			),
+		);
+}
 
 has "client_id" =>
 	is => "ro",

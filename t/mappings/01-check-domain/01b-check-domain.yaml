@@ -1,13 +1,3 @@
-#<NZSRSRequest VerMajor='5' VerMinor='0'>
-#   <Whois DomainName="cheese.co.nz" FullResult="0"/>
-#</NZSRSRequest>
-#
-#<?xml version="1.0"?>
-#<!DOCTYPE NZSRSResponse SYSTEM "protocol.dtd">
-#<NZSRSResponse VerMajor="5" VerMinor="0">
-#  <Response Action="Whois" FeId="8" FeSeq="4640992" OrigRegistrarId="1" RecipientRegistrarId="1"><FeTimeStamp Day="26" Hour="11" Minute="41" Month="5" Second="21" TimeZoneOffset="+12:00" Year="2010"/><Domain DomainName="cheese.co.nz" Status="Active"/></Response>
-#</NZSRSResponse>
-
 template: check-domain.tt
 
 vars:
@@ -28,13 +18,7 @@ SRS:
         - [ '//Whois/@FullResult', '0', 'SRS: Check all FullResult attributes are zero' ]
       attr_is:
         - [ '/NZSRSRequest/Whois[1]', 'DomainName', 'cheese.co.te', 'SRS: Check cheese is the first check' ]
-    fake_response: |-
-      <NZSRSResponse VerMajor="5" VerMinor="0">
-        <Response Action="Whois" FeId="4" FeSeq="1981693" OrigRegistrarId="90" RecipientRegistrarId="90">
-          <FeTimeStamp Day="10" Hour="16" Minute="33" Month="6" Second="32" TimeZoneOffset="+12:00" Year="2010"/>
-          <Domain DomainName="cheese.co.te" Status="Active"/>
-        </Response>
-      </NZSRSResponse>
+
   
 output_assertions:
   count:

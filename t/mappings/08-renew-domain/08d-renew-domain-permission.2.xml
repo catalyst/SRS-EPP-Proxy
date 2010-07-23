@@ -1,0 +1,5 @@
+<NZSRSResponse VerMajor="4" VerMinor="3" RegistrarId="104">
+<Response Action="DomainUpdate" FeId="2" FeSeq="122118672" OrigRegistrarId="104" RecipientRegistrarId="104" Rows="1" TransId="20100624092216713">
+<FeTimeStamp Day="24" Hour="09" Minute="23" Month="6" Second="05" TimeZoneOffset="+12:00" Year="2010"/>
+</Response>
+</NZSRSResponse>

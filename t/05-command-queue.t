@@ -131,6 +131,9 @@ while ( @rq_q or @rs_q ) {
 push @output_q, [ $cq->dequeue_response ]
 	while $cq->response_ready;
 
+is($cq->next, 0,
+   "->next not decremented even if the commands were not dequeued");
+
 ok(!(grep{
 	my $rv = (
 	!$output_q[$_]
@@ -150,6 +153,12 @@ ok(!(grep{
 	   require Data::Dumper;
 	   diag("results: ".Data::Dumper::Dumper(\@output_q));
    };
+
+$cq->queue_command( $command_rq[0] );
+$cq->add_command_response($command_rs[0]);
+
+is($cq->next_command, undef,
+   "commands with immediate responses not returned by ->next_command");
 
 # Copyright (C) 2009  NZ Registry Services
 #
