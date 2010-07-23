@@ -30,12 +30,6 @@ SRS:
         <Response Action="DomainDetailsQry" FeId="8" FeSeq="4739999" OrigRegistrarId="1" RecipientRegistrarId="1" Rows="1">
           <FeTimeStamp Day="23" Hour="17" Minute="29" Month="6" Second="44" TimeZoneOffset="+12:00" Year="2010"/>
           <Domain Delegate="1" DomainName="cheese.co.te" RegistrarId="123" Status="Active">
-            <NameServers>
-              <Server FQDN="ns1.everydns.net"/>
-              <Server FQDN="ns2.everydns.net"/>
-              <Server FQDN="ns3.everydns.net"/>
-              <Server FQDN="ns4.everydns.net"/>
-            </NameServers>
             <BilledUntil Day="19" Hour="19" Minute="45" Month="11" Second="02" TimeZoneOffset="+13:00" Year="2011"/>
             <RegisteredDate Day="19" Hour="19" Minute="45" Month="11" Second="02" TimeZoneOffset="+13:00" Year="2007"/>
             <AuditDetails ActionId="20091231.4b3b555304642" RegistrarId="123">
