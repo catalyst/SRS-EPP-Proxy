@@ -42,13 +42,18 @@ around 'build_response' => sub {
 		when (!blessed($_)) {
 		}
 		when ($_->isa("PRANG::Graph::Context::Error") ) {
+			use YAML;
+			my $xpath = $except->xpath;
+			my $message = $except->message;
+			my $reason = "XML validation error at $xpath";
+			if ( $message =~ m{Validation failed for '.*::(\w+Type)' failed with value (.*) at}) {
+				$reason .= "; '$2' does not meet schema requirements for $1";
+			}
 			my $error = XML::EPP::Error->new(
 				value => $except->node,
-				reason => "XML validation error at "
-					.$except->xpath."; "
-						.$except->message,
+				reason => $reason,
 				);
-			$result->add_error($error);
+			$result->[0]->add_error($error);
 		}
 		when ($_->isa("XML::LibXML::Error") ) {
 			while ( $except ) {
