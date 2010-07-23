@@ -67,6 +67,12 @@ around 'build_response' => sub {
 				$except = $except->_prev;
 			}
 		}
+		when ($_->isa("XML::SRS::Error")) {
+			my $new_result = $message->message->result->clone(
+				map_error($except)
+				);
+			$message->message->result($new_result);
+		}
 	}
 	$message;
 };
