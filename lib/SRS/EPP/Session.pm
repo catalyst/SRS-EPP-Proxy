@@ -222,8 +222,11 @@ method input_packet( Str $data ) {
 		XML::EPP->parse($data);
 	};
 	my $error = ( $msg ? undef : $@ );
-	$self->log_info("error parsing message: $error")
-		if $error;
+	if ( $error ) {
+		my $err_str = "".$error;
+		$err_str =~ s{at /.* line(?s:.*)\Z}{};
+		$self->log_info("error parsing message: $err_str");
+	}
 	my $queue_item = SRS::EPP::Command->new(
 		( $msg ? (message => $msg) : () ),
 		xml => $data,
