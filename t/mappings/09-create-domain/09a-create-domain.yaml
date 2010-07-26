@@ -50,7 +50,7 @@ output_assertions:
     - [ '//domain:creData', 1, 'SRS: Check for one creData' ]
   match:
     - [ '//domain:name', 'wicked-yeah2.co.te', 'SRS: Check domain name' ]
-    - [ '//domain:crDate', '2010-07-06T13:19:58+12:00', 'SRS: Check crDate' ]
-    - [ '//domain:exDate', '2010-08-06T13:19:58+12:00', 'SRS: Check exDate' ]
+    - [ '//domain:crDate', '/\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d.\d\d:\d\d/', 'SRS: Check crDate' ]
+    - [ '//domain:exDate', '/\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d.\d\d:\d\d/', 'SRS: Check exDate' ]
   attr_is:
     - [ '//epp:result', 'code', '1000', 'SRS: Check result code' ]
