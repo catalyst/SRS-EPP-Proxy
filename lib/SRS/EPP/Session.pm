@@ -657,6 +657,7 @@ method process_responses() {
 		my ($cmd, @rs) = $self->dequeue_backend_response;
 		$self->log_info("notifying command $cmd of back-end response");
 		my $resp = $cmd->notify(@rs);
+		$self->log_trace("Resp isa " . ref $resp);
 		if ( $resp->isa("SRS::EPP::Response") ) {
 			$self->log_info( "command $cmd is complete" );
 			$self->state("Prepare Response");
@@ -667,7 +668,8 @@ method process_responses() {
 			$self->yield("send_pending_replies")
 				if $self->response_ready;
 		}
-		elsif ( $resp->isa("XML::SRS") ) {
+        elsif ( $resp->does('XML::SRS::Action') ||
+                $resp->does('XML::SRS::Query') ) {
 			$self->log_info( "command $cmd not yet complete" );
 			my @messages = map {
 				SRS::EPP::SRSRequest->new(
@@ -680,6 +682,10 @@ method process_responses() {
 				);
 			$self->queue_backend_request($cmd, @messages);
 			$self->yield("send_backend_queue");
+		}
+		else {
+		    # TODO: should handle this more gracefully, i.e. return a response to the client
+            confess "Unknown response type: " . ref $resp;    
 		}
 	}
 }
