@@ -405,17 +405,17 @@ method process_queue( Int $count = 1 ) {
 						$command,
 						);
 				}
+				else {
+                    $self->log_debug("process_queue: Unknown message type - $messages[0] ... doesn't appear to be a SRS or EPP request, returning error");
+                    $rs = $command->make_response(
+                        code => 2400
+                    );
+                    $self->add_command_response(
+                        $rs,
+                        $command,
+                    );    
+                }
 			}
-			else {
-                $self->log_debug("process_queue: Unknown message type - $messages[0] ... doesn't appear to be a SRS or EPP request, returning error");
-                $rs = $command->make_response(
-                    code => 2400
-                );
-                $self->add_command_response(
-                    $rs,
-                    $command,
-                );    
-            }
 		}
 		$self->yield("send_pending_replies")
 			if $self->response_ready;
