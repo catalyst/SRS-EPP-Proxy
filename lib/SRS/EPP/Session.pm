@@ -386,6 +386,14 @@ method process_queue( Int $count = 1 ) {
 					$response, $command,
 					);
 			}
+			elsif ($messages[0] and
+			       $messages[0]->isa('SRS::EPP::Response') ) {
+			           
+			   
+			   $self->add_command_response(
+					$messages[0], $command,
+					);
+			}			
 			else {
 				# something else, or default response.
 				my $rs;
