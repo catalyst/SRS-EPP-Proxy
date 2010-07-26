@@ -7,7 +7,7 @@ vars:
   ccode: NZ
   phone: +64.44798699
   email: a@smartarse.co.te
-  contact_id: error1
+  contact_id: simple1
 
 input_assertions:
   class: SRS::EPP::Command::Create::Contact
@@ -16,7 +16,7 @@ input_assertions:
 SRS:
  - assertions:
      attr_is:
-       - [ '/NZSRSRequest/HandleCreate', 'HandleId', 'error1', 'SRS: create handle' ]
+       - [ '/NZSRSRequest/HandleCreate', 'HandleId', 'simple1', 'SRS: create handle' ]
 output_assertions:
   attr_is:
     - [ '//epp:result', 'code', 2400, 'EPP: Correct response code' ]
