@@ -1,7 +1,7 @@
 template: delete-contact.tt
 
 vars:
-  contact_id: c_id1
+  contact_id: c_id2
 
 input_assertions:
   match:
