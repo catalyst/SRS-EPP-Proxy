@@ -393,6 +393,8 @@ method process_queue( Int $count = 1 ) {
 				if ( defined $messages[0] and
 				     $messages[0] =~ /^\d{4}$/ ) {
 					# error code.
+					# XXX: does anything actually use this? 
+					#  I suspect not, as it's calling a non-existant package below (SRS::EPP::EPPResponse) 
 					my $rs = $command->make_response(
 						@messages,
 						);
@@ -404,6 +406,16 @@ method process_queue( Int $count = 1 ) {
 						);
 				}
 			}
+			else {
+                $self->log_debug("process_queue: Unknown message type - $messages[0] ... doesn't appear to be a SRS or EPP request, returning error");
+                $rs = $command->make_response(
+                    code => 2400
+                );
+                $self->add_command_response(
+                    $rs,
+                    $command,
+                );    
+            }
 		}
 		$self->yield("send_pending_replies")
 			if $self->response_ready;
