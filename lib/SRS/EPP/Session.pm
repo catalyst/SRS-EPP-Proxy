@@ -516,7 +516,16 @@ has 'user_agent' =>
 					$self->log_trace(
 			"UA input event fired, calling backend_response",
 						);
-					$self->backend_response;
+						
+					eval {
+					   $self->backend_response;
+					};
+					if ($@) {
+					   my $error = "Uncaught exception calling backend_response in user_agent: $@";
+					   $self->log_info($error);
+					   
+					   die $@;
+					}
 				}
 				else {
 					$self->log_trace(
