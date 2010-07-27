@@ -2,7 +2,7 @@ template: renew-domain.tt
 
 vars:
   domain: chedder4.co.te
-  expDate: 2010-01-01
+  expDate: 2012-01-01
   period: 12
 
 input_assertions:
