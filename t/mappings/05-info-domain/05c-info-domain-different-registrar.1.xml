@@ -1,5 +1,5 @@
 <NZSRSResponse VerMajor="5" VerMinor="0">
-  <Response Action="Whois" FeId="8" FeSeq="4739879" OrigRegistrarId="90" RecipientRegistrarId="100">
+  <Response Action="Whois" FeId="8" FeSeq="4739879" OrigRegistrarId="1" RecipientRegistrarId="100">
     <FeTimeStamp Day="23" Hour="14" Minute="49" Month="6" Second="20" TimeZoneOffset="+12:00" Year="2010"/>
     <Domain DomainName="registrar-101.co.te" Status="Active"/>
   </Response>
