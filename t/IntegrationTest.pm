@@ -55,7 +55,7 @@ sub run_tests {
             next;
         }
         
-        my $vars = { %{$data->{vars} || {}}, %$stash };
+        my $vars = { %{$data->{vars} || {}}, ($data->{int_dont_use_stash} ? () : %$stash) };
         $vars->{command} = $data->{template};
         $vars->{command} =~ s/\.tt$//;
         $vars->{transaction_id} = time;        

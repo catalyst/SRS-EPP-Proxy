@@ -4,6 +4,8 @@ vars:
   domain: mozzarella.co.te
   auth: UDAiUDAj
 
+int_dont_use_stash: 1
+
 input_assertions:
   class: SRS::EPP::Command::Transfer::Domain
   match:
