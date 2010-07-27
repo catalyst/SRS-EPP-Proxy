@@ -1,7 +1,7 @@
 template: info-domain.tt
 
 vars:
-  domain_name: cheese.co.te
+  domain_name: not-exists.co.te
   pw:
 
 input_assertions:
@@ -17,7 +17,7 @@ SRS:
         - [ '/NZSRSRequest/*[1]', 'Whois', 'SRS: The first request should be a Whois' ]
         - [ '/NZSRSRequest/*[2]', 'DomainDetailsQry', 'SRS: The second request should be a DomainDetailsQry' ]
       match:
-        - [ '//DomainNameFilter', 'cheese.co.te', 'SRS: Check the domain name' ]
+        - [ '//DomainNameFilter', 'not-exists.co.te', 'SRS: Check the domain name' ]
       match_all:
       attr_is:
 
