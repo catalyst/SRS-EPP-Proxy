@@ -51,8 +51,10 @@ sub find_tests {
 
 sub read_xml {
 	my $test = shift;
+	
+	my $file = $test =~ m|^/| ? $test : "$Bin/$test";
 
-	open XML, "<$Bin/$test" or return undef;
+	open XML, "<", $file or return undef;
 	binmode XML, ":utf8";
 	my $xml = do {
 		local($/);
