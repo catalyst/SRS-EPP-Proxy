@@ -1,4 +1,0 @@
-# We are about to renew a domain, and we need to be sure the expiry
-# date is still in the future, so we'll travel forward to a point
-# before it's expiry date
-set: 2011-02-01 00:00:00

@@ -5,6 +5,8 @@ vars:
   expDate: 2010-01-01
   period: 12
 
+int_dont_use_stash: 1
+
 input_assertions:
   class: SRS::EPP::Command::Renew::Domain
   match:

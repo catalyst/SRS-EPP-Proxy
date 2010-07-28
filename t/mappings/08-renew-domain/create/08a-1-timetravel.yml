@@ -1,4 +1,0 @@
-# We are about to create a domain (with a term of 12), and we 
-# need to know the exact date of expiry so we can renew it a an
-# epp transaction.
-set: 2011-01-01 00:00:00
