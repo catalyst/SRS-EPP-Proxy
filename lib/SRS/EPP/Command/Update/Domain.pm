@@ -5,6 +5,9 @@ extends 'SRS::EPP::Command::Update';
 use MooseX::Method::Signatures;
 use Crypt::Password;
 
+use XML::SRS::Server;
+use XML::SRS::Server::List;
+
 my $allowed = {
     action => { add => 1, remove => 1 },
 };
@@ -14,6 +17,13 @@ sub xmlns {
     return XML::EPP::Domain::Node::xmlns();
 }
 
+has 'state' =>
+    'is' => 'rw',
+    'isa' => 'Str',
+    'default' => 'EPP-DomainUpdate'
+    ;
+
+# we onyl ever enter here once, so we know what state we're in
 method process( SRS::EPP::Session $session ) {
     $self->session($session);
 
@@ -26,11 +36,97 @@ method process( SRS::EPP::Session $session ) {
         return $self->make_response(code => 2002);
     }
 
-    # for now, return the fact that we're not dealing with Nameservers
+    # if they want to add/remove a nameserver, then we need to hit the SRS
+    # first to find out what they are currently set to
     if ( ( $payload->add and $payload->add->ns )
          or ( $payload->remove and $payload->remove->ns ) ) {
-        return $self->make_response(code => 2002);
+
+        # remember the fact that we're doing a domain details query first
+        $self->state('SRS-DomainDetailsQry');
+
+        # need to do a DomainDetailsQry
+        return (
+            XML::SRS::Domain::Query->new(
+                domain_name_filter => $payload->name,
+                field_list => XML::SRS::FieldList->new(
+                    name_servers    => 1,
+                ),
+            )
+        );
     }
+
+    # ok, we have all the info we need, so create the request
+    my $request = $self->make_request($message, $payload);
+    $self->state('SRS-DomainUpdate');
+    return $request;
+}
+
+
+method notify( SRS::EPP::SRSResponse @rs ) {
+    # original payload
+    my $epp = $self->message;
+    my $message = $epp->message;
+    my $payload = $message->argument->payload;
+
+    # response from SRS (either a DomainDetailsQry or a DomainUpdate)
+    my $res = $rs[0]->message->response;
+
+    if ( $self->state eq 'SRS-DomainDetailsQry' ) {
+        # we have just asked for the DomainDetailsQry so we are doing an
+        # add/remove of a nameserver
+        # my @ns = map { $_->fqdn } @{$res->nameservers->nameservers};
+        my %ns;
+        foreach my $ns ( map { $_->fqdn } @{$res->nameservers->nameservers} ) {
+            $ns{$ns} = 1;
+        }
+
+        # check what the user wants to do (it's either an add, rem or both)
+        # do the add first
+        if ( $payload->add and $payload->add->ns ) {
+            my $add_ns = $payload->add->ns->host_objs;
+
+            # loop through and add them
+            foreach my $ns ( @$add_ns ) {
+                $ns{$ns} = 1;
+            }
+        }
+        # now do the remove
+        if ( $payload->remove and $payload->remove->ns ) {
+            my $rem_ns = $payload->remove->ns->host_objs;
+
+            # loop through and remove them
+            foreach my $ns ( @$rem_ns ) {
+                delete $ns{$ns};
+            }
+        }
+
+        my @ns_list = sort keys %ns;
+
+        # so far all is good, now send the DomainUpdate request to the SRS
+        my $request = $self->make_request($message, $payload, \@ns_list);
+        $self->state('SRS-DomainUpdate');
+        return $request;
+    }
+    elsif ( $self->state eq 'SRS-DomainUpdate' ) {
+        # if we get no response, then it's likely the domain name doesn't exist
+        # ie. the DomainNameFilter didn't match anything
+        unless ( defined $res ) {
+            # Object does not exist
+            return $self->make_response(code => 2303);
+        }
+
+        # check the response wasn't an error
+        if ( $res->isa('XML::SRS::Error') ) {
+            return $self->make_response(code => 2400);
+        }
+
+        # everything looks ok, so let's return a successful message
+        return $self->make_response(code => 1000);
+    }
+}
+
+sub make_request {
+    my ($self, $message, $payload, $new_nameservers) = @_;
 
     # create some vars we'll fill in shortly
     my ($registrant, $admin, $admin_old, $tech, $tech_old);
@@ -55,11 +151,20 @@ method process( SRS::EPP::Session $session ) {
     my $contact_admin = _make_contact($admin, $admin_old);
     my $contact_tech = _make_contact($tech, $tech_old);
 
+    # now set the nameserver list
+    my $ns_list;
+    if ( defined $new_nameservers and @$new_nameservers ) {
+        $ns_list = XML::SRS::Server::List->new(
+            nameservers => [ map { XML::SRS::Server->new( fqdn => $_ ) } @$new_nameservers ],
+        );
+    }
+
     return XML::SRS::Domain::Update->new(
         filter => [ $payload->name() ],
         ( $registrant ? ( registrant_id => $registrant ) : () ),
         ( $contact_admin ? ( contact_admin => $contact_admin ) : () ),
         ( $contact_tech ? ( contact_technical => $contact_tech ) : () ),
+        ( $ns_list ? ( nameservers => $ns_list ) : () ),
         action_id => $message->client_id || sprintf('auto.%x', time()),
     );
 }
@@ -94,30 +199,6 @@ sub _extract_contact {
         return $c->value if $c->type eq $type;
     }
     return;
-}
-
-method notify( SRS::EPP::SRSResponse @rs ) {
-    my $epp = $self->message;
-    my $eppMessage = $epp->message;
-    my $eppPayload = $eppMessage->argument->payload;
-
-    my $message = $rs[0]->message;
-    my $responses = $message->responses;
-
-    # if we get no response, then it's likely the domain name doesn't exist
-    # ie. the DomainNameFilter didn't match anything
-    unless ( @$responses ) {
-        # Object does not exist
-        return $self->make_response(code => 2303);
-    }
-
-    # check the response wasn't an error
-    if ( $responses->[0]->isa('XML::SRS::Error') ) {
-        return $self->make_response(code => 2400);
-    }
-
-    # everything looks ok, so let's return a successful message
-    return $self->make_response(code => 1000);
 }
 
 1;

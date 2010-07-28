@@ -4,6 +4,7 @@ vars:
   domain: cheese.co.te
   nslist:
     - ns5.everydns.net
+    - ns6.everydns.net
   nslist_old:
     - ns1.everydns.net
 
@@ -13,11 +14,14 @@ input_assertions:
     - [ '//domain:name', 1, 'SRS: Check for the domain' ]
     - [ '//domain:add/domain:ns', 1, 'SRS: Check there is a new ns to add' ]
     - [ '//domain:rem/domain:ns', 1, 'SRS: Check there is an old ns to remove' ]
-    - [ '//domain:hostObj', 2, 'SRS: Check there are two hostObjects' ]
+    - [ '//domain:add/domain:ns/domain:hostObj', 2, 'SRS: Two NSs to add' ]
+    - [ '//domain:rem/domain:ns/domain:hostObj', 1, 'SRS: One NS to remove' ]
+    - [ '//domain:hostObj', 3, 'SRS: Check there are three hostObjects in total' ]
   match:
     - [ '//domain:name', 'cheese.co.te', 'SRS: Check the domain name' ]
-    - [ '//domain:add/domain:ns/domain:hostObj', 'ns5.everydns.net', 'SRS: Check the new ns' ]
-    - [ '//domain:rem/domain:ns/domain:hostObj', 'ns1.everydns.net', 'SRS: Check the old ns' ]
+    - [ '//domain:add/domain:ns/domain:hostObj[1]', 'ns5.everydns.net', 'SRS: Check the new ns5' ]
+    - [ '//domain:add/domain:ns/domain:hostObj[2]', 'ns6.everydns.net', 'SRS: Check the new ns6' ]
+    - [ '//domain:rem/domain:ns/domain:hostObj', 'ns1.everydns.net', 'SRS: Check the old ns1 is gone' ]
   match_all:
 
 SRS:
@@ -26,4 +30,4 @@ output_assertions:
   count:
     - [ '//epp:result', 1, 'SRS: Check for one result' ]
   attr_is:
-    - [ '//epp:result', 'code', 2002, 'SRS: Check for correct result code' ]
+    - [ '//epp:result', 'code', 1000, 'SRS: Check for correct result code' ]
