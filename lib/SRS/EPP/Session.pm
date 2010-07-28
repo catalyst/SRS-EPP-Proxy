@@ -18,6 +18,8 @@ use strict;
 
 use Moose;
 use MooseX::Method::Signatures;
+use Scalar::Util qw(blessed);
+use Data::Dumper;
 
 with 'MooseX::Log::Log4perl::Easy';
 
@@ -360,6 +362,13 @@ method process_queue( Int $count = 1 ) {
 			# regular message which may need to talk to the SRS backend
 			my @messages = $command->process($self);
 
+            unless (blessed $messages[0]) {
+                my $error = "Got an unblessed reference from process(). Cannot process queue";
+                $error .= "Messages: " . Dumper \@messages;
+                $self->log_info($error);
+                confess $error;   
+            }            
+
 			# check what kind of messages these are
 			if ( $messages[0] and
 			     $messages[0]->does('XML::SRS::Action') ||
@@ -406,34 +415,15 @@ method process_queue( Int $count = 1 ) {
 					);
 			}			
 			else {
-				# something else, or default response.
-				my $rs;
-
-				if ( defined $messages[0] and
-				     $messages[0] =~ /^\d{4}$/ ) {
-					# error code.
-					# XXX: does anything actually use this? 
-					#  I suspect not, as it's calling a non-existant package below (SRS::EPP::EPPResponse) 
-					my $rs = $command->make_response(
-						@messages,
-						);
-					$self->add_command_response(
-						SRS::EPP::EPPResponse->new(
-							message => $rs,
-							),
-						$command,
-						);
-				}
-				else {
-                    $self->log_debug("process_queue: Unknown message type - $messages[0] ... doesn't appear to be a SRS or EPP request, returning error");
-                    $rs = $command->make_response(
-                        code => 2400
-                    );
-                    $self->add_command_response(
-                        $rs,
-                        $command,
-                    );    
-                }
+                # We got something else unknown... return an error
+                $self->log_debug("process_queue: Unknown message type - $messages[0] ... doesn't appear to be a SRS or EPP request, returning error");
+                my $rs = $command->make_response(
+                    code => 2400
+                );
+                $self->add_command_response(
+                    $rs,
+                    $command,
+                );                
 			}
 		}
 		$self->yield("send_pending_replies")
