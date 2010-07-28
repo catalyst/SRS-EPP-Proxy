@@ -11,8 +11,8 @@ input_assertions:
     - [ '//domain:name', 'chedder.co.te', 'Domain correctly included in XML' ]
 
 SRS:
-   # The initial EPP action should be a whois for the domain we are trying to renew
  - assertions:
+       # The initial EPP action should be a whois for the domain we are trying to renew
        count:
        match: []
        match_all:
@@ -20,9 +20,8 @@ SRS:
          - [ '/NZSRSRequest/Whois', 'DomainName', 'chedder.co.te', 'SRS: find correct domain' ]
    # The SRS response to that is... 
 
-   # Given the previous fake_response from the SRS, we want
-   # to generate a DomainUpdate txn
  - assertions:
+       # then, we want to generate a DomainUpdate txn
        count:
        attr_is:
          - [ '//DomainUpdate', 'Term', '12', 'EPP->SRS: Correct Term for renewal' ]
