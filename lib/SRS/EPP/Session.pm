@@ -636,7 +636,8 @@ method backend_response() {
 
 	# decode message
 	$self->log_packet("BE response", $fields{r});
-	my $message = XML::SRS::Response->parse($fields{r});
+	my $message = eval { XML::SRS::Response->parse($fields{r}) };
+	confess "Exception parsing SRS Response: $@" if $@;
 	my $rs_tx = SRS::EPP::SRSMessage->new( message => $message );
 
 	$self->be_response($rs_tx);
