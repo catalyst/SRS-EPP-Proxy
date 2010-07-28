@@ -223,6 +223,8 @@ sub load_test {
 	my $test_name = shift;
 
 	my $test = XMLMappingTest->new(filename => $test_name);
+	
+	return $test if $test->data->{skip};
 
 	print 'EPP request  = ', $test->xml if $VERBOSE>0;
 
@@ -478,6 +480,13 @@ sub run_unit_tests {
 	for my $testfile ( sort @testfiles ) {
 		diag("Reading $testfile") if $main::VERBOSE>0;
 		my $test = load_test($testfile);
+		if ($test->data->{skip}) {
+		   SKIP: {
+		      skip $test->data->{skip}, 1;
+		      
+		   }
+		   next if $test->data->{skip};
+		}
 		my $session = $gen_session->();
 		if ( exists $test->data->{user} ) {
 			$session->user($test->data->{user});
