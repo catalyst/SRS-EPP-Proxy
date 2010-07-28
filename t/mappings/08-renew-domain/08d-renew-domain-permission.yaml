@@ -18,7 +18,6 @@ SRS:
        match_all:
        attr_is:
          - [ '/NZSRSRequest/Whois', 'DomainName', 'chedder.co.te', 'SRS: find correct domain' ]
-   # The SRS response to that is... 
 
  - assertions:
        # then, we want to generate a DomainUpdate txn

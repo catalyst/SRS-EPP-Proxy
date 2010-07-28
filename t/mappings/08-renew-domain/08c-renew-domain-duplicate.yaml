@@ -1,11 +1,9 @@
 template: renew-domain.tt
 
 vars:
-  domain: chedder.co.te
+  domain: chedder4.co.te
   expDate: 2010-01-01
   period: 12
-
-int_dont_use_stash: 1
 
 input_assertions:
   class: SRS::EPP::Command::Renew::Domain
@@ -20,7 +18,7 @@ SRS:
        match_all:
        attr_is:
          - [ '/NZSRSRequest/Whois', 'DomainName', 'chedder.co.te', 'SRS: find correct domain' ]
-   # The SRS response to that is... 
+
 output_assertions:
   attr_is:
       - [ '//epp:result', 'code', 2400, 'EPP: Correct response code' ]
