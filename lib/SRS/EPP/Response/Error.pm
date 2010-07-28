@@ -14,6 +14,7 @@ use 5.010;
 package SRS::EPP::Response::Error;
 use Moose;
 use MooseX::StrictConstructor;
+use Data::Dumper;
 extends 'SRS::EPP::Response';
 
 has 'exception' =>
@@ -40,6 +41,12 @@ around 'build_response' => sub {
 	my $except = $self->exception;
 	given ($except) {
 		when (!blessed($_)) {
+		    my $reason = ref $_ ? Dumper $_ : $_;
+		    my $error = XML::EPP::Error->new(
+				value => '???',
+				reason => $reason,
+			);
+			$result->[0]->add_error($error);
 		}
 		when ($_->isa("PRANG::Graph::Context::Error") ) {
 			use YAML;
