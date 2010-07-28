@@ -60,7 +60,7 @@ method process( SRS::EPP::Session $session ) {
 	my $login = $epp->message->argument;
 	my $uid = $login->client_id;
 	if ( $uid !~ m{^\d+$} ) {
-		return 2200;
+		return $self->make_response(code => 2200);
 	}
 	$uid += 0;  # remove leading 0's
 	$self->password($login->password);
