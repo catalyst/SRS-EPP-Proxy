@@ -2,7 +2,7 @@ description: set up domain
 registrar: 1
 
 request: |-
- <NZSRSRequest VerMajor="4" VerMinor="4" RegistrarId="128">
+ <NZSRSRequest VerMajor="4" VerMinor="4" RegistrarId="101">
    <DomainCreate
        Term="12" ActionId="[% actionid %]" Delegate="1"
        DomainName="chedder.co.te" RegistrantRef="RefRuff"
