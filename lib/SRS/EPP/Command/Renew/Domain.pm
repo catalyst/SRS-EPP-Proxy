@@ -80,10 +80,12 @@ method notify( SRS::EPP::SRSResponse @rs ) {
   }
 
   # By now, we must be dealing with the response to our update TXN
-  if ( ! $response ) {
-    # We found the bill_date of the domain, but didn't update it
-    # - Assume the domain isn't managed by this registrar
-    return $self->make_response(code => 2201);
+  if ( $response->isa("XML::SRS::Error") ) {
+    if ( $response->error_id eq "MISSING_MANDATORY_FIELD" ) {
+      if ( $response->details()->[0] eq "UDAI" ) {
+        return $self->make_response(code => 2201);
+      }
+    }
   }
 
   if ( $response->can("billed_until") ) {
