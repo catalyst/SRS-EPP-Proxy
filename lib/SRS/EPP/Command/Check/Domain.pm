@@ -35,6 +35,16 @@ method notify( SRS::EPP::SRSResponse @rs ) {
 	my @response_items;
 	for my $response ( @rs ) {
 		my $domain = $response->message->response;
+		
+		if ($domain->isa('XML::SRS::Error')) {
+		    # We return an error if *any* of the domains is invalid.
+		    #  This is probably correct behaviour, according to the rfc
+		    # TODO: just returning blanket error code at the moment...
+        	return $self->make_response(
+        		code => 2400,
+        	);
+		}
+		
 		my $name_status = XML::EPP::Domain::Check::Name->new(
 			name => $domain->name,
 			available => ($domain->status eq "Available"
