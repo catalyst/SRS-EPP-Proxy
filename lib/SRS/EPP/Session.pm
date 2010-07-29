@@ -791,6 +791,34 @@ method empty_read() {
 
 method output_event() {
 	my $oq = $self->output_queue;
+
+    my $written = $self->write_to_client($oq);
+
+	if ( @$oq ) {
+		$self->output_event_watcher->start;
+	}
+	else {
+		$self->output_event_watcher->stop;
+		$self->log_info("flushed output to client");
+		if ( $self->shutting_down ) {
+			$self->check_queues;
+			# if check_queues didn't yield any events, we're done.
+			if ( !keys %{$self->yielding} ) {
+				$self->do_close;
+			}
+			else {
+				$self->log_debug(
+			"shutdown still pending: @{[keys %{$self->yielding}]}"
+					);
+			}
+		}
+	}
+	return $written;
+}
+
+method write_to_client(ArrayRef|Str $oq) {
+    $oq = [$oq] unless ref $oq;    
+    
 	my $written = 0;
 	my $io = $self->io;
 	while ( @$oq ) {
@@ -813,25 +841,7 @@ method output_event() {
 	$self->log_trace(
 	"output_event wrote $written bytes, ".@$oq." chunk(s) remaining"
 		);
-	if ( @$oq ) {
-		$self->output_event_watcher->start;
-	}
-	else {
-		$self->output_event_watcher->stop;
-		$self->log_info("flushed output to client");
-		if ( $self->shutting_down ) {
-			$self->check_queues;
-			# if check_queues didn't yield any events, we're done.
-			if ( !keys %{$self->yielding} ) {
-				$self->do_close;
-			}
-			else {
-				$self->log_debug(
-			"shutdown still pending: @{[keys %{$self->yielding}]}"
-					);
-			}
-		}
-	}
+		
 	return $written;
 }
 

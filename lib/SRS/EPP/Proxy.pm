@@ -380,6 +380,33 @@ method accept_loop() {
 				my $event = shift;
 				my $exception = shift;
 				$self->log_error("Exception during ".$event->w->desc."; $exception");
+				
+				# Send back a generic error message
+				# TODO: perhaps only do this if a response is not ready?
+				if ($session) {
+				    eval {
+    				    my $error = SRS::EPP::Response::Error->new(        			
+                			server_id => $session->new_server_id,
+                			code => 2400,
+                			exception => $exception,
+            			);
+            			my $xml = $error->to_xml;
+            			
+            			my $left_to_write = bytes::length $xml;
+            			while ($left_to_write) {
+            			    my $written = $session->write_to_client($xml);
+            			    
+            			    last if $written == 0;
+            			    
+            			    $left_to_write -= $written;
+            			}
+				    };
+				    my $error = $@;
+				    if ($@) {
+				        $self->log_error("Failed in sending generic response back to client: $@");   
+				    }
+				}
+				
 				Event::unloop_all;
 			};
 			Event::loop(120);
