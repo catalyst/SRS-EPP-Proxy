@@ -36,6 +36,12 @@ method process( SRS::EPP::Session $session ) {
         return $self->make_response(code => 2002);
     }
 
+    # we're not going to do anything with Status additions or removals
+    if ( ( $payload->add and $payload->add->status )
+         or ( $payload->remove and $payload->remove->status ) ) {
+        return $self->make_response(code => 2307);
+    }
+
     # if they want to add/remove a nameserver, then we need to hit the SRS
     # first to find out what they are currently set to
     if ( ( $payload->add and $payload->add->ns )

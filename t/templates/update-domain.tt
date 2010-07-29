@@ -3,7 +3,7 @@
 
     <domain:name>[% domain %]</domain:name>
 
-    [%~ IF admin OR tech OR nslist %]
+    [%~ IF admin OR tech OR nslist OR status_list %]
     <domain:add>
       [%~ IF admin %]
       <domain:contact type="admin">[% admin %]</domain:contact>
@@ -18,10 +18,15 @@
         [%~ END %]
       </domain:ns>
       [%~ END %]
+      [%~ IF status_list %]
+        [%~ FOREACH status IN status_list %]
+      <domain:status s="[% status.name %]">[% status.value %]</domain:status>
+        [%~ END %]
+      [%~ END %]
     </domain:add>
     [%~ END %]
 
-    [%~ IF admin_old OR tech_old OR nslist_old %]
+    [%~ IF admin_old OR tech_old OR nslist_old OR status_list_old %]
     <domain:rem>
       [%~ IF admin_old %]
       <domain:contact type="admin">[% admin_old %]</domain:contact>
@@ -35,6 +40,11 @@
         <domain:hostObj>[% ns %]</domain:hostObj>
         [%~ END %]
       </domain:ns>
+      [%~ END %]
+      [%~ IF status_list_old %]
+        [%~ FOREACH status IN status_list_old %]
+      <domain:status s="[% status.name %]" />
+        [%~ END %]
       [%~ END %]
     </domain:rem>
     [%~ END %]
