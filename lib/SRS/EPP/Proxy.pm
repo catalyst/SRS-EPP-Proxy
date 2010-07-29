@@ -391,15 +391,16 @@ method accept_loop() {
                 			exception => $exception,
             			);
             			my $xml = $error->to_xml;
+            			my $length = pack("N", bytes::length($xml)+4);
             			
             			my $left_to_write = bytes::length $xml;
             			while ($left_to_write) {
-            			    my $written = $session->write_to_client($xml);
+            			    my $written = $session->write_to_client([$length, $xml]);
             			    
-            			    last if $written == 0;
+            			    last if $written <= 0;
             			    
             			    $left_to_write -= $written;
-            			}
+            			}            			
 				    };
 				    my $error = $@;
 				    if ($@) {
