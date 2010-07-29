@@ -41,7 +41,7 @@ method notify( SRS::EPP::SRSResponse @rs ) {
 		    #  This is probably correct behaviour, according to the rfc
 		    # TODO: just returning blanket error code at the moment...
         	return $self->make_response(
-        		code => 2400,
+        		code => 2306,
         	);
 		}
 		
