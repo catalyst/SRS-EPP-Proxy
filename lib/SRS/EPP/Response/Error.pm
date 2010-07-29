@@ -42,8 +42,9 @@ around 'build_response' => sub {
 	given ($except) {
 		when (!blessed($_)) {
 		    my $reason = ref $_ ? Dumper $_ : $_;
+		    $reason =~ s/at (.+?) line \d+//;
 		    my $error = XML::EPP::Error->new(
-				value => '???',
+				value => 'Unknown',
 				reason => $reason,
 			);
 			$result->[0]->add_error($error);
