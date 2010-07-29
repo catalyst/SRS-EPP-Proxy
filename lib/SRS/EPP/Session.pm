@@ -814,9 +814,14 @@ method output_event() {
 	return $written;
 }
 
-method write_to_client(ArrayRef|Str $oq) {
-    $oq = [$oq] unless ref $oq;    
-    
+# This accepts an arrayref of data to be written to the client, one chunk at a time.
+# Note, the client expects to read the length of the data before the data itself, and
+#  this *must* be passed in along in the array prior to the data itself
+# TODO: This is a somewhat crappy interface, but abstracting it would require a fairly
+#  large refactoring, as this method expects to be called in Event mode, so it only
+#  sends the first chunk, then exits. If the length was calculated inside this method,
+#  we'd need to keep track of whether it had already been sent to the client.
+method write_to_client(ArrayRef $oq) {
 	my $written = 0;
 	my $io = $self->io;
 	while ( @$oq ) {
