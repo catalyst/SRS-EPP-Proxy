@@ -148,13 +148,11 @@ method yield(Str $method, @args) {
 			eval {			
 			    $self->$method(@args);
 			};
-			if ($@) {
-			    $self->log_info("Uncaught exception: $@");
-			    
-			    # TODO: For now, we rethrow this, but possibly we should return an error to the client
-			    #  This might be tricky, as the thing that failed could have been sending to the client
-			    #  itself, so we want to check we don't send ourselves into a loop or something
-			    die $@;
+			my $error = $@;
+			if ($error) {
+			    $self->log_info("Uncaught exception when yielding to $method: $error");
+
+			    die $error;
 			}
 		});
 }
@@ -839,7 +837,7 @@ method write_to_client(ArrayRef|Str $oq) {
 		}
 	}
 	$self->log_trace(
-	"output_event wrote $written bytes, ".@$oq." chunk(s) remaining"
+	"write_to_client wrote $written bytes, ".@$oq." chunk(s) remaining"
 		);
 		
 	return $written;
