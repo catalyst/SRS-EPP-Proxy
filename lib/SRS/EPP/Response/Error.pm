@@ -15,6 +15,11 @@ package SRS::EPP::Response::Error;
 use Moose;
 use MooseX::StrictConstructor;
 use Data::Dumper;
+
+with 'MooseX::Log::Log4perl::Easy';
+
+use SRS::EPP::Response::Error::Map qw(map_error);
+
 extends 'SRS::EPP::Response';
 
 has 'exception' =>
@@ -29,6 +34,39 @@ has 'bad_node' =>
 has '+server_id' =>
 	required => 1,
 	;
+	
+around 'BUILDARGS' => sub {
+    my $orig = shift;
+    my $class = shift;
+    my %params = @_;
+    
+    # If they haven't provided a code, we look at the exception they gave us, and try to
+    #  work it out ourselves. We can only do this if the exception is a XML::SRS::Error
+    unless ($params{code}) {        
+        confess "Must provide either a code or exception" unless $params{exception};
+        
+        $params{exception} = [$params{exception}] unless ref $params{exception} eq 'ARRAY';
+        
+        confess "Can only derive code if provided exception isa XML::SRS::Error: " . Dumper (\%params) 
+            if grep { ! blessed($_) || ! $_->isa('XML::SRS::Error') } @{ $params{exception} };
+
+        my @mapped_exceptions;            
+        foreach my $except (@{ $params{exception} }) {
+            my %result = map_error($except);
+            
+            push @mapped_exceptions, @{$result{errors}};
+             
+            # Use the code for the first error we find. The rfc is unclear on what we should use
+            #  (in fact, they probably never thought of it)
+            $params{code} ||= $result{code};
+        }
+
+        # Overwrite the exception with the XML::EPP::Error(s)        
+        $params{exception} = \@mapped_exceptions;        
+    }
+        
+    return $class->$orig(%params);    
+};
 
 around 'build_response' => sub {
 	my $orig = shift;
@@ -40,6 +78,11 @@ around 'build_response' => sub {
 	my $bad_node = $self->bad_node;
 	my $except = $self->exception;
 	given ($except) {
+        when (ref $_ eq 'ARRAY') {
+            foreach my $error (@$_) {
+                $result->[0]->add_error($error);
+            }
+        }
 		when (!blessed($_)) {
 		    my $reason = ref $_ ? Dumper $_ : $_;
 		    $reason =~ s/at (.+?) line \d+//;
@@ -75,11 +118,8 @@ around 'build_response' => sub {
 				$except = $except->_prev;
 			}
 		}
-		when ($_->isa("XML::SRS::Error")) {
-			my $new_result = $message->message->result->clone(
-				map_error($except)
-				);
-			$message->message->result($new_result);
+		when ($_->isa("XML::EPP::Error")) {
+            $result->[0]->add_error($except);   
 		}
 	}
 	$message;
