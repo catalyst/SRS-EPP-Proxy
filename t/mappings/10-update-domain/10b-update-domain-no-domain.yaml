@@ -1,7 +1,7 @@
 template: update-domain.tt
 
 vars:
-  domain: cheese.co.te
+  domain: no-exist.co.te
   owner: abc123
 
 input_assertions:
@@ -10,7 +10,7 @@ input_assertions:
     - [ '//domain:name', 1, 'SRS: Check for the domain' ]
     - [ '//domain:registrant', 1, 'SRS: Check for the registrant' ]
   match:
-    - [ '//domain:name', 'cheese.co.te', 'SRS: Check the domain name' ]
+    - [ '//domain:name', 'no-exist.co.te', 'SRS: Check the domain name' ]
     - [ '//domain:registrant', 'abc123', 'SRS: Check the registrant' ]
 
 SRS:
