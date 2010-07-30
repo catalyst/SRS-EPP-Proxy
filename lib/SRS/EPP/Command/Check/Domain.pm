@@ -33,38 +33,46 @@ method notify( SRS::EPP::SRSResponse @rs ) {
 	my $payload = $epp->message->argument->payload;
 
 	my @response_items;
+	my @errors;
 	for my $response ( @rs ) {
 		my $domain = $response->message->response;
-		
+			
 		if ($domain->isa('XML::SRS::Error')) {
-		    # We return an error if *any* of the domains is invalid.
-		    #  This is probably correct behaviour, according to the rfc
-		    # TODO: just returning blanket error code at the moment...
-        	return $self->make_response(
-        		code => 2306,
-        	);
+        	push @errors, $domain;
 		}
-		
-		my $name_status = XML::EPP::Domain::Check::Name->new(
-			name => $domain->name,
-			available => ($domain->status eq "Available"
-					      ? 1 : 0 ),
-		       );
-		my $check_status = XML::EPP::Domain::Check::Status->new(
-			name_status => $name_status,
-		       );
-		push @response_items, $check_status;
+		else {		
+    		my $name_status = XML::EPP::Domain::Check::Name->new(
+    			name => $domain->name,
+    			available => ($domain->status eq "Available"
+    					      ? 1 : 0 ),
+    	    );
+    		my $result = XML::EPP::Domain::Check::Status->new(
+    			name_status => $name_status,
+    	    );
+    	    
+    	    push @response_items, $result;
+		}
 	}
 
-	my $r = XML::EPP::Domain::Check::Response->new(
-		items => \@response_items,
-	       );
-
-	# from SRS::EPP::Response::Check
-	return $self->make_response(
-		code => 1000,
-		payload => $r,
-	       );
+    # We return an error if *any* of the domains is invalid.
+    #  It's unclear whether this is correct behaviour according to the RFC
+    #  It's possible the schema supports both resData and error messages,
+    #   however, we'd need to refactor a bit to acheive this.
+    if (@errors) {
+        return $self->make_error_response(
+            \@errors,
+        );
+    }
+    else {
+    	my $r = XML::EPP::Domain::Check::Response->new(
+    		items => \@response_items,
+    	       );
+    
+    	return $self->make_response(
+    		code => 1000,
+    		payload => $r,
+    	       );
+    }
 };
 
 1;

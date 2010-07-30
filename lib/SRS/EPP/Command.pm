@@ -16,6 +16,8 @@ use Moose::Util::TypeConstraints;
 extends 'SRS::EPP::Message';
 
 use XML::EPP;
+use XML::SRS::Error;
+
 has "+message" =>
 	isa => "XML::EPP",
 	;
@@ -137,6 +139,13 @@ sub make_response {
 	$type->new(
 		%fields,
 		);
+}
+
+method make_error_response( XML::SRS::Error|ArrayRef[XML::SRS::Error] $srs_error ) {
+    return SRS::EPP::Response::Error->new(
+        server_id => $self->server_id,
+        exception => $srs_error,
+    );
 }
 
 has "client_id" =>
