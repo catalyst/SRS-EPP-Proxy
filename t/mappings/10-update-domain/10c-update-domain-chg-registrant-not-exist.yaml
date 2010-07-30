@@ -2,7 +2,7 @@ template: update-domain.tt
 
 vars:
   domain: cheese.co.te
-  owner: id123
+  owner: none-existant-handle
 
 input_assertions:
   class: SRS::EPP::Command::Update::Domain
@@ -11,7 +11,7 @@ input_assertions:
     - [ '//domain:registrant', 1, 'SRS: Check for the registrant' ]
   match:
     - [ '//domain:name', 'cheese.co.te', 'SRS: Check the domain name' ]
-    - [ '//domain:registrant', 'id123', 'SRS: Check the registrant' ]
+    - [ '//domain:registrant', 'none-existant-handle', 'SRS: Check the registrant' ]
 
 SRS:
   - assertions:
