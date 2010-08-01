@@ -78,31 +78,33 @@ sub extract_fact {
     );
   }
 
-  if ( my $udai = $domain->UDAI() ) {
-    return XML::EPP::Domain::Info::Response->new(
-      name => $domain->name,
-      roid => substr(md5_hex($domain->name), 0, 12) . '-DOM',
-      status => [ SRS::EPP::Command::Info::Domain::getEppStatuses($domain) ],
-      auth_info => XML::EPP::Domain::AuthInfo->new(
-        pw => XML::EPP::Common::Password->new(
-          content => $udai,
+  if ( $action eq "DomainUpdate" ) {
+    if ( my $udai = $domain->UDAI() ) {
+      return XML::EPP::Domain::Info::Response->new(
+        name => $domain->name,
+        roid => substr(md5_hex($domain->name), 0, 12) . '-DOM',
+        status => [ SRS::EPP::Command::Info::Domain::getEppStatuses($domain) ],
+        auth_info => XML::EPP::Domain::AuthInfo->new(
+          pw => XML::EPP::Common::Password->new(
+            content => $udai,
+          ),
         ),
+      );
+    }
+
+    if ( $domain->audit()->comment() =~ m/RenewDomains/ ) {
+      return XML::EPP::Domain::Info::Response->new(
+        name => $domain->name,
+        roid => substr(md5_hex($domain->name), 0, 12) . '-DOM',
+        status => [ SRS::EPP::Command::Info::Domain::getEppStatuses($domain) ],
+        expiry_date => $domain->billed_until->timestamptz,
       ),
-    );
-  }
+    }
 
-  if ( $domain->audit()->comment() =~ m/RenewDomains/ ) {
-    return XML::EPP::Domain::Info::Response->new(
-      name => $domain->name,
-      roid => substr(md5_hex($domain->name), 0, 12) . '-DOM',
-      status => [ SRS::EPP::Command::Info::Domain::getEppStatuses($domain) ],
-      expiry_date => $domain->billed_until->timestamptz,
-    ),
+    # didn't notice anything specifically interesting, so we'll default to
+    # returning a full info response...
+    return SRS::EPP::Command::Info::Domain::buildInfoResponse($domain);
   }
-
-  # didn't notice anything specifically interesting, so we'll default to
-  # returning a full info response...
-  return SRS::EPP::Command::Info::Domain::buildInfoResponse($domain);
 }
 
 method notify( SRS::EPP::SRSResponse @rs ) {
@@ -137,9 +139,8 @@ method notify( SRS::EPP::SRSResponse @rs ) {
 
       for my $resp ( $record->response() ) {
         my $action = $record->action();
-        if ( my $fact = $self->extract_fact($action,$resp) ) {
-          return $self->make_response(code => 1301, payload => $fact, msgQ => $msgQ);
-        }
+        my $fact = $self->extract_fact($action,$resp);
+        return $self->make_response(code => 1301, payload => $fact, msgQ => $msgQ);
       }
     }
   }
