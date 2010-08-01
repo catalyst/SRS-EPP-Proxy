@@ -2,7 +2,7 @@ template: update-domain.tt
 
 vars:
   domain: cheese.co.te
-  owner: none-existant-handle
+  owner: noexist
 
 input_assertions:
   class: SRS::EPP::Command::Update::Domain
