@@ -11,7 +11,7 @@ input_assertions:
     - [ '//domain:registrant', 1, 'SRS: Check for the registrant' ]
   match:
     - [ '//domain:name', 'cheese.co.te', 'SRS: Check the domain name' ]
-    - [ '//domain:registrant', 'none-existant-handle', 'SRS: Check the registrant' ]
+    - [ '//domain:registrant', 'noexist', 'SRS: Check the registrant' ]
 
 SRS:
   - assertions:
