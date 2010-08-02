@@ -65,19 +65,6 @@ method notify( SRS::EPP::SRSResponse @rs ) {
     my $message = $rs[0]->message;
     my $response = $message->response;
 
-    if ( $response->isa('XML::SRS::Error') ) {
-        # ToDo: am not completely sure if these error codes are appropriate.
-        my $error = $response->error_id;
-        if ( $error eq 'HANDLE_DOES_NOT_EXIST' ) {
-            return $self->make_response(code => 2201);
-        }
-        elsif ( $error eq 'DOMAIN_ALREADY_EXISTS' ) {
-            return $self->make_response(code => 2201);
-        }
-        # if we don't specifically see one of the above, use a general failure
-        return $self->make_response(code => 2400);
-    }
-
     # let's create the returned create domain response
     my $r = XML::EPP::Domain::Create::Response->new(
         name => $response->name,

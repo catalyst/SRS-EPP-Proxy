@@ -121,11 +121,6 @@ method notify( SRS::EPP::SRSResponse @rs ) {
             return $self->make_response(code => 2303);
         }
 
-        # check the response wasn't an error
-        if ( $res->isa('XML::SRS::Error') ) {
-            return $self->make_response(code => 2400);
-        }
-
         # everything looks ok, so let's return a successful message
         return $self->make_response(code => 1000);
     }

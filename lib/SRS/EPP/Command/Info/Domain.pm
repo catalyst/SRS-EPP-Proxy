@@ -52,7 +52,7 @@ method notify( SRS::EPP::SRSResponse @rs ) {
     # check there are two responses
     my $whois = $rs[0]->message->response;
     my $domain = $rs[1]->message->response;
-
+    
     # if status is available, then the object doesn't exist
     if ( $whois->status eq 'Available' ) {
         # since this is available, we already know the result is 'Object does not exist'
