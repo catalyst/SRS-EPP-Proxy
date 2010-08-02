@@ -134,29 +134,25 @@ method notify( SRS::EPP::SRSResponse @rs ) {
 sub make_request {
     my ($self, $message, $payload, $new_nameservers) = @_;
 
-    # create some vars we'll fill in shortly
-    my ($registrant, $admin, $admin_old, $tech, $tech_old);
-
     # the first thing we're going to check for is a change to the registrant
+    my %contacts;
     if ( $payload->change ) {
-        if ( $payload->change->registrant ) {
+        if ( my $registrant = $payload->change->registrant ) {
             # changing the registrant, so let's remember that
-            $registrant = $payload->change->registrant;
+            $contacts{contact_registrant} = _make_contact($registrant);
         }
     }
 
-    # get the admin contacts (if there)
-    $admin = _extract_contact( $payload, 'add', 'admin' );
-    $admin_old = _extract_contact( $payload, 'remove', 'admin' );
-
-    # get the tech contacts (if there)
-    $tech = _extract_contact( $payload, 'add', 'tech' );
-    $tech_old = _extract_contact( $payload, 'remove', 'tech' );
-
-    # make the contact elements if we need them
-    my $contact_admin = _make_contact($admin, $admin_old);
-    my $contact_tech = _make_contact($tech, $tech_old);
-
+    # Get the contacts (if any)
+    for my $contact (qw/admin technical/) { 
+        my $contact_new = _extract_contact( $payload, 'add', $contact );
+        my $contact_old = _extract_contact( $payload, 'remove', $contact );
+        
+        my $new_contact = _make_contact($contact_new, $contact_old);
+        
+        $contacts{'contact_' . $contact} = $new_contact if defined $new_contact; 
+    }
+            
     # now set the nameserver list
     my $ns_list;
     if ( defined $new_nameservers and @$new_nameservers ) {
@@ -167,9 +163,7 @@ sub make_request {
 
     return XML::SRS::Domain::Update->new(
         filter => [ $payload->name() ],
-        ( $registrant ? ( registrant_id => $registrant ) : () ),
-        ( $contact_admin ? ( contact_admin => $contact_admin ) : () ),
-        ( $contact_tech ? ( contact_technical => $contact_tech ) : () ),
+        %contacts,
         ( $ns_list ? ( nameservers => $ns_list ) : () ),
         action_id => $message->client_id || sprintf('auto.%x', time()),
     );
@@ -196,6 +190,8 @@ sub _extract_contact {
     # check the input
     die q{Program error: '$action' should be 'add' or 'remove'}
         unless $allowed->{action}{$action};
+
+    $type = 'tech' if $type eq 'technical';
 
     # check that action is there
     return unless $payload->$action;

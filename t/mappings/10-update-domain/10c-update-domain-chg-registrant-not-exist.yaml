@@ -18,6 +18,7 @@ SRS:
       count:
       match:
         - [ '//DomainNameFilter', 'cheese.co.te', 'SRS: Check for the domain name' ]
+        - [ '//RegistrantContact/@HandleId', 'noexist', 'SRS: Handle of registrant contact changed' ]
       match_all:
       attr_is:
     fake_response: |-
