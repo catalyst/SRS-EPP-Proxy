@@ -1,3 +1,4 @@
+# Update a domain with a registrant contact that doesn't exist
 template: update-domain.tt
 
 vars:

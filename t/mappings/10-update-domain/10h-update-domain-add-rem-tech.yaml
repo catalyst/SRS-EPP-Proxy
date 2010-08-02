@@ -1,3 +1,4 @@
+# Update domain, add and remove tech contact
 template: update-domain.tt
 
 vars:

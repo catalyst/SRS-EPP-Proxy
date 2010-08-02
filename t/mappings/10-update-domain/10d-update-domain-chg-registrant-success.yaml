@@ -1,3 +1,4 @@
+# Successfully update a domain, changing the registrant contact
 template: update-domain.tt
 
 vars:
@@ -18,6 +19,7 @@ SRS:
       count:
       match:
         - [ '//DomainNameFilter', 'cheese.co.te', 'SRS: Check for the domain name' ]
+        - [ '//RegistrantContact/@HandleId', 'registrant-001', 'SRS: Handle of registrant contact changed' ]
       match_all:
       attr_is:
     fake_response: |-

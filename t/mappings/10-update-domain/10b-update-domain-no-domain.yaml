@@ -1,3 +1,4 @@
+# Update a non-existant domain
 template: update-domain.tt
 
 vars:

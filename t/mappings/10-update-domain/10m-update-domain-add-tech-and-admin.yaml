@@ -1,31 +1,30 @@
-# Update domain, remove admin contact
+# Update domain, add an admin contact
 template: update-domain.tt
 
 vars:
-  domain: cheese.co.te
-  admin_old: registrant-001
+  domain: 10m-create-domain.co.te
+  admin: registrant-001
+  tech: registrant-001
 
 input_assertions:
   class: SRS::EPP::Command::Update::Domain
   count:
     - [ '//domain:name', 1, 'SRS: Check for the domain' ]
-    - [ '//domain:add/domain:contact', 0, 'SRS: Check there is no new admin' ]
-    - [ '//domain:rem/domain:contact', 1, 'SRS: Check removal of old admin' ]
+    - [ '//domain:add/domain:contact', 2, 'SRS: Check the new admin' ]
+    - [ '//domain:rem/domain:contact', 0, 'SRS: Check old admin' ]
   match:
-    - [ '//domain:name', 'cheese.co.te', 'SRS: Check the domain name' ]
-    - [ '//domain:rem/domain:contact', 'registrant-001', 'SRS: Check the new admin' ]
+    - [ '//domain:name', '10m-create-domain.co.te', 'SRS: Check the domain name' ]
   match_all:
-    - [ '//domain:contact/@type', 'admin', 'SRS: Check all contacts are of type admin' ]
 
 SRS:
   - assertions:
       count:
-        - [ '//AdminContact/@HandleId', 0, 'SRS: Check the admin HandleId attr does not exist' ]
       match:
-        - [ '//DomainNameFilter', 'cheese.co.te', 'SRS: Check for the domain name' ]
-        - [ '//AdminContact', '', 'SRS: Check for the (empty) admin contact' ]
+        - [ '//DomainNameFilter', '10m-create-domain.co.te', 'SRS: Check for the domain name' ]
       match_all:
       attr_is:
+        - [ '//AdminContact', 'HandleId', 'registrant-001', 'SRS: Check for the admin contact' ]
+        - [ '//TechnicalContact', 'HandleId', 'registrant-001', 'SRS: Check for the tech contact' ]
     fake_response: |-
       <NZSRSResponse VerMajor="5" VerMinor="0">
         <Response Action="DomainUpdate" FeId="8" FeSeq="4803306" OrigRegistrarId="90" RecipientRegistrarId="90" Rows="1" TransId="brause8769">

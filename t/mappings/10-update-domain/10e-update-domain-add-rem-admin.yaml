@@ -1,3 +1,4 @@
+# Update domain, add and remove an admin contact
 template: update-domain.tt
 
 vars:
