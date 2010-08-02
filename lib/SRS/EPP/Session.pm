@@ -512,7 +512,7 @@ has 'user_agent' =>
 					   my $error = "Uncaught exception calling backend_response in user_agent: $@";
 					   $self->log_info($error);
 					   
-					   die $@;
+					   die $error;
 					}
 				}
 				else {
