@@ -1,13 +1,1 @@
-<NZSRSResponse VerMajor="4" VerMinor="3" RegistrarId="170">
-<Response Action="HandleCreate" FeId="2" FeSeq="126163" OrigRegistrarId="170" RecipientRegistrarId="170" TransId="12770745">
-<FeTimeStamp Day="21" Hour="10" Minute="49" Month="6" Second="10" TimeZoneOffset="+12:00" Year="2010"/>
-<Error Hint="INVALID_REQUEST_ERROR" ErrorId="MISSING_MANDATORY_FIELD" Severity="err">
-<Description>
-<![CDATA[Mandatory Field missing from Transaction]]>
-</Description>
-<ErrorDetails>
-<![CDATA[UDAI]]>
-</ErrorDetails>
-</Error>
-</Response>
-</NZSRSResponse>
+<!DOCTYPE NZSRSResponse SYSTEM "protocol.dtd"><NZSRSResponse VerMajor="5" VerMinor="2"><Response Action="HandleUpdate" FeId="9" FeSeq="1749" OrigRegistrarId="100" RecipientRegistrarId="100" TransId="1280724615"><FeTimeStamp Day="2" Hour="16" Minute="50" Month="8" Second="17" TimeZoneOffset="+12:00" Year="2010"/><Error Hint="INVALID_REQUEST_ERROR" ErrorId="HANDLE_ALREADY_EXISTS" Severity="err"><Description><![CDATA[There is already a Handle with the given HandleId.]]></Description><ErrorDetails><![CDATA[simple1]]></ErrorDetails></Error></Response></NZSRSResponse>
