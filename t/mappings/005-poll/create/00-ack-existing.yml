@@ -1,5 +1,5 @@
 description: Ack pre existing messages
-registrar: 1
+registrar: 100
 
 request: |-
    <NZSRSRequest VerMinor="0" VerMajor="5">
