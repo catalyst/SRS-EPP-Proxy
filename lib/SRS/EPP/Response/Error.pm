@@ -42,6 +42,9 @@ around 'BUILDARGS' => sub {
     
     # If they haven't provided a code, we look at the exception they gave us, and try to
     #  work it out ourselves. We can only do this if the exception is a XML::SRS::Error
+    # TODO: we possibly want to do this (error mapping) even if they *do* provide a code
+    #  or at least make the interface a bit clearer - right now it's kind of an obscure
+    #  set of parameters that triggers this (useful) magic
     unless ($params{code}) {        
         confess "Must provide either a code or exception" unless $params{exception};
         
@@ -85,7 +88,7 @@ around 'build_response' => sub {
         }
 		when (!blessed($_)) {
 		    my $reason = ref $_ ? Dumper $_ : $_;
-		    $reason =~ s/at (.+?) line \d+//;
+		    $reason =~ s/at (?:.+?) line \d+//mg;
 		    my $error = XML::EPP::Error->new(
 				value => 'Unknown',
 				reason => $reason,
