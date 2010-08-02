@@ -15,4 +15,4 @@ output_assertions:
     - [ '//epp:resData', 0, 'EPP: No resData in the response' ]
   match:
   attr_is:
-    - [ '//epp:result', 'code', 2306, 'EPP: Unexpected failure' ]
+    - [ '//epp:result', 'code', 2305, 'EPP: Unexpected failure' ]

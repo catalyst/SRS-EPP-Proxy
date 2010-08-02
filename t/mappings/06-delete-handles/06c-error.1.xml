@@ -1,1 +1,6 @@
-<NZSRSResponse VerMajor="4" VerMinor="3" RegistrarId="170"><Response Action="HandleUpdate" FeId="2" FeSeq="121846163" OrigRegistrarId="170" RecipientRegistrarId="170" TransId="1277074547.5859"><FeTimeStamp Day="21" Hour="10" Minute="49" Month="6" Second="10" TimeZoneOffset="+12:00" Year="2010"/><Error Hint="INVALID_REQUEST_ERROR" ErrorId="MISSING_MANDATORY_FIELD" Severity="err"><Description><![CDATA[Mandatory Field missing from Transaction]]></Description><ErrorDetails><![CDATA[UDAI]]></ErrorDetails></Error></Response></NZSRSResponse>
+<!DOCTYPE NZSRSResponse SYSTEM "protocol.dtd"><NZSRSResponse VerMajor="5" VerMinor="2">
+ <Response Action="HandleUpdate" FeId="9" FeSeq="1407" OrigRegistrarId="100" RecipientRegistrarId="100" TransId="1280720420">
+ <FeTimeStamp Day="2" Hour="15" Minute="40" Month="8" Second="21" TimeZoneOffset="+12:00" Year="2010"/>
+ <Error Hint="UNKNOWN_ERROR_HINT" ErrorId="HANDLE_IN_USE" Severity="err">
+ <Description><![CDATA[Handles cannot be deleted when they are associated by with a domain or registrar contact]]></Description></Error></Response>
+ </NZSRSResponse>
