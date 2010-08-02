@@ -29,5 +29,5 @@ SRS:
 
 output_assertions:
   attr_is:
-      - [ '//epp:result', 'code', 2201, 'EPP: correct response code' ]
+      - [ '//epp:result', 'code', 2306, 'EPP: correct response code' ]
 

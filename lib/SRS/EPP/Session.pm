@@ -665,9 +665,17 @@ method be_response( SRS::EPP::SRSMessage $rs_tx ) {
 method process_responses() {
 	while ( $self->backend_response_ready ) {
 		my ($cmd, @rs) = $self->dequeue_backend_response;
-		$self->log_info("notifying command $cmd of back-end response");
-		my $resp = $cmd->notify(@rs);
+		
+		my $resp;
+		if ($resp = $self->check_for_be_error($cmd, @rs)) {
+		    $self->log_info("found srs errors in response to $cmd, converting into errors and not calling notify");
+		}
+		else {	
+		    $self->log_info("notifying command $cmd of back-end response");
+		    $resp = $cmd->notify(@rs);
+		}
 		$self->log_trace("Resp isa " . ref $resp);
+		
 		if ( $resp->isa("SRS::EPP::Response") ) {
 			$self->log_info( "command $cmd is complete" );
 			$self->state("Prepare Response");
@@ -698,6 +706,30 @@ method process_responses() {
             confess "Unknown response type: " . ref $resp;    
 		}
 	}
+}
+
+# Check responses for an error from the SRS. If we find one, we create
+#  an appropriate response and return it
+method check_for_be_error( SRS::EPP::Command $cmd, SRS::EPP::SRSResponse @rs ) {
+    my @errors;
+    foreach my $rs (@rs) {
+        my $resp = $rs->message->response;
+        
+        next unless $resp;
+        
+        if ($resp->isa('XML::SRS::Error')) {
+            push @errors, $resp;
+            last unless $cmd->multiple_responses;
+        }
+    }
+    
+    if (@errors) {
+        return $cmd->make_error_response(
+            \@errors,
+        );
+    }
+    
+    return;
 }
 
 method send_pending_replies() {

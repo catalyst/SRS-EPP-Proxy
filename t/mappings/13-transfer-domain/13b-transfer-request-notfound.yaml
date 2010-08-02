@@ -7,7 +7,7 @@ vars:
 input_assertions:
   class: SRS::EPP::Command::Transfer::Domain
   match:
-    - [ '//domain:name', 'mozzarella.co.te', 'Domain correctly included in XML' ]
+    - [ '//domain:name', 'no-exist.co.te', 'Domain correctly included in XML' ]
     - [ '//domain:pw', 'UDAjUDAj', 'found auth info data' ]
 
 SRS:

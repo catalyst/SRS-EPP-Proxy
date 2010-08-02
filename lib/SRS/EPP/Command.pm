@@ -83,6 +83,13 @@ method simple() { 0 }
 method authenticated() { 1 }
 method done() { 1 }
 
+# Indicates whether we'd normally expect multiple responses to be returned to the client
+#  e.g. check domain allows multiple domains to be checked at once, and therefore multiple
+#  responses, whereas info domain is only one response. This is used to decide whether we
+#  return multiple SRS errors back to the client (as some actions that map to multiple
+#  SRS queries only want to return at most one error to the client)
+method multiple_responses { 0 }
+
 BEGIN {
 	class_type "SRS::EPP::Session";
 	class_type "SRS::EPP::SRSResponse";

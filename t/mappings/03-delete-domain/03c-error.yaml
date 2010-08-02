@@ -16,4 +16,4 @@ SRS:
 
 output_assertions:
   attr_is:
-    - [ '//epp:result', 'code', 2400, 'EPP: Unexpected failure' ]
+    - [ '//epp:result', 'code', 2306, 'EPP: Unexpected failure' ]

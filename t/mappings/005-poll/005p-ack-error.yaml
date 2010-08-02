@@ -17,6 +17,6 @@ SRS:
 output_assertions:
   count:
   attr_is:
-    - [ '//epp:result', 'code', 2400, 'EPP: Correct response code' ]
+    - [ '//epp:result', 'code', 2002, 'EPP: Correct response code' ]
 
 

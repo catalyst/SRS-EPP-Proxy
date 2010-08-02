@@ -36,4 +36,4 @@ output_assertions:
   count:
     - [ '//epp:result', 1, 'SRS: Check for one result' ]
   attr_is:
-    - [ '//epp:result', 'code', 2400, 'SRS: Check for correct result code' ]
+    - [ '//epp:result', 'code', 2303, 'SRS: Check for correct result code' ]
