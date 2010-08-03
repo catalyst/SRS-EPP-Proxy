@@ -346,15 +346,19 @@ method process_queue( Int $count = 1 ) {
 			$self->add_command_response($response, $command);
 		}
 		elsif ( $command->authenticated xor $self->user ) {
+		    my $reason = ($self->user?"already":"not")." logged in";
 			$self->add_command_response(
 				$command->make_response(
-					Error => code => 2001,
-					),
+					Error => (
+					    code => 2001,
+					    exception => $reason,
+					)
+				),
 				$command,
-				);
+			);
 			$self->log_info(
-	"rejecting command: ".($self->user?"already":"not")." logged in"
-				);
+	           "rejecting command: $reason"
+			);
 		}
 		else {
 			# regular message which may need to talk to the SRS backend
