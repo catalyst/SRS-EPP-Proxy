@@ -57,6 +57,18 @@ method notify( SRS::EPP::SRSResponse @rs ) {
     );
     
     $addr{sp} = $response->address->region if defined $response->address->region; # state or province
+    
+    # The SRS local number field can contain anything alphanumeric. We grab anything numeric from the beginning
+    #  of the string (including spaces, dashes, etc. which we strip out) and call that part of the phone number
+    #  anything after that goes into the 'x' field of the E164 object.
+    $response->phone->subscriber =~ m{(^[\d\s\-\.]*)(.*?)$};
+    my ($local_number, $x) = ($1, $2);
+    
+    # If we didn't get anything assigned to either field, our regex could be wrong. Just stick the whole thing in $x
+    $x = $response->phone->subscriber unless $local_number || $x;
+    
+    # Strip out anything non-numeric from $local_number
+    $local_number =~ s/[^\d]//g;    
 
     my $r = XML::EPP::Contact::Info::Response->new(
         id => $response->handle_id,
@@ -70,7 +82,8 @@ method notify( SRS::EPP::SRSResponse @rs ) {
             ),
         ) ],
         voice => XML::EPP::Contact::E164->new(
-            content => "+" . $response->phone->cc . "." . $response->phone->ndc . $response->phone->subscriber,
+            content => "+" . $response->phone->cc . "." . $response->phone->ndc . $local_number,
+            ($x ? (x => $x) : ()),
         ),
         #fax => XML::EPP::Contact::E164->new(
         #    content => $response->phone->cc . $response->phone->ndc . $response->phone->subscriber,
