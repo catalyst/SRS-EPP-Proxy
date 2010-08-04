@@ -52,11 +52,11 @@ method notify( SRS::EPP::SRSResponse @rs ) {
     my %addr = (
         street => [ $response->address->address1, $response->address->address2 || ()],
         city   => $response->address->city,        
-        pc     => $response->address->postcode,
         cc     => $response->address->cc,
     );
     
-    $addr{sp} = $response->address->region if defined $response->address->region; # state or province
+    $addr{sp} = $response->address->region   if defined $response->address->region; # state or province
+    $addr{pc} = $response->address->postcode if defined $response->address->postcode;
     
     # The SRS local number field can contain anything alphanumeric. We grab anything numeric from the beginning
     #  of the string (including spaces, dashes, etc. which we strip out) and call that part of the phone number
