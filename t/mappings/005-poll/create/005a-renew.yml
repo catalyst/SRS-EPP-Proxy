@@ -4,7 +4,8 @@ registrar: 1
 
 request: |-
  <NZSRSRequest VerMajor="4" VerMinor="4" RegistrarId="100">
-  <DomainUpdate DomainNameFilter="mustard.co.te" ActionId="[% actionid %]" Renew="1">
+  <DomainUpdate ActionId="[% actionid %]" Renew="1">
+    <DomainNameFilter>mustard.co.te</DomainNameFilter>
     <AuditText>Renew that sucka</AuditText>
   </DomainUpdate>
  </NZSRSRequest>
