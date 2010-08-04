@@ -3,8 +3,8 @@ registrar: 1
 
 request: |-
    <NZSRSRequest VerMinor="0" VerMajor="5" RegistrarId="100">
-       <AckMessage OriginatingRegistrarId="1" ActionId="[% actionid %]" TransId="Test /tmp/srsregn-regression//submodules/SRS-EPP-Proxy/t/mappings/000-setup/create/00b-registrar-auth.yml 0 1"/>
-       <AckMessage OriginatingRegistrarId="1" ActionId="[% actionid %]" TransId="Test /tmp/srsregn-regression//submodules/SRS-EPP-Proxy/t/mappings/000-setup/create/00b-registrar-auth.yml 0 2"/>
+       <AckMessage OriginatingRegistrarId="1" ActionId="[% actionid %] 0" TransId="Test /tmp/srsregn-regression//submodules/SRS-EPP-Proxy/t/mappings/000-setup/create/00b-registrar-auth.yml 0 1"/>
+       <AckMessage OriginatingRegistrarId="1" ActionId="[% actionid %] 2" TransId="Test /tmp/srsregn-regression//submodules/SRS-EPP-Proxy/t/mappings/000-setup/create/00b-registrar-auth.yml 0 2"/>
    </NZSRSRequest>
 
 assertions:
