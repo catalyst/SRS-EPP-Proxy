@@ -49,6 +49,15 @@ method notify( SRS::EPP::SRSResponse @rs ) {
     }
 
     # make the Info::Response object
+    my %addr = (
+        street => [ $response->address->address1, $response->address->address2 || ()],
+        city   => $response->address->city,        
+        pc     => $response->address->postcode,
+        cc     => $response->address->cc,
+    );
+    
+    $addr{sp} = $response->address->region if defined $response->address->region; # state or province
+
     my $r = XML::EPP::Contact::Info::Response->new(
         id => $response->handle_id,
         # roid => ?,
@@ -57,11 +66,7 @@ method notify( SRS::EPP::SRSResponse @rs ) {
             name => $response->name,
             # org => ,
             addr => XML::EPP::Contact::Addr->new(
-                street => [ $response->address->address1, $response->address->address2],
-                city   => $response->address->city,
-                sp     => $response->address->region, # state or province
-                pc     => $response->address->postcode,
-                cc     => $response->address->cc,
+                %addr,
             ),
         ) ],
         voice => XML::EPP::Contact::E164->new(
