@@ -36,7 +36,15 @@ method process( SRS::EPP::Session $session ) {
 
   # The SRS doesn't have a 'org' field, we don't want to lose info, so
   if ( $postalInfo->org ) {
-    return $self->make_response(code => 2306);
+    return $self->make_response(
+        Error => (
+            code => 2306,
+            exception => XML::EPP::Error->new(
+                value => $postalInfo->org,            
+                reason => 'org field not supported',
+            ),
+        )
+    );
   }
 
   # Try to make an SRS address object...

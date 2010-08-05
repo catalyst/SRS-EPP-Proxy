@@ -3,7 +3,7 @@
     <contact:id>[% contact_id %]</contact:id>
     <contact:postalInfo type="int">
       <contact:name>[% name %]</contact:name>
-      <contact:org>[% company %]</contact:org>
+      [% UNLESS org_not_provided %]<contact:org>[% company %]</contact:org>[% END %]
       <contact:addr>
         <contact:street>[% street %]</contact:street>
         <contact:city>[% city %]</contact:city>

@@ -1,3 +1,4 @@
+# org (company) provided - not supported
 template: create-contact.tt
 
 vars:
@@ -20,5 +21,8 @@ input_assertions:
 output_assertions:
   attr_is:
     - [ '//epp:result', 'code', 2306, 'EPP: Correct response code' ]
+  match:
+    - [ '//epp:value', 'emc2', 'EPP: correct value returned' ]
+    - [ '//epp:reason', 'org field not supported', 'EPP: correct reason returned' ]
 
 

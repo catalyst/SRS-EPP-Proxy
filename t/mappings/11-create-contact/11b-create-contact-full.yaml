@@ -1,3 +1,4 @@
+# Successful create, with full details
 template: create-contact.tt
 
 vars:
