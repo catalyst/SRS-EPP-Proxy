@@ -88,6 +88,8 @@ sub buildInfoResponse {
   for my $type (qw(registrant admin technical)) {
       my $method = 'contact_'.$type;
       my $contact = $domain->$method;
+
+      next unless $contact->handle_id;
       
       if ($contact) {
         if ($type eq 'registrant') {
@@ -108,7 +110,6 @@ sub buildInfoResponse {
       roid => substr(md5_hex($domain->name), 0, 12) . '-DOM',
       status => [ getEppStatuses($domain) ],
       %contacts,
-      ($contacts{'registrant'} ? (registrant => $contacts{'registrant'}) : ()), 
       ($nsList ? (ns => $nsList) : ()),
       client_id => sprintf("%03d",$domain->registrar_id()), # clID
       created => ($domain->registered_date())->timestamptz, # crDate
