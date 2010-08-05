@@ -1,9 +1,9 @@
-description: Ack pre existing messages
+description: Ack unwanted messages
 registrar: 1
 
 request: |-
    <NZSRSRequest VerMinor="0" VerMajor="5" RegistrarId="100">
-       <AckMessage OriginatingRegistrarId="1" ActionId="[% actionid %]-1" TransId="Test /tmp/srsregn-regression//submodules/SRS-EPP-Proxy/t/mappings/005-poll/create/005a-create.yml 0"/>
+       <AckMessage OriginatingRegistrarId="1" ActionId="[% actionid %]-1" TransId="Test /tmp/srsregn-regression//submodules/SRS-EPP-Proxy/t/mappings/005-poll/create/005a-2-create.yml 0"/>
    </NZSRSRequest>
 
 assertions:
