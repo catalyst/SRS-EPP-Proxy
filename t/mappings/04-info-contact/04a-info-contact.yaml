@@ -1,7 +1,7 @@
 template: info-contact.tt
 
 vars:
-  contact_id: sh8013
+  contact_id: 04a
   pw: 
 
 input_assertions:
@@ -26,7 +26,7 @@ output_assertions:
   count:
     - [ '//contact:id', 1, 'SRS: Check for one ID' ]
   match:
-    - [ '//contact:id', 'find-me', 'Correct id returned']
+    - [ '//contact:id', '04a', 'Correct id returned']
     - [ '//contact:name', 'A Person', 'Correct name returned']
     - [ '//contact:street[1]', '1 Acacia Ave', 'Correct street 1 returned']
     - [ '//contact:street[2]', 'Treewood', 'Correct street 1 returned']
