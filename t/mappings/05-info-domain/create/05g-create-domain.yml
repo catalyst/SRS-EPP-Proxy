@@ -23,9 +23,9 @@ request: |-
     </HandleCreate>     
 
   <DomainCreate Delegate="1" DomainName="05g.co.te" Term="1" ActionId="[% actionid %] 4">
-    <RegistrantContact HandleId="reg1">
-    <AdminContact HandleId="admin1">
-    <TechnicalContact HandleId="tech1">
+    <RegistrantContact HandleId="reg1"/>
+    <AdminContact HandleId="admin1"/>
+    <TechnicalContact HandleId="tech1"/>
     <NameServers>
       <Server FQDN="ns1.everydns.net"/>
       <Server FQDN="ns2.everydns.net"/>
