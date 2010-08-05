@@ -11,12 +11,12 @@ input_assertions:
 output_assertions:
   count:
     - [ '//epp:result', 1, 'SRS: Check for one result' ]
+    - [ '//contact:sp', 0, 'Province not provided']
   match:
     - [ '//contact:name', 'A Person', 'Correct name returned']
     - [ '//contact:street[1]', '1 Acacia Ave', 'Correct street 1 returned']
     - [ '//contact:street[2]', 'Treewood', 'Correct street 2 returned']
     - [ '//contact:city', 'Wellington', 'Correct city returned']
-    - [ '//contact:sp', '', 'Province is empty']
     - [ '//contact:pc', '6021', 'Correct postcode returned']
     - [ '//contact:cc', 'NZ', 'Correct country code returned']
   match_all: ~

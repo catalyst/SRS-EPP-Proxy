@@ -12,12 +12,12 @@ output_assertions:
   count:
     - [ '//epp:result', 1, 'SRS: Check for one result' ]
     - [ '//contact:street', 1, '1 street returned']
+    - [ '//contact:pc', 0, 'Postcode not returned']
   match:
     - [ '//contact:name', 'EPP Test Registrar II', 'Correct name returned']
     - [ '//contact:street', 'Address 1', 'Correct street 1 returned']
     - [ '//contact:city', 'New City', 'Correct city returned']
     - [ '//contact:sp', 'New State', 'Correct province returned']
-    - [ '//contact:pc', '', 'Postcode is empty']
     - [ '//contact:cc', 'NZ', 'Correct country code returned']
     - [ '//contact:voice', '+12.12123456', 'Phone number correct']
   match_all: ~
