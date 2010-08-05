@@ -18,7 +18,7 @@ SRS:
       count:
         - [ '//HandleIdFilter', 1, 'SRS: Check for only one HandleIdFilter' ]
       match:
-        - [ '//HandleIdFilter', 'sh8013', 'SRS: Check the first HandleIdFilter' ]
+        - [ '//HandleIdFilter', '04a', 'SRS: Check the first HandleIdFilter' ]
       match_all:
       attr_is:
 
