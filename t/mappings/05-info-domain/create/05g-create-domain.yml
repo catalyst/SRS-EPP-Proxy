@@ -22,7 +22,7 @@ request: |-
       User Id: evan]]></AuditText>
     </HandleCreate>     
 
-  <DomainCreate Delegate="1" DomainName="05g.co.te" Term="1" ActionId="[% actionid %] 3">
+  <DomainCreate Delegate="1" DomainName="05g.co.te" Term="1" ActionId="[% actionid %] 4">
     <RegistrantContact HandleId="reg1">
     <AdminContact HandleId="admin1">
     <TechnicalContact HandleId="tech1">
