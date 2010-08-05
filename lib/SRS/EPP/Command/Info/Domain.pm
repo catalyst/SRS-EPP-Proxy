@@ -83,23 +83,37 @@ sub buildInfoResponse {
       my @nameservers = map { $_->fqdn } @{$domain->nameservers->nameservers};
       $nsList = XML::EPP::Domain::NS::List->new( ns => [ @nameservers ] );
   }
+  
+  my %contacts;
+  for my $type (qw(registrant admin technical)) {
+      my $method = 'contact_'.$type;
+      my $contact = $domain->$method;
+      
+      if ($contact) {
+        if ($type eq 'registrant') {
+            $contacts{$type} = $contact->handle_id;
+        }
+        else {
+            my $epp_type = $type eq 'technical' ? 'tech' : $type;
+            push @{$contacts{contact}}, XML::EPP::Domain::Contact->new(
+                value => $contact->handle_id,
+                type => $epp_type,
+            );
+        }
+      }
+  }
 
   return XML::EPP::Domain::Info::Response->new(
       name => $domain->name,
       roid => substr(md5_hex($domain->name), 0, 12) . '-DOM',
       status => [ getEppStatuses($domain) ],
-      # registrant # skipping, since contacts can't be seen from EPP
-      # contact    # skipping, since contacts can't be seen from EPP
+      %contacts,
+      ($contacts{'registrant'} ? (registrant => $contacts{'registrant'}) : ()), 
       ($nsList ? (ns => $nsList) : ()),
-      # host # not doing this
       client_id => sprintf("%03d",$domain->registrar_id()), # clID
-      # crID => '',
       created => ($domain->registered_date())->timestamptz, # crDate
       expiry_date => ($domain->billed_until())->timestamptz, # exDate
-      # upID
       updated => ($domain->audit->when->begin())->timestamptz, # upDate
-      # trDate
-      # authInfo
   );
 }
 
