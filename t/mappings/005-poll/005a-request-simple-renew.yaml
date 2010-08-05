@@ -20,6 +20,6 @@ output_assertions:
    - [ '//domain:infData/domain:exDate', 1, 'EPP: found the new domain expiry date' ]
   attr_is:
     - [ '//epp:result', 'code', 1301, 'EPP: Correct response code' ]
-    - [ '//epp:msgQ', 'id', '0050RenewDomains-2010-07-06 23:30:00-tasty.co.te', 'EPP: found msg id' ]
+    - [ '//epp:msgQ', 'id', '0001Test /tmp/srsregn-regression//submodules/SRS-EPP-Proxy/t/mappings/005-poll/create/005a-2-renew.yml 0', 'EPP: found msg id' ]
 
 

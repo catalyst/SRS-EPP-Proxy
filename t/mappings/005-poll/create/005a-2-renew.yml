@@ -6,7 +6,7 @@ request: |-
  <NZSRSRequest VerMajor="4" VerMinor="4" RegistrarId="100">
   <DomainUpdate ActionId="[% actionid %]" Renew="1" Term="1">
     <DomainNameFilter>mustard.co.te</DomainNameFilter>
-    <AuditText>Renew that sucka</AuditText>
+    <AuditText>We RenewDomains for cash - we are pretending to be a scheduled job</AuditText>
   </DomainUpdate>
  </NZSRSRequest>
 

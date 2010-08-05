@@ -16,7 +16,7 @@ SRS:
        - [ '/NZSRSRequest/GetMessages', 'MaxResults', '1', 'SRS: request wants just one row' ]
 output_assertions:
   count:
-    - [ '//domain:infData/domain:name', 1, 'EPP: found the domain name that was renewed' ]
+    - [ '//domain:infData/domain:name', 1, 'EPP: found the domain name that was changed' ]
   attr_is:
     - [ '//epp:msgQ', 'id', '0001srsrps-1_378', 'EPP: found msg id' ]
     - [ '//epp:result', 'code', 1301, 'EPP: Correct response code' ]
