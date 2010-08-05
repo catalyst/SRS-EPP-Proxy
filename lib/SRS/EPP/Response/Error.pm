@@ -80,6 +80,7 @@ around 'build_response' => sub {
 
 	my $bad_node = $self->bad_node;
 	my $except = $self->exception;
+
 	given ($except) {
         when (ref $_ eq 'ARRAY') {
             foreach my $error (@$_) {
@@ -103,6 +104,10 @@ around 'build_response' => sub {
 			if ( $message =~ m{Validation failed for '.*::(\w+Type)' failed with value (.*) at}) {
 				$reason .= "; '$2' does not meet schema requirements for $1";
 			}
+			else {
+			    $reason .= "; $message";
+			}
+			
 			my $error = XML::EPP::Error->new(
 				value => $except->node,
 				reason => $reason,
