@@ -368,8 +368,10 @@ sub _test_session_change {
 	elsif ( my $rs = $cmd_q->responses->[ $cmd_q->next-1 ] ) {
 		# process resulted in an immediate response (eg, an
 		# error)
+		use Data::Dumper;
 		ok( !$test->data->{SRS}[$index],
-		    "$desc: epp response timely");
+		    "$desc: immediate error returned (and no assertions provided in test file)") 
+		      or diag "Found these SRS assertions in test file:\n" .  Dumper $test->data->{SRS}[$index];
 		_test_response( $test, $rs, "$desc - epp rs", );
 		return 1;
 	}
