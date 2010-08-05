@@ -3,8 +3,20 @@
     <domain:name>[% domain %]</domain:name>
       <domain:ns>
         [%~ FOREACH dns IN ns %]
-        <domain:hostObj>[% dns %]</domain:hostObj>
+        <domain:hostAttr>
+        	<domain:hostName>[% dns %]</domain:hostName>
+        </domain:hostAttr>
         [%~ END %]
+        [% FOREACH dns IN host_obj %]
+        	<domain:hostObj>[% dns %]</domain:hostObj>
+        [% END %]
+        [% FOREACH dns_rec IN ns_with_ips %]
+        <domain:hostAttr>
+        	<domain:hostName>[% dns_rec.name %]</domain:hostName>
+        	[% IF dns_rec.ipv4 %]<domain:hostAddr ip="v4">[% dns_rec.ipv4 %]</domain:hostAddr>[% END %]
+        	[% IF dns_rec.ipv6 %]<domain:hostAddr ip="v6">[% dns_rec.ipv6 %]</domain:hostAddr>[% END %]
+        </domain:hostAttr>
+       	[% END %]
       </domain:ns>
     <domain:registrant>[% owner %]</domain:registrant>
     <domain:contact type="admin">[% admin %]</domain:contact>

@@ -24,7 +24,7 @@ input_assertions:
   class: SRS::EPP::Command::Create::Domain
   count:
     - [ '//domain:name', 1, 'Initial EPP: Creating one domain' ]
-    - [ '//domain:hostObj', 3, 'Initial EPP: Three nameservers' ]
+    - [ '//domain:hostName', 3, 'Initial EPP: Three nameservers' ]
     - [ '//domain:registrant', 1, 'Initial EPP: One registrant' ]
     - [ '//domain:contact[@type="admin"]', 1, 'Initial EPP: One admin contact' ]
     - [ '//domain:contact[@type="tech"]', 1, 'Initial EPP: One tech contact' ]
