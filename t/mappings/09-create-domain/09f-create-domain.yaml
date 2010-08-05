@@ -2,7 +2,7 @@
 template: create-domain.tt
 
 vars:
-  domain: 09f.co.nz
+  domain: 09f.co.te
   ns_with_ips:
     - name: ns1.hidns.com
       ipv4: 222.222.222.222
