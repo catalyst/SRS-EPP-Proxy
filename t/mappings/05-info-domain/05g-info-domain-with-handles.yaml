@@ -11,7 +11,7 @@ input_assertions:
 output_assertions:
   count:
     - [ '//epp:resData', 1, 'EPP: Check for resData' ]
-    - [ '//domain:hostObj', '4', 'EPP: Four nameservers' ]
+    - [ '//domain:hostAttr', '4', 'EPP: Four nameservers' ]
   match:
     - [ '//domain:name', '05g.co.te', 'EPP: Check domain name is correct' ]
     - [ '//domain:roid', '751f02590626-DOM', 'EPP: Check domain roid is correct' ]
