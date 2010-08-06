@@ -19,5 +19,5 @@ output_assertions:
   count:
   attr_is:
   match:
-    - [ '//domain:name', 'test.net.te',  'EPP: found the transferred domain' ]
+    - [ '//domain:name', 'pepper.co.te',  'EPP: found the transferred domain' ]
 
