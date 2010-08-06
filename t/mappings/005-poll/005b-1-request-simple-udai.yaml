@@ -17,9 +17,9 @@ SRS:
 output_assertions:
   count:
     - [ '//domain:infData/domain:name', 1, 'EPP: found the domain name that was changed' ]
+    - [ '//domain:pw', 1,  'EPP: found the UDAI' ]
   attr_is:
     - [ '//epp:msgQ', 'id', '0001srsrps-1_378', 'EPP: found msg id' ]
     - [ '//epp:result', 'code', 1301, 'EPP: Correct response code' ]
   match:
-    - [ '//domain:pw', 'PqC9VFP8',  'EPP: found the new UDAI' ]
 
