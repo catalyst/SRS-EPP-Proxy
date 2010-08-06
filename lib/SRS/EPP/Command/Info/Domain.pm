@@ -36,13 +36,16 @@ method process( SRS::EPP::Session $session ) {
         XML::SRS::Domain::Query->new(
             domain_name_filter => $payload->name->value,
             field_list => XML::SRS::FieldList->new(
-                delegate        => 1,
-                name_servers    => 1,
-                registered_date => 1,
-                registrar_id    => 1,
-                billed_until    => 1,
-                audit_text      => 1,
-                effective_from  => 1,
+                delegate           => 1,
+                name_servers       => 1,
+                registered_date    => 1,
+                registrar_id       => 1,
+                billed_until       => 1,
+                audit_text         => 1,
+                effective_from     => 1,
+                registrant_contact => 1,
+                admin_contact      => 1,
+                technical_contact  => 1,
             ),
         )
     );
