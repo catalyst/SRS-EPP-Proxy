@@ -1,10 +1,10 @@
-description: Update the registry
+description: Update the registrar
 registrar: 1
 
 
 request: |-
  <NZSRSRequest VerMajor="1" VerMinor="0" RegistrarId="100"> 
-   <RegistrarUpdate ActionId="[% actionid %]" Name"Changed">
+   <RegistrarUpdate ActionId="[% actionid %]" Name="Changed">
 
    </RegistrarUpdate>
  </NZSRSRequest>
