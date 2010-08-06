@@ -89,7 +89,7 @@ sub buildInfoResponse {
       my $method = 'contact_'.$type;
       my $contact = $domain->$method;
 
-      next unless $contact->handle_id;
+      next unless $contact && $contact->handle_id;
       
       if ($contact) {
         if ($type eq 'registrant') {
