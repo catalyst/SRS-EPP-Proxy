@@ -4,6 +4,7 @@ template: create-contact.tt
 vars:
   name: Albert Einstein
   street: electric avenue
+  street2: brixton
   city: Anywhere
   state: NSW
   pcode: 300000

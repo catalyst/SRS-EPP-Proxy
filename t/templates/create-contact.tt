@@ -6,6 +6,7 @@
       [% UNLESS org_not_provided %]<contact:org>[% company %]</contact:org>[% END %]
       <contact:addr>
         <contact:street>[% street %]</contact:street>
+        <contact:street>[% street2 %]</contact:street>
         <contact:city>[% city %]</contact:city>
         <contact:sp>[% state %]</contact:sp>
         <contact:pc>[% pcode %]</contact:pc>
