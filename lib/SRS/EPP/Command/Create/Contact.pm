@@ -53,9 +53,9 @@ method process( SRS::EPP::Session $session ) {
   my $address = XML::SRS::Contact::Address->new(
     address1 => $street->[0],
     city => $postalInfoAddr->city,
-    region => $postalInfoAddr->sp,
+    ($postalInfoAddr->sp ? (region => $postalInfoAddr->sp) : ()),
     cc => $postalInfoAddr->cc,
-    postcode => $postalInfoAddr->pc,
+    ($postalInfoAddr->pc ? (postcode => $postalInfoAddr->pc) : ()),
   );
   if ( $address ) {
     if ( $street->[1] ) {
@@ -71,7 +71,7 @@ method process( SRS::EPP::Session $session ) {
       email => $payload->email(),
       action_id => $message->client_id || sprintf("auto.%x",time()),
     };
-    if ( $payload->fax()->content() ) {
+    if ( $payload->fax() && $payload->fax()->content() ) {
       $txn->{fax} = $payload->fax()->content();
     }
     if ( my $srsTxn =  XML::SRS::Handle::Create->new(%$txn) ) {
