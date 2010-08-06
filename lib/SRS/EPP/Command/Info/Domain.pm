@@ -11,6 +11,7 @@ use Data::Dumper;
 
 use XML::EPP::Common;
 use XML::EPP::Domain::NS::List;
+use XML::EPP::Domain::HostAttr;
 use XML::SRS::FieldList;
 
 # for plugin system to connect
@@ -83,7 +84,8 @@ sub buildInfoResponse {
   # get some things out to make it easier on the eye below
   my $nsList;
   if ( $domain->nameservers ) {
-      my @nameservers = map { $_->fqdn } @{$domain->nameservers->nameservers};
+      my @nameservers = map { XML::EPP::Domain::HostAttr->new(name => $_->fqdn) } 
+        @{$domain->nameservers->nameservers};
       $nsList = XML::EPP::Domain::NS::List->new( ns => [ @nameservers ] );
   }
   

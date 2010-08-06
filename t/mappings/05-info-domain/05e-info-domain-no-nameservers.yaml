@@ -23,7 +23,7 @@ SRS:
 output_assertions:
   count:
     - [ '//epp:resData', 1, 'EPP: Check for resData' ]
-    - [ '//domain:hostObj', 0, 'EPP: Zero nameservers' ]
+    - [ '//domain:hostAttr', 0, 'EPP: Zero nameservers' ]
   match:
     - [ '//domain:name', 'no-nameserver.co.te', 'EPP: Check domain name is correct' ]
     - [ '//domain:roid', '6dc92f1925d2-DOM', 'EPP: Check domain roid is correct' ]

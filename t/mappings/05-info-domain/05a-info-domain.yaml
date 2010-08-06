@@ -24,13 +24,17 @@ SRS:
 output_assertions:
   count:
     - [ '//epp:resData', 1, 'EPP: Check for resData' ]
-    - [ '//domain:hostObj', '4', 'EPP: Four nameservers' ]
+    - [ '//domain:hostAttr', '4', 'EPP: Four nameservers' ]
   match:
     - [ '//domain:name', 'cheese123.co.te', 'EPP: Check domain name is correct' ]
     - [ '//domain:roid', 'a6e226cce5cb-DOM', 'EPP: Check domain roid is correct' ]
     - [ '//domain:crDate', '/\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d.\d\d:\d\d/', 'EPP: Check created date' ]
     - [ '//domain:upDate', '/\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d.\d\d:\d\d/', 'EPP: Check updated date' ]
     - [ '//domain:exDate', '/\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d.\d\d:\d\d/', 'EPP: Check expiry date' ]
+    - [ '//domain:hostAttr[1]/domain:hostName', 'ns1.everydns.net', 'EPP: correct nameserver 1']
+    - [ '//domain:hostAttr[2]/domain:hostName', 'ns2.everydns.net', 'EPP: correct nameserver 2']
+    - [ '//domain:hostAttr[3]/domain:hostName', 'ns3.everydns.net', 'EPP: correct nameserver 3']
+    - [ '//domain:hostAttr[4]/domain:hostName', 'ns4.everydns.net', 'EPP: correct nameserver 4']
   match_all:
   attr_is:
     - [ '//epp:result', 'code', 1000, 'EPP: command ok' ]
