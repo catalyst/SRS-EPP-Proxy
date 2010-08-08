@@ -13,4 +13,5 @@ SRS:
      attr_is:
 output_assertions:
   attr_is:
+    - [ '//epp:msgQ', 'count', 4, 'EPP: count of remaining messges' ]
     - [ '//epp:result', 'code', 1000, 'EPP: response code' ]
