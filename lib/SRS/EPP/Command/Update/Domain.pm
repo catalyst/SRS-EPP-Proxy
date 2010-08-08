@@ -2,6 +2,8 @@ package SRS::EPP::Command::Update::Domain;
 
 use Moose;
 extends 'SRS::EPP::Command::Update';
+with 'SRS::EPP::Common::Domain::NameServers';
+
 use MooseX::Method::Signatures;
 use Crypt::Password;
 
@@ -80,33 +82,32 @@ method notify( SRS::EPP::SRSResponse @rs ) {
     if ( $self->state eq 'SRS-DomainDetailsQry' ) {
         # we have just asked for the DomainDetailsQry so we are doing an
         # add/remove of a nameserver
-        # my @ns = map { $_->fqdn } @{$res->nameservers->nameservers};
         my %ns;
-        foreach my $ns ( map { $_->fqdn } @{$res->nameservers->nameservers} ) {
-            $ns{$ns} = 1;
+        foreach my $ns (@{$res->nameservers->nameservers} ) {
+            $ns{$ns->fqdn} = $self->translate_ns_srs_to_epp($ns);
         }
 
         # check what the user wants to do (it's either an add, rem or both)
         # do the add first
         if ( $payload->add and $payload->add->ns ) {
-            my $add_ns = $payload->add->ns->host_objs;
+            my $add_ns = $payload->add->ns->ns;
 
             # loop through and add them
             foreach my $ns ( @$add_ns ) {
-                $ns{$ns} = 1;
+                $ns{$ns->name} = $ns;
             }
         }
         # now do the remove
         if ( $payload->remove and $payload->remove->ns ) {
-            my $rem_ns = $payload->remove->ns->host_objs;
+            my $rem_ns = $payload->remove->ns->ns;
 
             # loop through and remove them
             foreach my $ns ( @$rem_ns ) {
-                delete $ns{$ns};
+                delete $ns{$ns->name};
             }
         }
 
-        my @ns_list = sort keys %ns;
+        my @ns_list = values %ns;
 
         # so far all is good, now send the DomainUpdate request to the SRS
         my $request = $self->make_request($message, $payload, \@ns_list);
@@ -151,8 +152,14 @@ sub make_request {
     # now set the nameserver list
     my $ns_list;
     if ( defined $new_nameservers and @$new_nameservers ) {
+        my @ns_objs = eval { $self->translate_ns_epp_to_srs(@$new_nameservers) };
+        my $error = $@;
+        if ($error) {
+            return $error if $error->isa('SRS::EPP::Response::Error');
+            die $error; # rethrow
+        }
         $ns_list = XML::SRS::Server::List->new(
-            nameservers => [ map { XML::SRS::Server->new( fqdn => $_ ) } @$new_nameservers ],
+            nameservers => \@ns_objs,
         );
     }
 

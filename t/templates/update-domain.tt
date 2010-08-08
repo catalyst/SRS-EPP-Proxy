@@ -14,7 +14,9 @@
       [%~ IF nslist %]
       <domain:ns>
         [%~ FOREACH ns IN nslist %]
-        <domain:hostObj>[% ns %]</domain:hostObj>
+        <domain:hostAttr>
+        	<domain:hostName>[% ns %]</domain:hostName>
+        </domain:hostAttr>
         [%~ END %]
       </domain:ns>
       [%~ END %]
@@ -37,7 +39,9 @@
       [%~ IF nslist_old %]
       <domain:ns>
         [%~ FOREACH ns IN nslist_old %]
-        <domain:hostObj>[% ns %]</domain:hostObj>
+        <domain:hostAttr>
+        	<domain:hostName>[% ns %]</domain:hostName>
+        </domain:hostAttr>
         [%~ END %]
       </domain:ns>
       [%~ END %]

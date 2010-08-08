@@ -2,6 +2,9 @@ package SRS::EPP::Command::Create::Domain;
 
 use Moose;
 extends 'SRS::EPP::Command::Create';
+
+with 'SRS::EPP::Common::Domain::NameServers';
+
 use MooseX::Method::Signatures;
 use Crypt::Password;
 use SRS::EPP::Session;
@@ -40,51 +43,12 @@ method process( SRS::EPP::Session $session ) {
 
     my $ns = $payload->ns->ns;
     
-    # Compile list of nameservers. If any aren't hostAttr's, they must be hostObj's, which
-    #  are not allowed
-    my @ns_objs;
-    foreach my $ns (@$ns) {
-        unless ($ns->isa('XML::EPP::Domain::HostAttr')) {
-            return $self->make_response(
-                Error => (
-                    code => 2102,
-                    exception => XML::EPP::Error->new(
-                        value => $ns,
-                        reason => 'hostObj not supported',
-                    )
-                )
-            );   
-        }
-        
-        my $ips = $ns->addrs;
-        
-        # We reject any requests that have more than 1 ip address, as the SRS
-        #  doesn't really support that (altho an ipv4 and ipv6 address are allowed)
-        my %translated_ips;
-        foreach my $ip (@$ips) {
-            my $type = $ip->ip;
-            if ($translated_ips{$type}) {
-                return $self->make_response(
-                    Error => (
-                        code => 2102,
-                        exception => XML::EPP::Error->new(
-                            value => $ns->name,
-                            reason => 'multiple addresses for a nameserver of the same ip version not supported',
-                        )
-                    )
-                );
-            }
-            
-            $translated_ips{$type} = $ip->value;
-        }
-        
-        push @ns_objs, XML::SRS::Server->new( 
-            fqdn => $ns->name,
-            ($translated_ips{v4} ? (ipv4_addr => $translated_ips{v4}) : ()),
-            ($translated_ips{v6} ? (ipv6_addr => $translated_ips{v6}) : ()),
-        ); 
+    my @ns_objs = eval { $self->translate_ns_epp_to_srs(@$ns); };
+    my $error = $@;
+    if ($error) {
+        return $error if $error->isa('SRS::EPP::Response::Error');
+        die $error; # rethrow
     }
-
 
     my $list = XML::SRS::Server::List->new(
         nameservers => \@ns_objs,

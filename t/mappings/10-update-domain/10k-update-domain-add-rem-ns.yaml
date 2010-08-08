@@ -10,21 +10,25 @@ vars:
 
 input_assertions:
   class: SRS::EPP::Command::Update::Domain
-  count:
-    - [ '//domain:name', 1, 'SRS: Check for the domain' ]
-    - [ '//domain:add/domain:ns', 1, 'SRS: Check there is a new ns to add' ]
-    - [ '//domain:rem/domain:ns', 1, 'SRS: Check there is an old ns to remove' ]
-    - [ '//domain:add/domain:ns/domain:hostObj', 2, 'SRS: Two NSs to add' ]
-    - [ '//domain:rem/domain:ns/domain:hostObj', 1, 'SRS: One NS to remove' ]
-    - [ '//domain:hostObj', 3, 'SRS: Check there are three hostObjects in total' ]
-  match:
-    - [ '//domain:name', 'cheese.co.te', 'SRS: Check the domain name' ]
-    - [ '//domain:add/domain:ns/domain:hostObj[1]', 'ns5.everydns.net', 'SRS: Check the new ns5' ]
-    - [ '//domain:add/domain:ns/domain:hostObj[2]', 'ns6.everydns.net', 'SRS: Check the new ns6' ]
-    - [ '//domain:rem/domain:ns/domain:hostObj', 'ns1.everydns.net', 'SRS: Check the old ns1 is gone' ]
-  match_all:
 
 SRS:
+    -
+        assertions: 
+           count:
+               - [ '//DomainDetailsQry', 1, 'DDQ generated']
+           match:
+               - [ '//DomainNameFilter', 'cheese.co.te', 'SRS[1] - Domain name filter correct' ]
+    -
+        assertions:
+           count:
+               - [ '//Server', 5, 'SRS[2] - 5 name servers' ]
+               - [ '//Server[@FQDN = "ns2.everydns.net"]', 1, 'ns2 in server list']
+               - [ '//Server[@FQDN = "ns3.everydns.net"]', 1, 'ns3 in server list']
+               - [ '//Server[@FQDN = "ns4.everydns.net"]', 1, 'ns4 in server list']
+               - [ '//Server[@FQDN = "ns5.everydns.net"]', 1, 'ns5 in server list']
+               - [ '//Server[@FQDN = "ns6.everydns.net"]', 1, 'ns6 in server list']
+           match:  
+               - [ '//DomainNameFilter', 'cheese.co.te', 'SRS[2] - Domain name filter correct' ]
 
 output_assertions:
   count:

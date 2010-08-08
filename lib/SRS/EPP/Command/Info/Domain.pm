@@ -1,7 +1,9 @@
 package SRS::EPP::Command::Info::Domain;
 
 use Moose;
+
 extends 'SRS::EPP::Command::Info';
+
 use MooseX::Method::Signatures;
 use Crypt::Password;
 use SRS::EPP::Session;
@@ -10,7 +12,7 @@ use Digest::MD5 qw(md5_hex);
 use Data::Dumper;
 
 use XML::EPP::Common;
-use XML::EPP::Domain::NS::List;
+use XML::EPP::Domain::NS;
 use XML::EPP::Domain::HostAttr;
 use XML::SRS::FieldList;
 
@@ -86,7 +88,7 @@ sub buildInfoResponse {
   if ( $domain->nameservers ) {
       my @nameservers = map { XML::EPP::Domain::HostAttr->new(name => $_->fqdn) } 
         @{$domain->nameservers->nameservers};
-      $nsList = XML::EPP::Domain::NS::List->new( ns => [ @nameservers ] );
+      $nsList = XML::EPP::Domain::NS->new( ns => [ @nameservers ] );
   }
   
   my %contacts;
