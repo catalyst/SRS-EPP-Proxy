@@ -99,15 +99,24 @@ around 'build_response' => sub {
 		when ($_->isa("PRANG::Graph::Context::Error") ) {
 			use YAML;
 			my $xpath = $except->xpath;
+
 			my $message = $except->message;
+
+			my @lines = split /\n/, $message;			
+			
 			my $reason = "XML validation error at $xpath";
-			if ( $message =~ m{Validation failed for '.*::(\w+Type)' failed with value (.*) at}) {
+			if ( $lines[0] =~ m{Validation failed for '.*::(\w+Type)' failed with value (.*) at}) {
 				$reason .= "; '$2' does not meet schema requirements for $1";
 			}
-			else {
-			    $reason .= "; $message";
+			elsif ($lines[0] =~ m{Attribute \(.+?\) does not pass the type constraint}) {
+			    # Nothing else needed in the reason
 			}
-			
+			else {
+			    # Catch-all - return the first line.
+			    # TODO: possibly too much information... might pay to remove this before go-live
+			    $lines[0] =~ m{^(.+?)(?: at .+? line \d+)?$}; 
+			    $reason .= "; $1";
+			}
 			my $error = XML::EPP::Error->new(
 				value => $except->node,
 				reason => $reason,

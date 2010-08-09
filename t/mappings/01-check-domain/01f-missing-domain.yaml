@@ -1,0 +1,17 @@
+template: check-domain.tt
+
+vars:
+  domains:
+    - ''
+
+input_assertions:
+  count:
+    - [ '//domain:name', 1, 'Initial EPP: One domain to check' ]
+  
+output_assertions:
+  count:
+    - [ '//epp:resData', 0, 'EPP: No resData in the response' ]
+  match:
+    - [ '//epp:reason', 'XML validation error at /epp/command/check', 'Correct reason' ]
+  attr_is:
+    - [ '//epp:result', 'code', 2001, 'EPP: Error returned' ]
