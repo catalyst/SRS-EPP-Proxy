@@ -35,8 +35,8 @@ sub run_tests {
         port => 700,
         template_path => $test_dir . 'templates', 
         debug => $VERBOSE ? 1 : 0,
-        ssl_key => $test_dir . '/auth/host.key',
-        #ssl_cert => $test_dir . '/auth/host.crt',
+        ssl_key => $test_dir . '/auth/client-key.pem',
+        ssl_cert => $test_dir . '/auth/client-cert.pem',
     );
     
     @files = map { s|^t/||; $_ } @files;
