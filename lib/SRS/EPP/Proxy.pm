@@ -302,7 +302,7 @@ method accept_one() {
 			backend_url => $self->backend,
 			event => "Event",
 			peerhost => $peerhost,
-			($self->rfc_compliant_ssl ? (peer_cn => $peer_cn) : ()),
+			($self->rfc_compliant_ssl ? (peer_cn => lc $peer_cn) : ()),
 		       );
 		# let it know it's connected.
 		$session->connected;
