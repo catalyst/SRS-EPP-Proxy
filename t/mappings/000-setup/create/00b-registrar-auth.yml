@@ -39,7 +39,11 @@ request: |-
    <AccessControlListAdd List="whitelist" ActionId="[% actionid %] 2" Resource="epp_connect">
       <AccessControlListEntry RegistrarId="100" Address="192.168.252.38" />
       <AuditText>foo</AuditText>
-    </AccessControlListAdd>    
+    </AccessControlListAdd>
+   <AccessControlListAdd List="whitelist" ActionId="[% actionid %] 3" Resource="epp_client_certs">
+      <AccessControlListEntry RegistrarId="100" DomainName="test client" />
+      <AuditText>bar</AuditText>
+    </AccessControlListAdd> 
  </NZSRSRequest>
 
 assertions:
