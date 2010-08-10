@@ -272,7 +272,18 @@ method accept_one() {
 		$self->log_info("connection from $peerhost, starting SSL");
 		$0 = "srs-epp-proxy [$peerhost] - SSL init";
 
-		my $ssl = $self->ssl_engine->accept($socket);
+		my $ssl = eval {
+		    $self->ssl_engine->accept($socket);
+		};
+		
+		my $error = $@;
+		if ($error) {
+		    # We got an SSL error - send it back to the client, and close the connection
+		    $socket->print($error);
+		    $socket->close();
+		    die $error;   
+		}
+		
 		$0 = "srs-epp-proxy [$peerhost] - setup";
 
 		# RFC3734 and updates specify the use of client
