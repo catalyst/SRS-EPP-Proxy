@@ -51,8 +51,8 @@ sub run_tests {
             port => 700,
             template_path => $test_dir . 'templates', 
             debug => $VERBOSE ? 1 : 0,
-            ssl_key  => $data->{ssl_key} ?  $test_dir . 'auth/' . $data->{ssl_key}  : $test_dir . '/auth/client-key.pem',
-            ssl_cert => $data->{ssl_cert} ? $test_dir . 'auth/' . $data->{ssl_cert} : $test_dir . '/auth/client-cert.pem',
+            ssl_key  => exists $data->{ssl_key} ?  $test_dir . 'auth/' . $data->{ssl_key}  : $test_dir . '/auth/client-key.pem',
+            ssl_cert => exists $data->{ssl_cert} ? $test_dir . 'auth/' . $data->{ssl_cert} : $test_dir . '/auth/client-cert.pem',
         );
         
         my $vars = { %{$data->{vars} || {}}, ($data->{int_dont_use_stash} ? () : %$stash) };
