@@ -3,6 +3,7 @@ template: login.tt
 
 skip: Can't be run as a unit test
 no_auto_login: 1
+expect_failure: 1
 
 ssl_cert: client-cert-invalid-ca.pem
 ssl_key: client-key-invalid-ca.pem

@@ -51,8 +51,8 @@ sub run_tests {
             port => 700,
             template_path => $test_dir . 'templates', 
             debug => $VERBOSE ? 1 : 0,
-            ssl_key  => $test_dir . 'auth/' . $data->{ssl_key}  || $test_dir . '/auth/client-key.pem',
-            ssl_cert => $test_dir . 'auth/' . $data->{ssl_cert} || $test_dir . '/auth/client-cert.pem',
+            ssl_key  => $data->{ssl_key} ?  $test_dir . 'auth/' . $data->{ssl_key}  : $test_dir . '/auth/client-key.pem',
+            ssl_cert => $data->{ssl_cert} ? $test_dir . 'auth/' . $data->{ssl_cert} : $test_dir . '/auth/client-cert.pem',
         );
         
         my $vars = { %{$data->{vars} || {}}, ($data->{int_dont_use_stash} ? () : %$stash) };
@@ -80,6 +80,11 @@ sub run_tests {
         require Brause;
         my $res = eval { Brause::talk($test, \%conf) };
         if ($@) {
+            if ($data->{expect_failure}) {
+                pass("Couldn't login to proxy: $@");
+                next;
+            }
+            
             fail("Couldn't talk to Epp proxy: $@");   
         }
         
