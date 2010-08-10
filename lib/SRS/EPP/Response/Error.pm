@@ -89,10 +89,11 @@ around 'build_response' => sub {
         }
 		when (!blessed($_)) {
 		    my $reason = ref $_ ? Dumper $_ : $_;
-		    $reason =~ s/at (?:.+?) line \d+//mg;
+		    my @lines = split /\n/, $reason;
+		    		    
 		    my $error = XML::EPP::Error->new(
 				value => 'Unknown',
-				reason => $reason,
+				reason =>  parse_moose_error($lines[0]),
 			);
 			$result->[0]->add_error($error);
 		}
@@ -105,18 +106,9 @@ around 'build_response' => sub {
 			my @lines = split /\n/, $message;			
 			
 			my $reason = "XML validation error at $xpath";
-			if ( $lines[0] =~ m{Validation failed for '.*::(\w+Type)' failed with value (.*) at}) {
-				$reason .= "; '$2' does not meet schema requirements for $1";
-			}
-			elsif ($lines[0] =~ m{Attribute \(.+?\) does not pass the type constraint}) {
-			    # Nothing else needed in the reason
-			}
-			else {
-			    # Catch-all - return the first line.
-			    # TODO: possibly too much information... might pay to remove this before go-live
-			    $lines[0] =~ m{^(.+?)(?: at .+? line \d+)?$}; 
-			    $reason .= "; $1";
-			}
+			
+			$reason .= '; ' . parse_moose_error($lines[0]);
+
 			my $error = XML::EPP::Error->new(
 				value => $except->node,
 				reason => $reason,
@@ -141,6 +133,33 @@ around 'build_response' => sub {
 	}
 	$message;
 };
+
+sub parse_moose_error {
+    my $string = shift;
+    
+    my $error = '';
+    
+	if ( $string =~ m{Validation failed for '.*::(\w+Type)' with value (.*) at}) {
+		$error = "'$2' does not meet schema requirements for $1";
+	}
+	elsif ($string =~ m{Attribute \((.+?)\) does not pass the type constraint because: Validation failed for '(?:.+?)' with value (.+?) at}) {
+	    my ($label, $value) = ($1, $2);
+	    unless ($value =~ m{^(?:ARRAY|HASH)}) {
+	       $error = "Invalid value $value ($label)";
+	    }
+	}
+	elsif ($string =~ m{Attribute \((.+?)\) is required}) {
+	    $error = "Missing required value ($1)";   
+	}
+	else {
+	    # Catch-all - return the first line.
+	    # TODO: possibly too much information... might pay to remove this before go-live
+	    $string =~ m{^(.+?)(?: at .+? line \d+)?$}; 
+	    $error = $1;
+	}
+	
+	return $error;   
+}
 
 no Moose;
 __PACKAGE__->meta->make_immutable;

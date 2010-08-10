@@ -362,7 +362,21 @@ method process_queue( Int $count = 1 ) {
 		}
 		else {
 			# regular message which may need to talk to the SRS backend
-			my @messages = $command->process($self);
+			my @messages = eval {
+			    $command->process($self);
+			};
+			my $error = $@;
+			if ($error) {
+			    $self->log_info("Error when calling process on $command: $error");
+			    # TODO: we're not setting the code correctly
+			    my $error_resp = SRS::EPP::Response::Error->new(
+                    exception => $error,
+                    server_id => $command->server_id,
+                    code => 2400,
+                );
+			    push @messages, $error_resp;
+                
+			}
 
             unless (blessed $messages[0]) {
                 my $error = "Got an unblessed reference from process(). Cannot process queue";
