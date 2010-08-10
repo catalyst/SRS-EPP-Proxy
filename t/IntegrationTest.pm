@@ -30,15 +30,6 @@ sub run_tests {
     
     my $test_dir = "$Bin/../../../submodules/SRS-EPP-Proxy/t/";
     
-    my %conf = (
-        host => $ENV{SRS_PROXY_HOST},
-        port => 700,
-        template_path => $test_dir . 'templates', 
-        debug => $VERBOSE ? 1 : 0,
-        ssl_key => $test_dir . '/auth/client-key.pem',
-        ssl_cert => $test_dir . '/auth/client-cert.pem',
-    );
-    
     @files = map { s|^t/||; $_ } @files;
     
     my @testfiles = @files ? @files : XMLMappingTests::find_tests('mappings');
@@ -54,6 +45,15 @@ sub run_tests {
             }
             next;
         }
+ 
+         my %conf = (
+            host => $ENV{SRS_PROXY_HOST},
+            port => 700,
+            template_path => $test_dir . 'templates', 
+            debug => $VERBOSE ? 1 : 0,
+            ssl_key  => $test_dir . 'auth/' . $data->{ssl_key}  || $test_dir . '/auth/client-key.pem',
+            ssl_cert => $test_dir . 'auth/' . $data->{ssl_cert} || $test_dir . '/auth/client-cert.pem',
+        );
         
         my $vars = { %{$data->{vars} || {}}, ($data->{int_dont_use_stash} ? () : %$stash) };
         $vars->{command} = $data->{template};

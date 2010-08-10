@@ -1,0 +1,20 @@
+# Test logging in with a cert signed by an incorrect CA
+template: login.tt
+
+skip: Can't be run as a unit test
+no_auto_login: 1
+
+ssl_cert: client-cert-invalid-ca.pem
+ssl_key: client-key-invalid-ca.pem
+
+vars:
+  user: 100
+  pass: foobar
+
+input_assertions:
+  class: SRS::EPP::Command::Login
+
+output_assertions:
+  attr_is:
+    - [ '//epp:result', 'code', '2400', 'EPP: successful failed' ]
+
