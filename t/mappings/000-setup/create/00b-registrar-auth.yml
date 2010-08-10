@@ -4,7 +4,7 @@ registrar: 1
 
 request: |-
  <NZSRSRequest VerMajor="1" VerMinor="0" RegistrarId="100"> 
-   <RegistrarUpdate ActionId="[% actionid %] 1">
+   <RegistrarUpdate ActionId="00b-registrar-auth 1">
  <EncryptKeys><EncryptKey><![CDATA[
  -----BEGIN PGP PUBLIC KEY BLOCK-----
  Version: GnuPG v1.4.9 (GNU/Linux)
@@ -36,11 +36,11 @@ request: |-
     <Role RoleName="QueryACL"/>
    </Roles>
    </RegistrarUpdate>    
-   <AccessControlListAdd List="whitelist" ActionId="[% actionid %] 2" Resource="epp_connect">
+   <AccessControlListAdd List="whitelist" ActionId="00b-registrar-auth 2" Resource="epp_connect">
       <AccessControlListEntry RegistrarId="100" Address="192.168.252.38" />
       <AuditText>foo</AuditText>
     </AccessControlListAdd>
-   <AccessControlListAdd List="whitelist" ActionId="[% actionid %] 3" Resource="epp_client_certs">
+   <AccessControlListAdd List="whitelist" ActionId="00b-registrar-auth 3" Resource="epp_client_certs">
       <AccessControlListEntry RegistrarId="100" DomainName="test client" />
       <AuditText>bar</AuditText>
     </AccessControlListAdd> 
