@@ -139,10 +139,10 @@ sub parse_moose_error {
     
     my $error = '';
     
-	if ( $string =~ m{Validation failed for '.*::(\w+Type)' with value (.*) at}) {
+	if ( $string =~ m{Validation failed for '.*::(\w+Type)' (?:failed )?with value (.*) at}) {
 		$error = "'$2' does not meet schema requirements for $1";
 	}
-	elsif ($string =~ m{Attribute \((.+?)\) does not pass the type constraint because: Validation failed for '(?:.+?)' with value (.+?) at}) {
+	elsif ($string =~ m{Attribute \((.+?)\) does not pass the type constraint because: Validation failed for '.+?' (?:failed )?with value (.+?) at}) {
 	    my ($label, $value) = ($1, $2);
 	    unless ($value =~ m{^(?:ARRAY|HASH)}) {
 	       $error = "Invalid value $value ($label)";
