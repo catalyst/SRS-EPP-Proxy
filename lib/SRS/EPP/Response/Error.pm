@@ -35,6 +35,9 @@ has '+server_id' =>
 	required => 1,
 	;
 	
+# TODO: for errors, the code attribute could be made optional, and we could try to figure it
+#  out from the type of exeception given (as we are for SRS errors below). e.g. XML errors
+#  are always a particular code.
 around 'BUILDARGS' => sub {
     my $orig = shift;
     my $class = shift;
@@ -134,6 +137,8 @@ around 'build_response' => sub {
 	$message;
 };
 
+# TODO: Moose supports structured errors, although might need an extension or a newer version
+#  This would be much easier if we used those
 sub parse_moose_error {
     my $string = shift;
     
