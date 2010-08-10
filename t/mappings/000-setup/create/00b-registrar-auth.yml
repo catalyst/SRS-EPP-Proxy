@@ -33,7 +33,7 @@ request: |-
     <Role RoleName="CancelDomain"/>
     <Role RoleName="UncancelDomain"/>
     <Role RoleName="UpdateRegistrar"/>
-    <Role RoleName="QueryACL"/>
+    <Role RoleName="QueryRegACL"/>
    </Roles>
    </RegistrarUpdate>    
    <AccessControlListAdd List="whitelist" ActionId="00b-registrar-auth 2" Resource="epp_connect">
