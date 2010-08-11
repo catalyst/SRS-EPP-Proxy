@@ -138,17 +138,16 @@ sub getEppStatuses {
 
   my @status;
   if ( $domain->delegate() == 0 ) {
-      push @status, 'inactive';
+      push @status, 'clientHold';
   }
-  elsif ( $domain->status eq 'PendingRelease' ) {
+  if ( $domain->status eq 'PendingRelease' ) {
       push @status, 'pendingDelete';
   }
-  elsif ( defined $domain->locked_date() ) {
+  if ( defined $domain->locked_date() ) {
       push @status, qw( serverDeleteProhibited serverHold serverRenewProhibited serverTransferProhibited serverUpdateProhibited );
   }
-  else {
-      push @status, 'ok';
-  }
+  
+  push @status, 'ok' unless @status;
 
   return map { XML::EPP::Domain::Status->new( status => $_ ) } @status
 }
