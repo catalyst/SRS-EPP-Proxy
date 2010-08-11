@@ -42,6 +42,7 @@ method process( SRS::EPP::Session $session ) {
         admin_contact      => 1,
         technical_contact  => 1,   
         status             => 1,
+        locked_date        => 1,
     );
     
     # We only want to return name servers if the 'hosts' attribute is 'all' or 'del'
