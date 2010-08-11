@@ -1,6 +1,6 @@
 <info>
   <domain:info xmlns:domain="urn:ietf:params:xml:ns:domain-1.0">
-    <domain:name hosts="all">[% domain_name %]</domain:name>
+    <domain:name [% IF hosts.defined %]hosts="[% hosts %]"[% END %]>[% domain_name %]</domain:name>
 [% IF pw -%]
     <domain:authInfo>
       <domain:pw>[% pw %]</domain:pw>

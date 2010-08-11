@@ -13,6 +13,7 @@ SRS:
         - [ '/NZSRSRequest/*', 2, 'SRS: Check that there are two requests' ]
         - [ '//Whois', 1, 'SRS: Check for only one Whois' ]
         - [ '//DomainNameFilter', 1, 'SRS: Check for only one DomainNameFilter' ]
+        - [ '//FieldList/@NameServers', '1', 'SRS: Nameservers field requested' ]
       element_is:
         - [ '/NZSRSRequest/*[1]', 'Whois', 'SRS: The first request should be a Whois' ]
         - [ '/NZSRSRequest/*[2]', 'DomainDetailsQry', 'SRS: The second request should be a DomainDetailsQry' ]
