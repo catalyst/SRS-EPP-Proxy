@@ -113,7 +113,7 @@ around 'build_response' => sub {
 			$reason .= '; ' . parse_moose_error($lines[0]);
 
 			my $error = XML::EPP::Error->new(
-				value => $except->node,
+				value => $except->node || '',
 				reason => $reason,
 				);
 			$result->[0]->add_error($error);
