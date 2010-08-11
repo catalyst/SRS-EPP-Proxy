@@ -82,8 +82,14 @@ method notify( SRS::EPP::SRSResponse @rs ) {
   # By now, we must be dealing with the response to our update TXN
 
   if ( $response->can("billed_until") ) {
-    # TODO, actual check for success?
-    return $self->make_response(code => 1000);
+    my $epp_resp = XML::EPP::Domain::Renew::Response->new(
+        name => $response->name,
+        expiry_date => $response->billed_until->timestamptz,
+    );
+    return $self->make_response(
+        code => 1000,
+        payload => $epp_resp,        
+    );
   }
 
   return $self->make_response(code => 2400);
