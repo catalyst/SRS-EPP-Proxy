@@ -2,7 +2,7 @@
 template: info-domain.tt
 
 vars:
-  domain_name: 05j.co.te
+  domain_name: 05l.co.te
   pw:
 
 input_assertions:
