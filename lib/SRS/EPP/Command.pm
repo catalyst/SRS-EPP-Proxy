@@ -151,6 +151,7 @@ sub make_response {
 method make_error_response( XML::SRS::Error|ArrayRef[XML::SRS::Error] $srs_error ) {
     return SRS::EPP::Response::Error->new(
         server_id => $self->server_id,
+        client_id => $self->client_id,
         exception => $srs_error,
     );
 }

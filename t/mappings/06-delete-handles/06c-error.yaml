@@ -13,6 +13,7 @@ SRS:
 output_assertions:
   count:
     - [ '//epp:resData', 0, 'EPP: No resData in the response' ]
+    - [ '//epp:clTRID', 1, 'EPP: clTRID returned' ]
   match:
   attr_is:
     - [ '//epp:result', 'code', 2305, 'EPP: Unexpected failure' ]
