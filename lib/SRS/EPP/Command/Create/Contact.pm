@@ -1,9 +1,10 @@
-
-
 package SRS::EPP::Command::Create::Contact;
 
 use Moose;
+
 extends 'SRS::EPP::Command::Create';
+with 'SRS::EPP::Common::Contact';
+
 use MooseX::Method::Signatures;
 use Crypt::Password;
 use SRS::EPP::Session;
@@ -22,47 +23,16 @@ method process( SRS::EPP::Session $session ) {
   my $message = $epp->message;
   my $payload = $message->argument->payload;
 
-
-  my $epp_postal_info = $payload->postal_info();
-  if ( (scalar @$epp_postal_info) != 1 ) {
-    # The SRS doesn't support the US's idea of i18n.  That is
-    # that ASCII=international, anything else=local.
-    # Instead, well accept either form of postalinfo, but throw an 
-    # error if they try to provide both types (because the SRS can't
-    # have two translations for one address)
-    return $self->make_response(code => 2400);
+  if (my $resp = $self->validate_epp_contact($payload)) {
+    return $resp;   
   }
+  
+  my $epp_postal_info = $payload->postal_info();
   my $postalInfo = $epp_postal_info->[0];
 
-  # The SRS doesn't have a 'org' field, we don't want to lose info, so
-  if ( $postalInfo->org ) {
-    return $self->make_response(
-        Error => (
-            code => 2306,
-            exception => XML::EPP::Error->new(
-                value => $postalInfo->org,            
-                reason => 'org field not supported',
-            ),
-        )
-    );
-  }
+  my $address = $self->translate_address($postalInfo->addr);
 
-  # Try to make an SRS address object...
-  my $postalInfoAddr = $postalInfo->addr();
-  my $street = $postalInfoAddr->street();
-  my $address = XML::SRS::Contact::Address->new(
-    address1 => $street->[0],
-    city => $postalInfoAddr->city,
-    ($postalInfoAddr->sp ? (region => $postalInfoAddr->sp) : ()),
-    cc => $postalInfoAddr->cc,
-    ($postalInfoAddr->pc ? (postcode => $postalInfoAddr->pc) : ()),
-  );
   if ( $address ) {
-    if ( $street->[1] ) {
-      $address->address2($street->[1]);
-    }
-
-    # and finally, an SRS update is (hopefully) produced..
     my $txn = {
       handle_id => $payload->id(),
       name => $postalInfo->name(),
@@ -79,6 +49,7 @@ method process( SRS::EPP::Session $session ) {
     }
   }
 
+  # Catch all (possibly not necessary)
   return $self->make_response(code => 2400);
 }
 
