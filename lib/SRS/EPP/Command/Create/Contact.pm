@@ -55,18 +55,18 @@ method process( SRS::EPP::Session $session ) {
 
 
 method notify( SRS::EPP::SRSResponse @rs ) {
-  my $epp = $self->message;
-  my $eppMessage = $epp->message;
-  my $eppPayload = $eppMessage->argument->payload;
-
   my $message = $rs[0]->message;
   my $response = $message->response;
+  
+  my $r = XML::EPP::Contact::Create::Response->new(
+    id => $response->handle_id,
+    created => $message->server_time->timestamptz,
+  );
 
-  if ( $response->isa("XML::SRS::Handle") ) {
-    return $self->make_response(code => 1000);
-  }
-
-  return $self->make_response(code => 2400);
+ return $self->make_response(
+    code => 1000,
+    payload => $r,
+ );
 }
 
 1;
