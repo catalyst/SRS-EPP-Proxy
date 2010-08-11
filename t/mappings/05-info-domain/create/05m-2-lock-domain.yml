@@ -3,7 +3,7 @@ registrar: 1
 
 request: |-
  <NZSRSRequest VerMajor="4" VerMinor="4" RegistrarId="1">
-  <DomainUpdate Lock="1">
+  <DomainUpdate Lock="1" ActionId="[% actionid %] 1">
     <DomainNameFilter>05m.co.te</DomainNameFilter>
   </DomainUpdate>
  </NZSRSRequest>
