@@ -2,7 +2,7 @@ description: lock domain
 registrar: 1
 
 request: |-
- <NZSRSRequest VerMajor="4" VerMinor="4" RegistrarId="1">
+ <NZSRSRequest VerMajor="4" VerMinor="4" RegistrarId="100">
   <DomainUpdate Lock="1" ActionId="[% actionid %] 1">
     <DomainNameFilter>05m.co.te</DomainNameFilter>
   </DomainUpdate>
