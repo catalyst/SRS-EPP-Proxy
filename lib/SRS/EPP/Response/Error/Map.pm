@@ -191,7 +191,7 @@ sub map_error {
 	while ( my ($value, $fieldName) = splice @details, 0, 2 ) {
 		push @errors, XML::EPP::Error->new(
 			value => $value,
-			reason => "SRS error field '$fieldName'",
+			reason => $fieldName ? "SRS error field '$fieldName'" : '',
 			);
 	}
 	$result{errors} = \@errors;
