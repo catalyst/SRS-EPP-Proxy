@@ -13,7 +13,6 @@ SRS:
         - [ '/NZSRSRequest/*', 2, 'SRS: Check that there are two requests' ]
         - [ '//Whois', 1, 'SRS: Check for only one Whois' ]
         - [ '//DomainNameFilter', 1, 'SRS: Check for only one DomainNameFilter' ]
-        - [ '//FieldList/@NameServers', '1', 'SRS: Nameservers field requested' ]
       element_is:
         - [ '/NZSRSRequest/*[1]', 'Whois', 'SRS: The first request should be a Whois' ]
         - [ '/NZSRSRequest/*[2]', 'DomainDetailsQry', 'SRS: The second request should be a DomainDetailsQry' ]
@@ -21,6 +20,16 @@ SRS:
         - [ '//DomainNameFilter', 'cheese123.co.te', 'SRS: Check the domain name' ]
       match_all:
       attr_is:
+        - [ '//FieldList', 'NameServers', '1', 'SRS: Nameservers field requested' ]
+        - [ '//FieldList', 'Status', '1', 'SRS: Status field requested' ]
+        - [ '//FieldList', 'RegisteredDate', '1', 'SRS: RegisteredDate field requested' ]
+        - [ '//FieldList', 'RegistrarId', '1', 'SRS: RegistrarId field requested' ]
+        - [ '//FieldList', 'BilledUntil', '1', 'SRS: BilledUntil field requested' ]
+        - [ '//FieldList', 'AuditText', '1', 'SRS: AuditText field requested' ]
+        - [ '//FieldList', 'EffectiveFrom', '1', 'SRS: EffectiveFrom field requested' ]
+        - [ '//FieldList', 'RegistrantContact', '1', 'SRS: RegistrantContact field requested' ]
+        - [ '//FieldList', 'AdminContact', '1', 'SRS: AdminContact field requested' ]
+        - [ '//FieldList', 'TechnicalContact', '1', 'SRS: TechnicalContact field requested' ]
 
 output_assertions:
   count:
