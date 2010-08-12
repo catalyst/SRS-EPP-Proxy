@@ -32,6 +32,7 @@ SRS:
         - [ '//FieldList', 'TechnicalContact', '1', 'SRS: TechnicalContact field requested' ]
         - [ '//FieldList', 'LockedDate', '1', 'SRS: LockedDate field requested' ]
         - [ '//FieldList', 'Delegate', '1', 'SRS: Delegate field requested' ]
+        - [ '//FieldList', 'ChangedByRegistrarId', '1', 'SRS: ChangedByRegistrarId field requested' ]
 
 output_assertions:
   count:
