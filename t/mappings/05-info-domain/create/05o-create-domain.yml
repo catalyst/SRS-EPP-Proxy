@@ -1,5 +1,5 @@
 description: set up domain
-registrar: 1
+registrar: 100
 
 request: |-
  <NZSRSRequest VerMajor="4" VerMinor="4" RegistrarId="100">

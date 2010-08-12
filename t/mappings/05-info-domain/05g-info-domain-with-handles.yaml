@@ -19,7 +19,6 @@ output_assertions:
     - [ '//domain:contact[@type = "admin"]', 'admin1', "EPP: correct admin contact"]
     - [ '//domain:contact[@type = "tech"]', 'tech1', "EPP: correct tech contact"]
     - [ '//domain:crDate', '/\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d.\d\d:\d\d/', 'EPP: Check created date' ]
-    - [ '//domain:upDate', '/\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d.\d\d:\d\d/', 'EPP: Check updated date' ]
     - [ '//domain:exDate', '/\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d.\d\d:\d\d/', 'EPP: Check expiry date' ]
   match_all:
   attr_is:
