@@ -1,6 +1,7 @@
 <create>
   <domain:create xmlns:domain="urn:ietf:params:xml:ns:domain-1.0">
     <domain:name>[% domain %]</domain:name>
+      [% UNLESS no_ns %]
       <domain:ns>
         [%~ FOREACH dns IN ns %]
         <domain:hostAttr>
@@ -18,6 +19,7 @@
         </domain:hostAttr>
        	[% END %]
       </domain:ns>
+      [% END %]
     <domain:registrant>[% owner %]</domain:registrant>
     <domain:contact type="admin">[% admin %]</domain:contact>
     <domain:contact type="tech">[% tech %]</domain:contact>

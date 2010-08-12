@@ -40,29 +40,34 @@ method process( SRS::EPP::Session $session ) {
             $contact_technical = XML::SRS::Contact->new( handle_id => $contact->value );
         }
     }
-
-    my $ns = $payload->ns->ns;
     
-    my @ns_objs = eval { $self->translate_ns_epp_to_srs(@$ns); };
-    my $error = $@;
-    if ($error) {
-        return $error if $error->isa('SRS::EPP::Response::Error');
-        die $error; # rethrow
-    }
-
-    my $list = XML::SRS::Server::List->new(
-        nameservers => \@ns_objs,
-    );
-
-    return XML::SRS::Domain::Create->new(
+    my $request = XML::SRS::Domain::Create->new(
         domain_name => $payload->name(),
         term => 1, # ToDo: check this
         contact_registrant => $contact_registrant,
         contact_admin => $contact_admin,
         contact_technical => $contact_technical,
-        nameservers => $list,
         action_id => $message->client_id || sprintf('auto.%x',time()),
     );
+
+    my $ns = $payload->ns ? $payload->ns->ns : undef;
+    
+    if ($ns) {
+        my @ns_objs = eval { $self->translate_ns_epp_to_srs(@$ns); };
+        my $error = $@;
+        if ($error) {
+            return $error if $error->isa('SRS::EPP::Response::Error');
+            die $error; # rethrow
+        }
+    
+        my $list = XML::SRS::Server::List->new(
+            nameservers => \@ns_objs,
+        );
+        
+        $request->nameservers($list);
+    }
+
+    return $request;
 }
 
 method notify( SRS::EPP::SRSResponse @rs ) {
