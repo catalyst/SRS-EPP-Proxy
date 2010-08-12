@@ -93,7 +93,6 @@ around 'build_response' => sub {
 		when (!blessed($_)) {
 		    my $reason = ref $_ ? Dumper $_ : $_;
 		    my @lines = split /\n/, $reason;
-		    		    
 		    my $error = XML::EPP::Error->new(
 				value => 'Unknown',
 				reason =>  parse_moose_error($lines[0]),
@@ -159,7 +158,7 @@ sub parse_moose_error {
 	else {
 	    # Catch-all - return the first line.
 	    # TODO: possibly too much information... might pay to remove this before go-live
-	    $string =~ m{^(.+?)(?: at .+? line \d+)?$}; 
+	    $string =~ m{^(.+?)(?:at .+? line \d+)?\.?$}; 
 	    $error = $1;
 	}
 	
