@@ -1,3 +1,4 @@
+# Test removing statuses that are prohibited
 template: update-domain.tt
 
 vars:
@@ -23,6 +24,8 @@ output_assertions:
   count:
     - [ '//epp:result', 1, 'SRS: Check for one result' ]
   match:
+    - [ '//epp:value', 'clientUpdateProhibited', 'EPP: prohibited status returned' ]
+    - [ '//epp:reason', 'Adding or removing this status is not allowed', 'EPP: reason returned' ]
   match_all:
   attr_is:
     - [ '//epp:result', 'code', 2307, 'SRS: Check for correct result code' ]

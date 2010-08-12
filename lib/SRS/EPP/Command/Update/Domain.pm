@@ -10,6 +10,9 @@ use Crypt::Password;
 use XML::SRS::Server;
 use XML::SRS::Server::List;
 
+# List of statuses the user is allowed to add or remove
+my @ALLOWED_STATUSES = qw(clientHold);
+
 my $allowed = {
     action => { add => 1, remove => 1 },
 };
@@ -23,6 +26,11 @@ has 'state' =>
     'is' => 'rw',
     'isa' => 'Str',
     'default' => 'EPP-DomainUpdate'
+    ;
+    
+has 'status_changes' =>
+    'is' => 'rw',
+    'isa' => 'HashRef',
     ;
 
 # we onyl ever enter here once, so we know what state we're in
@@ -38,11 +46,48 @@ method process( SRS::EPP::Session $session ) {
         return $self->make_response(code => 2002);
     }
 
-    # we're not going to do anything with Status additions or removals
-    if ( ( $payload->add and $payload->add->status )
-         or ( $payload->remove and $payload->remove->status ) ) {
-        return $self->make_response(code => 2307);
+    # Validate that statuses supplied (if any)
+    my %statuses = (
+        ($payload->add ? (add => $payload->add->status) : ()),
+        ($payload->remove ? (remove => $payload->remove->status) : ()),
+    );
+    
+    my %allowed_statuses = map { $_ => 1 } @ALLOWED_STATUSES;
+    
+    my %used;
+    foreach my $key (keys %statuses) {
+        foreach my $status (@{$statuses{$key}}) {           
+            unless ($allowed_statuses{$status->status}) {
+                # They supplied a status that's not allowed
+                return $self->make_response(
+                    Error => (
+                        code      => 2307,
+                        exception => XML::EPP::Error->new(
+                            value  => $status->status,
+                            reason => 'Adding or removing this status is not allowed',
+                        ),
+                    )
+                );
+            }            
+            
+            if ($used{$status->status}) {
+                # They've added and removed the same status. Thrown an error
+                return $self->make_response(
+                    Error => (
+                        code      => 2002,
+                        exception => XML::EPP::Error->new(
+                            value  => $status->status,
+                            reason => 'Cannot add an remove the same status',
+                        ),
+                    )
+                );
+            }
+            
+            $used{$status->status} = 1;
+        }
     }
+    
+    $self->status_changes(\%statuses);
 
     # if they want to add/remove a nameserver, then we need to hit the SRS
     # first to find out what they are currently set to
@@ -162,13 +207,28 @@ sub make_request {
             nameservers => \@ns_objs,
         );
     }
-
-    return XML::SRS::Domain::Update->new(
+    
+    my $request = XML::SRS::Domain::Update->new(
         filter => [ $payload->name() ],
         %contacts,
         ( $ns_list ? ( nameservers => $ns_list ) : () ),
         action_id => $message->client_id || sprintf('auto.%x', time()),
     );
+
+
+    # Do we need to set or clear Delegate flag?
+    my $status_changes = $self->status_changes;
+    if ($status_changes) {        
+        if ($status_changes->{add} && grep {$_->status eq 'clientHold'} @{$status_changes->{add}}) {
+            $request->delegate(1);   
+        }
+        elsif ($status_changes->{remove} && grep {$_->status eq 'clientHold'} @{$status_changes->{remove}}) {
+            $request->delegate(0);   
+        }        
+    }
+    
+    return $request;
+
 }
 
 sub _make_contact {
