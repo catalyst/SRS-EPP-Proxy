@@ -26,7 +26,7 @@
       </TechnicalContact>
       <BilledUntil Day="19" Hour="19" Minute="45" Month="11" Second="02" TimeZoneOffset="+13:00" Year="2011"/>
       <RegisteredDate Day="19" Hour="19" Minute="45" Month="11" Second="02" TimeZoneOffset="+13:00" Year="2007"/>
-      <AuditDetails ActionId="20091231.4b3b555304642" RegistrarId="100">
+      <AuditDetails ActionId="20091231.4b3b555304642" RegistrarId="1">
         <AuditTime>
           <From Day="31" Hour="02" Minute="27" Month="12" Second="47" TimeZoneOffset="+13:00" Year="2009"/>
         </AuditTime>

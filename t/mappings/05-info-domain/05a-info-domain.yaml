@@ -49,7 +49,7 @@ output_assertions:
     - [ '//domain:hostAttr[3]/domain:hostName', 'ns3.everydns.net', 'EPP: correct nameserver 3']
     - [ '//domain:hostAttr[4]/domain:hostName', 'ns4.everydns.net', 'EPP: correct nameserver 4']
     - [ '//domain:clID', '100', 'EPP: Creating Registrar ID returned correctly']
-    - [ '//domain:upID', '100', 'EPP: Updating Registrar ID returned correctly']
+    - [ '//domain:upID', '001', 'EPP: Updating Registrar ID returned correctly']
   match_all:
   attr_is:
     - [ '//epp:result', 'code', 1000, 'EPP: command ok' ]
