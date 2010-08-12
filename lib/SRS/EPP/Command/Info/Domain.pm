@@ -119,6 +119,13 @@ sub buildInfoResponse {
         }
       }
   }
+  
+  # If the domain's registered date is different to the audit time, we assume this domain
+  #  has been updated at least once (which EPP thinks is important)
+  my $domain_updated = 0;
+  if ($domain->registered_date->timestamptz ne $domain->audit->when->begin->timestamptz) {
+     $domain_updated = 1;
+  }
 
   return XML::EPP::Domain::Info::Response->new(
       name => $domain->name,
@@ -129,7 +136,8 @@ sub buildInfoResponse {
       client_id => sprintf("%03d",$domain->registrar_id()), # clID
       created => ($domain->registered_date())->timestamptz, # crDate
       expiry_date => ($domain->billed_until())->timestamptz, # exDate
-      updated => ($domain->audit->when->begin())->timestamptz, # upDate
+      ($domain_updated ? (updated => ($domain->audit->when->begin())->timestamptz) : ()), # upDate
+      ($domain_updated ? (updated_by_id => sprintf("%03d",$domain->audit->registrar_id)) : ()), # upId
   );
 }
 
