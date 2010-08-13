@@ -21,5 +21,11 @@ SRS:
 output_assertions:
   attr_is:
     - [ '//epp:result', 'code', 1000, 'EPP: Correct response code' ]
-
+  match:
+    - [ '//domain:name', 'mozzarella.co.te', 'EPP: Correct domain name returned' ]
+    - [ '//domain:trStatus', 'serverApproved', 'EPP: Correct status' ]
+    - [ '//domain:reID', '100', 'EPP: Correct reID' ]
+    - [ '//domain:reDate', '/\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d.\d\d:\d\d/', 'EPP: Correct reDate' ]
+    - [ '//domain:acID', 'Model Registrar', 'EPP: Correct acID' ]
+    - [ '//domain:acDate', '/\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d.\d\d:\d\d/', 'EPP: Correct acDate' ]
 
