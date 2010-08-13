@@ -11,7 +11,7 @@ sub xmlns {
 }
 
 method process( SRS::EPP::Session $session ) {
-    return $self->make_response(code => 2106);
+    return $self->make_response(code => 2101);
 }
 
 1;
