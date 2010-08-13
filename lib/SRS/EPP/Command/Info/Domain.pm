@@ -153,7 +153,7 @@ sub getEppStatuses {
       push @status, 'pendingDelete';
   }
   if ( defined $domain->locked_date() ) {
-      push @status, qw( serverDeleteProhibited serverHold serverRenewProhibited serverTransferProhibited serverUpdateProhibited );
+      push @status, qw( serverDeleteProhibited serverRenewProhibited serverTransferProhibited serverUpdateProhibited );
   }
   
   push @status, 'ok' unless @status;

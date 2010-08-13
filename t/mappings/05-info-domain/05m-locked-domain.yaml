@@ -10,9 +10,8 @@ input_assertions:
 output_assertions:
   count:
     - [ '//epp:resData', 1, 'EPP: Check for resData' ]
-    - [ '//domain:status', 5, 'EPP: Check number of statuses assigned' ]
+    - [ '//domain:status', 4, 'EPP: Check number of statuses assigned' ]
     - [ '//domain:status[@s = "serverDeleteProhibited"]', 1, "EPP: status set correctly" ]
-    - [ '//domain:status[@s = "serverHold"]', 1, "EPP: status set correctly" ]
     - [ '//domain:status[@s = "serverRenewProhibited"]', 1, "EPP: status set correctly" ]
     - [ '//domain:status[@s = "serverTransferProhibited"]', 1, "EPP: status set correctly" ]
     - [ '//domain:status[@s = "serverUpdateProhibited"]', 1, "EPP: status set correctly" ]
