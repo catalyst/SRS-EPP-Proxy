@@ -70,14 +70,16 @@ method input_event( Str $data? ) {
 
 	if ( !defined $data ) {
 		$data = $self->read_input($expected - $ready);
-		$self->log_trace(
-			"input_event read ".length($data)." byte(s)"
-		       );
-		if ( length($data) == 0 ) {
-			$self->empty_read;
-		}
-		else {
-			push @{ $self->input_buffer }, $data;
+		if ( defined $data ) {
+			$self->log_trace(
+				"input_event read ".length($data)." byte(s)"
+			       );
+			if ( length($data) == 0 ) {
+				$self->empty_read;
+			}
+			else {
+				push @{ $self->input_buffer }, $data;
+			}
 		}
 	}
 
