@@ -39,7 +39,7 @@ method process( SRS::EPP::Session $session ) {
     return (
       XML::SRS::Whois->new(
         domain => $payload->name,
-        full => 1,
+        full => 0,
       ),
       XML::SRS::Domain::Update->new(
         filter => [$payload->name],
@@ -71,7 +71,6 @@ method notify( SRS::EPP::SRSResponse @rs ) {
         if ( $response->status eq "Available" ) {
           return $self->make_response(code => 2303);
         }
-        $original_registrar = $response->contact_registrar_public->name;
       }
       if ( $message->action() eq "DomainUpdate" ) {
         if ( $response->isa("XML::SRS::Domain") ) {
@@ -82,7 +81,7 @@ method notify( SRS::EPP::SRSResponse @rs ) {
             trStatus => 'serverApproved',
             requester => $response->registrar_id,
             requested => $response->audit->when->begin->timestamptz,
-            action_id =>  $original_registrar,
+            action_id =>  $response->registrar_id,
             action_date => $response->audit->when->begin->timestamptz,
           );            
             

@@ -26,6 +26,6 @@ output_assertions:
     - [ '//domain:trStatus', 'serverApproved', 'EPP: Correct status' ]
     - [ '//domain:reID', '100', 'EPP: Correct reID' ]
     - [ '//domain:reDate', '/\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d.\d\d:\d\d/', 'EPP: Correct reDate' ]
-    - [ '//domain:acID', 'Model Registrar', 'EPP: Correct acID' ]
+    - [ '//domain:acID', '100', 'EPP: Correct acID' ]
     - [ '//domain:acDate', '/\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d.\d\d:\d\d/', 'EPP: Correct acDate' ]
 

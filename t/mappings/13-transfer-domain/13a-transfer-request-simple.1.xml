@@ -1,43 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <NZSRSResponse VerMajor="4" VerMinor="3" RegistrarId="104">
-  <Response Action="Whois" FeId="8" FeSeq="4965040" OrigRegistrarId="1" RecipientRegistrarId="90">
-    <FeTimeStamp Day="13" Hour="15" Minute="32" Month="8" Second="28" TimeZoneOffset="+12:00" Year="2010" />
-    <Domain Delegate="1" DomainName="mozzarella.co.te" Status="Active">
-      <NameServers>
-        <Server FQDN="ns1.catalyst.net.nz" IP4Addr="202.78.240.34" IP6Addr="2404:130:0:1::34:0" />
-        <Server FQDN="ns2.catalyst.net.nz" IP4Addr="202.78.240.35" IP6Addr="2404:130:0:1::35:0" />
-        <Server FQDN="ns3.catalyst.net.nz" IP4Addr="202.78.244.33" IP6Addr="2404:130:2000:1::1" />
-        <Server FQDN="ns4.catalyst.net.nz" IP4Addr="174.143.170.62" />
-      </NameServers>
-      <RegistrantContact Name="Catalyst.Net Ltd" Email="dns@catalyst.net.nz">
-        <PostalAddress Address1="PO Box 11-053" Address2="Manners Street" City="Wellington" CountryCode="NZ" PostalCode="6142" />
-        <Phone AreaCode="4" CountryCode="64" LocalNumber="499 2267" />
-        <Fax AreaCode="4" CountryCode="64" LocalNumber="499 5596" />
-      </RegistrantContact>
-      <RegistrarPublicContact Name="Model Registrar B" Email="4service@domainz.net.nz">
-        <PostalAddress Address1="Private Bag 1810" City="Wellington" CountryCode="NZ" />
-        <Phone AreaCode="4" CountryCode="64" LocalNumber="473 4567" />
-        <Fax AreaCode="4" CountryCode="64" LocalNumber="473 4569" />
-      </RegistrarPublicContact>
-      <AdminContact Name="Catalyst.Net Ltd" Email="dns@catalyst.net.nz">
-        <PostalAddress Address1="PO Box 11-053" Address2="Manners Street" City="Wellington" CountryCode="NZ" PostalCode="6142" />
-        <Phone AreaCode="4" CountryCode="64" LocalNumber="499 2267" />
-        <Fax AreaCode="4" CountryCode="64" LocalNumber="499 5596" />
-      </AdminContact>
-      <TechnicalContact Name="Domainz" Email="4service@domainz.net.nz">
-        <PostalAddress Address1="Private Bag 1810" City="Wellington" CountryCode="NZ" />
-        <Phone AreaCode="4" CountryCode="64" LocalNumber="918-1740" />
-        <Fax AreaCode="4" CountryCode="64" LocalNumber="918-1719" />
-      </TechnicalContact>
-      <BilledUntil Day="07" Hour="00" Minute="00" Month="9" Second="00" TimeZoneOffset="+12:00" Year="2010" />
-      <RegisteredDate Day="07" Hour="00" Minute="00" Month="12" Second="00" TimeZoneOffset="+13:00" Year="1998" />
-      <AuditDetails>
-        <AuditTime>
-          <From Day="07" Hour="23" Minute="59" Month="8" Second="33" TimeZoneOffset="+12:00" Year="2010" />
-        </AuditTime>
-      </AuditDetails>
-    </Domain>
-  </Response>
+  <Response Action="Whois" FeId="8" FeSeq="4775126" OrigRegistrarId="1" RecipientRegistrarId="1">
+   <FeTimeStamp Day="1" Hour="08" Minute="50" Month="7" Second="34" TimeZoneOffset="+12:00" Year="2010"/>
+   <Domain DomainName="mozzarella.co.te" Status="Active"/>
+ </Response>
   <Response Action="DomainUpdate" FeId="2" FeSeq="122118672" OrigRegistrarId="104" RecipientRegistrarId="104" Rows="1" TransId="20100624092216713">
     <FeTimeStamp Day="24" Hour="09" Minute="23" Month="6" Second="05" TimeZoneOffset="+12:00" Year="2010" />
     <Domain Delegate="1" DomainName="mozzarella.co.te" RegistrantRef="24642" RegistrarId="100" Status="Active" Term="1">
