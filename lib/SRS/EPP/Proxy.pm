@@ -254,6 +254,11 @@ has 'backend' =>
 	default => "https://srstest.srs.net.nz/srs/registrar",
 	;
 
+has 'timeout' =>
+	is => "ro",
+	isa => "Int",
+	;
+
 method accept_one() {
 	$self->log_trace("accepting connections");
 	my $socket = $self->listener->accept
@@ -310,6 +315,7 @@ method accept_one() {
 			io => $ssl,
 			proxy => $self,
 			socket => $socket,
+			($self->timeout ? (timeout => $self->timeout) : ()),
 			backend_url => $self->backend,
 			event => "Event",
 			peerhost => $peerhost,
