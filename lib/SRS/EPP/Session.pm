@@ -20,7 +20,6 @@ use Moose;
 use MooseX::Method::Signatures;
 use Scalar::Util qw(blessed);
 use Data::Dumper;
-use Time::HiRes qw(sleep);
 
 with 'MooseX::Log::Log4perl::Easy';
 
@@ -208,23 +207,6 @@ has 'input_packeter' =>
 
 method read_input( Int $how_much where { $_ > 0 } ) {
 	my $rv = $self->io->read($how_much);
-	my $tries = 0;
-	
-	# If we didn't get anything from the read above, sleep for a while and re-try
-	#  This is needed because when the io event fires, the ssl libraries may not have
-	#  had a chance to decrpyt the data yet, so read() will return nothing. (This is 
-	#  especially true of large requests). Possibly this is a bug in the SSL libraries, 
-	#  or we're using the wrong method. Or possibly this is just a peculiarity in the
-	#  interation between SSL and the Event libraries.
-	while (! defined $rv) {
-	    $self->log_trace("Undefined read - sleeping and trying again in a bit (tries: $tries)");
-        sleep 0.05;
-        $rv = $self->io->read($how_much);
-        
-        $tries++;
-        last if $tries > 40;
-	}
-	 
 	$self->log_trace("read_input($how_much) = ".bytes::length($rv));
 	return $rv;
 }
