@@ -79,6 +79,11 @@ sub BUILD {
 
 	Log::Log4perl->init( $logging );
 	# pass configuration options to the session class?
+	
+	# Register namespaces to be returned by greeting
+	# TODO: Probably should be configured...
+	use XML::EPP;
+	XML::EPP::register_obj_uri(qw/urn:ietf:params:xml:ns:epp:domain-1.0 urn:ietf:params:xml:ns:epp:contact-1.0/); 
 }
 
 our $VERSION = "0.21";
