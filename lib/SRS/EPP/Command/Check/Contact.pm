@@ -14,6 +14,8 @@ sub xmlns {
     XML::EPP::Contact::Node::xmlns();
 }
 
+method multiple_responses() { 1 }
+
 method process( SRS::EPP::Session $session ) {
     $self->session($session);
     my $epp = $self->message;
@@ -23,28 +25,20 @@ method process( SRS::EPP::Session $session ) {
     return XML::SRS::Handle::Query->new( handle_id_filter => $payload->ids );
 }
 
-has 'ids_to_check' =>
-    is => 'rw',
-    isa => 'ArrayRef[Str]',
-    ;
-
-has 'avail' =>
-    is => "rw",
-    isa => "HashRef[Str]",
-    ;
-
 method notify( SRS::EPP::SRSResponse @rs ) {
-    $self->avail({ map { $_->message->response->handle_id => 1 } grep { $_->message->response } @rs });
+    my $handles = $rs[0]->message->responses;
+    
+    my %used;
+    %used = map { $_->handle_id => 1 } @$handles if $handles;
 
     my $epp = $self->message;
     my $payload = $epp->message->argument->payload;
 
     my $ids = $payload->ids;
-    my $avail = $self->avail();
 
     my @ids = map { XML::EPP::Contact::Check::ID->new(
                         name => $_,
-                        available => ($avail->{$_} ? 0 : 1),
+                        available => ($used{$_} ? 0 : 1),
                         ) } @$ids;
 
     my $status = XML::EPP::Contact::Check::Status->new(

@@ -732,18 +732,20 @@ method check_for_be_error( SRS::EPP::Command $cmd, SRS::EPP::SRSResponse @rs ) {
     my @errors;
     foreach my $rs (@rs) {
         my $message = $rs->message;
+                
+        my $resps = $message->can('responses') ? $message->responses : [$message];
         
-        my $resp = $message->can('response') ? $message->response : $message;
+        next unless $resps;
         
-        next unless $resp;
-        
-        if ($resp->isa('XML::SRS::Error')) {
-            push @errors, $resp;
-            
-            # If it's a system error (i.e. the original message is an XML::SRS::Error, not
-            #  an error wrapped in a response), or if this command type doesn't expect multiple
-            #  responses, we're done here. 
-            last if $message->isa('XML::SRS::Error') || ! $cmd->multiple_responses;
+        foreach my $resp (@$resps) {
+            if ($resp->isa('XML::SRS::Error')) {
+                push @errors, $resp;
+                
+                # If it's a system error (i.e. the original message is an XML::SRS::Error, not
+                #  an error wrapped in a response), or if this command type doesn't expect multiple
+                #  responses, we're done here. 
+                last if $message->isa('XML::SRS::Error') || ! $cmd->multiple_responses;
+            }
         }
     }
     
