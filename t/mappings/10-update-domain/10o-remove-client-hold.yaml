@@ -12,7 +12,7 @@ input_assertions:
 SRS:
   - assertions:
      attr_is:
-        - [ '//DomainUpdate', 'Delegate', 0, 'SRS: Delegate flag turned off' ]
+        - [ '//DomainUpdate', 'Delegate', 1, 'SRS: Delegate flag turned off' ]
 
 output_assertions:
   count:

@@ -1,7 +1,7 @@
 <NZSRSResponse VerMajor="5" VerMinor="0">
   <Response Action="DomainUpdate" FeId="8" FeSeq="4803306" OrigRegistrarId="90" RecipientRegistrarId="90" Rows="1" TransId="brause8769">
     <FeTimeStamp Day="8" Hour="15" Minute="23" Month="7" Second="27" TimeZoneOffset="+12:00" Year="2010"/>
-    <Domain Delegate="1" DomainName="cheese.co.nz" RegistrarId="90" Status="Active" Term="1" UDAI="GbtMuYY9">
+    <Domain Delegate="0" DomainName="cheese.co.nz" RegistrarId="90" Status="Active" Term="1" UDAI="GbtMuYY9">
       <NameServers>
         <Server FQDN="ns2.everydns.net"/>
         <Server FQDN="ns3.everydns.net"/>
