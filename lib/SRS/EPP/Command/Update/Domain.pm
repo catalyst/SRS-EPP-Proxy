@@ -77,7 +77,7 @@ method process( SRS::EPP::Session $session ) {
                         code      => 2002,
                         exception => XML::EPP::Error->new(
                             value  => $status->status,
-                            reason => 'Cannot add an remove the same status',
+                            reason => 'Cannot add and remove the same status',
                         ),
                     )
                 );
