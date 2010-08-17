@@ -7,6 +7,7 @@ use Crypt::Password;
 use SRS::EPP::Session;
 use XML::EPP::Contact;
 use Data::Dumper;
+use Digest::MD5 qw(md5_hex);
 
 use XML::EPP::Contact::Info::Response;
 use XML::EPP::Contact::PostalInfo;
@@ -66,6 +67,7 @@ method notify( SRS::EPP::SRSResponse @rs ) {
                 %addr,
             ),
         ) ],
+        roid => substr(md5_hex($response->registrar_id . $response->handle_id), 0, 12) . '-CON',
         ($response->phone ? (voice => $self->_translate_phone_number($response->phone)) : ()),
         ($response->fax   ? (fax   => $self->_translate_phone_number($response->fax))   : ()),
         email => $response->email,
