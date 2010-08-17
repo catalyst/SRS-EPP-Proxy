@@ -22,6 +22,7 @@
       [% END %]
     <domain:registrant>[% owner %]</domain:registrant>
     <domain:contact type="admin">[% admin %]</domain:contact>
+    [% IF admin2.defined %]<domain:contact type="admin">[% admin2 %]</domain:contact>[% END %]
     <domain:contact type="tech">[% tech %]</domain:contact>
     <domain:authInfo>
       <domain:pw></domain:pw>
