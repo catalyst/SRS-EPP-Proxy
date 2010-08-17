@@ -32,11 +32,34 @@ method process( SRS::EPP::Session $session ) {
     # create all the contacts (using their handles)
     my $contact_registrant = XML::SRS::Contact->new( handle_id => $payload->registrant() );
     my ($contact_admin, $contact_technical);
+    
     foreach my $contact ( @$contacts ) {
         if ( $contact->type eq 'admin' ) {
+            if ($contact_admin) {
+                return $self->make_response(
+                    Error => (
+                        code      => 2306,
+                        exception => XML::EPP::Error->new(
+                            value  => '',
+                            reason => 'Only one admin contact per domain supported',
+                        ),
+                    )
+                );
+            }
             $contact_admin = XML::SRS::Contact->new( handle_id => $contact->value );
         }
         if ( $contact->type eq 'tech' ) {
+            if ($contact_technical) {
+                return $self->make_response(
+                    Error => (
+                        code      => 2306,
+                        exception => XML::EPP::Error->new(
+                            value  => '',
+                            reason => 'Only one tech contact per domain supported',
+                        ),
+                    )
+                );
+            }
             $contact_technical = XML::SRS::Contact->new( handle_id => $contact->value );
         }
     }
