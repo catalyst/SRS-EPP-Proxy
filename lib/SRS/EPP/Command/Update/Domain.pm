@@ -220,10 +220,10 @@ sub make_request {
     my $status_changes = $self->status_changes;
     if ($status_changes) {        
         if ($status_changes->{add} && grep {$_->status eq 'clientHold'} @{$status_changes->{add}}) {
-            $request->delegate(1);   
+            $request->delegate(0);   
         }
         elsif ($status_changes->{remove} && grep {$_->status eq 'clientHold'} @{$status_changes->{remove}}) {
-            $request->delegate(0);   
+            $request->delegate(1);   
         }        
     }
     
