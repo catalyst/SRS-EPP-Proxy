@@ -1,4 +1,4 @@
-# Create a domain using hostObj for nameservers (which is not allowed)
+# Create a domain without specifying nameservers
 template: create-domain.tt
 
 vars:
