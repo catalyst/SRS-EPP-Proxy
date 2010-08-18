@@ -2,7 +2,7 @@
 template: update-domain.tt
 
 vars:
-  domain: cheese.co.te
+  domain: updatable.co.te
   owner: registrant-001
 
 input_assertions:
@@ -11,14 +11,14 @@ input_assertions:
     - [ '//domain:name', 1, 'SRS: Check for the domain' ]
     - [ '//domain:registrant', 1, 'SRS: Check for the registrant' ]
   match:
-    - [ '//domain:name', 'cheese.co.te', 'SRS: Check the domain name' ]
+    - [ '//domain:name', 'updatable.co.te', 'SRS: Check the domain name' ]
     - [ '//domain:registrant', 'registrant-001', 'SRS: Check the registrant' ]
 
 SRS:
   - assertions:
       count:
       match:
-        - [ '//DomainNameFilter', 'cheese.co.te', 'SRS: Check for the domain name' ]
+        - [ '//DomainNameFilter', 'updatable.co.te', 'SRS: Check for the domain name' ]
         - [ '//RegistrantContact/@HandleId', 'registrant-001', 'SRS: Handle of registrant contact changed' ]
       match_all:
       attr_is:
@@ -26,7 +26,7 @@ SRS:
       <NZSRSResponse VerMajor="5" VerMinor="0">
         <Response Action="DomainUpdate" FeId="8" FeSeq="4803306" OrigRegistrarId="90" RecipientRegistrarId="90" Rows="1" TransId="brause8769">
           <FeTimeStamp Day="8" Hour="15" Minute="23" Month="7" Second="27" TimeZoneOffset="+12:00" Year="2010"/>
-          <Domain Delegate="1" DomainName="wicked-yeah.co.nz" RegistrarId="90" Status="Active" Term="1" UDAI="GbtMuYY9">
+          <Domain Delegate="1" DomainName="updatable.co.te" RegistrarId="90" Status="Active" Term="1" UDAI="GbtMuYY9">
             <NameServers>
               <Server FQDN="ns1.hidns.com"/>
               <Server FQDN="ns2.hidns.com"/>

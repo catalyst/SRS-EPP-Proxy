@@ -33,6 +33,11 @@ has 'status_changes' =>
     'isa' => 'HashRef',
     ;
 
+has 'contact_changes' =>
+    'is' => 'rw',
+    'isa' => 'HashRef',
+    ;
+
 # we onyl ever enter here once, so we know what state we're in
 method process( SRS::EPP::Session $session ) {
     $self->session($session);
@@ -88,12 +93,59 @@ method process( SRS::EPP::Session $session ) {
     }
     
     $self->status_changes(\%statuses);
+    
+    # In some cases, we need to do a DomainDetailsQry before the update
+    my %ddq_fields;
 
     # if they want to add/remove a nameserver, then we need to hit the SRS
     # first to find out what they are currently set to
     if ( ( $payload->add and $payload->add->ns )
          or ( $payload->remove and $payload->remove->ns ) ) {
+    
+        $ddq_fields{name_servers} = 1;             
+    }
+    
+    # If they've added or removed contacts, we also need to do a ddq
+    #  to make sure they've added or removed the correct contacts
+    if ($payload->add && $payload->add->contact || $payload->remove && $payload->remove->contact) {
+        my %contact_changes = (
+            ($payload->add ? (add => $payload->add->contact) : ()), 
+            ($payload->remove ? (remove => $payload->remove->contact) : ()),
+        );
+        $self->contact_changes(\%contact_changes);
+        
+        for my $contact_type (qw/admin tech/) {
+            my $changes = 0;
+            
+            # Check they're not adding or removing more than one contact of the same type
+            for my $action (keys %contact_changes) {
+                my $changes_count = grep { $_->type eq $contact_type } @{$contact_changes{$action}};
+                
+                $changes = 1 if $changes_count >= 1;
+                
+                if ($changes_count >= 2) {
+                    return $self->make_response(
+                        Error => (
+                            code      => 2306,
+                            exception => XML::EPP::Error->new(
+                                value  => '',
+                                reason => "Only one $contact_type contact per domain supported",                                
+                            ),
+                        )
+                    );                    
+                }
+            }
+            
+            next unless $changes;
+            
+            # We have some changes to this contact type, so we need to request it in the ddq
+            my $long_type = $contact_type eq 'tech' ? 'technical' : $contact_type;
+                    
+            $ddq_fields{$long_type . '_contact'} = 1;
+        }
+    }
 
+    if (%ddq_fields) {
         # remember the fact that we're doing a domain details query first
         $self->state('SRS-DomainDetailsQry');
 
@@ -102,7 +154,7 @@ method process( SRS::EPP::Session $session ) {
             XML::SRS::Domain::Query->new(
                 domain_name_filter => $payload->name,
                 field_list => XML::SRS::FieldList->new(
-                    name_servers    => 1,
+                    \%ddq_fields,
                 ),
             )
         );
@@ -125,30 +177,73 @@ method notify( SRS::EPP::SRSResponse @rs ) {
     my $res = $rs[0]->message->response;
 
     if ( $self->state eq 'SRS-DomainDetailsQry' ) {
-        # we have just asked for the DomainDetailsQry so we are doing an
-        # add/remove of a nameserver
-        my %ns;
-        foreach my $ns (@{$res->nameservers->nameservers} ) {
-            $ns{$ns->fqdn} = $self->translate_ns_srs_to_epp($ns);
-        }
-
-        # check what the user wants to do (it's either an add, rem or both)
-        # do the add first
-        if ( $payload->add and $payload->add->ns ) {
-            my $add_ns = $payload->add->ns->ns;
-
-            # loop through and add them
-            foreach my $ns ( @$add_ns ) {
-                $ns{$ns->name} = $ns;
+        # Check if the contacts added or removed are correct
+        if ($self->contact_changes) {
+            foreach my $contact_type (qw/admin tech/) {
+                my $long_type = $contact_type eq 'tech' ? 'technical' : $contact_type;
+                my $method = 'contact_' . $long_type;
+                my $existing_contact = $res->$method;
+                    
+                my $contact_removed;                      
+                if (my $rem = $self->contact_changes->{remove}) {
+                    ($contact_removed) = grep { $_->type eq $contact_type } @$rem;
+                }
+                
+                # Throw an error if they're removing a contact that doesn't exist
+                if ($contact_removed && (! $existing_contact || $existing_contact->handle_id ne $contact_removed->value)) {
+                    return $self->make_response(
+                        Error => (
+                            code      => 2002,
+                            exception => XML::EPP::Error->new(
+                                value  => $contact_removed->value,
+                                reason => "Attempting to remove $contact_type contact which does not exist on the domain",                                
+                            ),
+                        )
+                    );
+                }                
+                
+                # If they're adding a contact, but one already exists (which hasn't been removed), throw an error
+                if (my $add = $self->contact_changes->{add}) {
+                    my ($contact_added) = grep { $_->type eq $contact_type } @$add;
+                    if ($contact_added && $existing_contact && ! $contact_removed) {
+                        return $self->make_response(
+                            Error => (
+                                code      => 2306,
+                                exception => XML::EPP::Error->new(
+                                    value  => '',
+                                    reason => "Only one $contact_type contact per domain supported",                                
+                                ),
+                            )
+                        );                         
+                    }
+                }
             }
-        }
-        # now do the remove
-        if ( $payload->remove and $payload->remove->ns ) {
-            my $rem_ns = $payload->remove->ns->ns;
+        } 
 
-            # loop through and remove them
-            foreach my $ns ( @$rem_ns ) {
-                delete $ns{$ns->name};
+        my %ns;        
+        if ($res->nameservers) {
+            foreach my $ns (@{$res->nameservers->nameservers} ) {
+                $ns{$ns->fqdn} = $self->translate_ns_srs_to_epp($ns);
+            }
+    
+            # check what the user wants to do (it's either an add, rem or both)
+            # do the add first
+            if ( $payload->add and $payload->add->ns ) {
+                my $add_ns = $payload->add->ns->ns;
+    
+                # loop through and add them
+                foreach my $ns ( @$add_ns ) {
+                    $ns{$ns->name} = $ns;
+                }
+            }
+            # now do the remove
+            if ( $payload->remove and $payload->remove->ns ) {
+                my $rem_ns = $payload->remove->ns->ns;
+    
+                # loop through and remove them
+                foreach my $ns ( @$rem_ns ) {
+                    delete $ns{$ns->name};
+                }
             }
         }
 

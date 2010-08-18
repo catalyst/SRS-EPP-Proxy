@@ -1,9 +1,9 @@
-# Update domain, remove admin contact
+# Update domain, add admin contact back in
 template: update-domain.tt
 
 vars:
   domain: updatable.co.te
-  admin_old: registrant-001
+  admin: registrant-001
 
 input_assertions:
   class: SRS::EPP::Command::Update::Domain
@@ -22,7 +22,7 @@ SRS:
         - [ '//DomainNameFilter', 'updatable.co.te', 'Check for the domain name' ]
       match_all:
       attr_is:
-        - [ '//AdminContact', 'HandleId', ~, 'Check for the admin contact' ]
+        - [ '//AdminContact', 'HandleId', 'registrant-001', 'Check for the admin contact' ]
 
 
 output_assertions:

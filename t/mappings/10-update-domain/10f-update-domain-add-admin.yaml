@@ -1,69 +1,26 @@
-# Update domain, add an admin contact
+# Update domain, add an admin contact, which fails since you can't add an admin contact if one already exists
 template: update-domain.tt
 
 vars:
-  domain: cheese.co.te
-  admin: registrant-001
+  domain: updatable.co.te
+  admin: 10c
 
 input_assertions:
   class: SRS::EPP::Command::Update::Domain
-  count:
-    - [ '//domain:name', 1, 'SRS: Check for the domain' ]
-    - [ '//domain:add/domain:contact', 1, 'SRS: Check the new admin' ]
-    - [ '//domain:rem/domain:contact', 0, 'SRS: Check old admin' ]
-  match:
-    - [ '//domain:name', 'cheese.co.te', 'SRS: Check the domain name' ]
-    - [ '//domain:add/domain:contact', 'registrant-001', 'SRS: Check the new admin' ]
-  match_all:
-    - [ '//domain:contact/@type', 'admin', 'SRS: Check all contacts are of type admin' ]
 
 SRS:
   - assertions:
       count:
       match:
-        - [ '//DomainNameFilter', 'cheese.co.te', 'SRS: Check for the domain name' ]
+        - [ '//DomainNameFilter', 'updatable.co.te', 'SRS: Check for the domain name' ]
       match_all:
       attr_is:
-        - [ '//AdminContact', 'HandleId', 'registrant-001', 'SRS: Check for the tech contact' ]
-    fake_response: |-
-      <NZSRSResponse VerMajor="5" VerMinor="0">
-        <Response Action="DomainUpdate" FeId="8" FeSeq="4803306" OrigRegistrarId="90" RecipientRegistrarId="90" Rows="1" TransId="brause8769">
-          <FeTimeStamp Day="8" Hour="15" Minute="23" Month="7" Second="27" TimeZoneOffset="+12:00" Year="2010"/>
-          <Domain Delegate="1" DomainName="wicked-yeah.co.nz" RegistrarId="90" Status="Active" Term="1" UDAI="GbtMuYY9">
-            <NameServers>
-              <Server FQDN="ns1.hidns.com"/>
-              <Server FQDN="ns2.hidns.com"/>
-              <Server FQDN="ns3.hidns.com"/>
-            </NameServers>
-            <RegistrantContact ActionId="Update handle registrant-001 1" Email="new001@registrant.co.nz" HandleId="registrant-001" Name="new registrant 001">
-              <PostalAddress Address1="Regisrant New Address 1" City="Wellington" CountryCode="NZ"/>
-              <Phone AreaCode="4" CountryCode="64" LocalNumber="123 ext 1"/>
-              <Fax AreaCode="4" CountryCode="64" LocalNumber="123666"/>
-            </RegistrantContact>
-            <AdminContact ActionId="Update handle registrant-001 1" Email="new001@registrant.co.nz" HandleId="registrant-001" Name="new registrant 001">
-              <PostalAddress Address1="Regisrant New Address 1" City="Wellington" CountryCode="NZ"/>
-              <Phone AreaCode="4" CountryCode="64" LocalNumber="123 ext 1"/>
-              <Fax AreaCode="4" CountryCode="64" LocalNumber="123666"/>
-            </AdminContact>
-            <TechnicalContact ActionId="Update handle registrant-001 1" Email="new001@registrant.co.nz" HandleId="registrant-001" Name="new registrant 001">
-              <PostalAddress Address1="Regisrant New Address 1" City="Wellington" CountryCode="NZ"/>
-              <Phone AreaCode="4" CountryCode="64" LocalNumber="123 ext 1"/>
-              <Fax AreaCode="4" CountryCode="64" LocalNumber="123666"/>
-            </TechnicalContact>
-            <BilledUntil Day="06" Hour="13" Minute="19" Month="8" Second="58" TimeZoneOffset="+12:00" Year="2010"/>
-            <RegisteredDate Day="06" Hour="13" Minute="19" Month="7" Second="58" TimeZoneOffset="+12:00" Year="2010"/>
-            <AuditDetails ActionId="brause8769" RegistrarId="90">
-              <AuditTime>
-                <From Day="08" Hour="15" Minute="23" Month="7" Second="27" TimeZoneOffset="+12:00" Year="2010"/>
-              </AuditTime>
-              <AuditText/>
-            </AuditDetails>
-          </Domain>
-        </Response>
-      </NZSRSResponse>
+        - [ '//FieldList', 'AdminContact', '1', 'SRS: Admin contact requested in DDQ field list' ]
 
 output_assertions:
   count:
-    - [ '//epp:result', 1, 'SRS: Check for one result' ]
+    - [ '//epp:result', 1, 'EPP: Check for one result' ]
   attr_is:
-    - [ '//epp:result', 'code', 1000, 'SRS: Check for correct result code' ]
+    - [ '//epp:result', 'code', 2306, 'EPP: Check for correct result code' ]
+  match: 
+    - [ '//epp:reason', 'Only one admin contact per domain supported', 'EPP: Correct reason' ]
