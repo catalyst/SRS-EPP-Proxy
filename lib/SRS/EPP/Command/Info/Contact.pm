@@ -12,6 +12,7 @@ use Digest::MD5 qw(md5_hex);
 use XML::EPP::Contact::Info::Response;
 use XML::EPP::Contact::PostalInfo;
 use XML::EPP::Contact::Addr;
+use XML::EPP::Contact::Status;
 
 # for plugin system to connect
 sub xmlns {
@@ -84,6 +85,7 @@ method notify( SRS::EPP::SRSResponse @rs ) {
         email => $response->email,
         created => $response->created_date->timestamptz,
         creator_id => zero_pad($response->registrar_id),
+        status => [XML::EPP::Contact::Status->new(status => 'ok')],
         ($contact_updated ?
             (
                 updated_by_id => zero_pad($response->audit->registrar_id),

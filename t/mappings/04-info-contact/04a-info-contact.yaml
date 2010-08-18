@@ -44,3 +44,4 @@ output_assertions:
   match_all:
   attr_is:
     - [ '//epp:result', 'code', 1000, 'SRS: Check for correct result code' ]
+    - [ '//contact:status', 's', 'ok', 'Status correct' ]
