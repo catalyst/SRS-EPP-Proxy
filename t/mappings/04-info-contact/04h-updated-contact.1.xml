@@ -5,7 +5,7 @@
       <PostalAddress Address1="1 Acacia Ave" Address2="Treewood" City="Wellington" CountryCode="NZ" PostalCode="6021" Province="Wellington"/>
       <Phone AreaCode="4" CountryCode="4" LocalNumber="0000000"/>
       <CreatedDate Day="03" Hour="17" Minute="03" Month="6" Second="58" TimeZoneOffset="+12:00" Year="2010"/>
-      <AuditDetails ActionId="srsrps-1_149" RegistrarId="100">
+      <AuditDetails ActionId="srsrps-1_149" RegistrarId="1">
         <AuditTime>
           <From Day="03" Hour="17" Minute="03" Month="6" Second="59" TimeZoneOffset="+12:00" Year="2010"/>
         </AuditTime>
