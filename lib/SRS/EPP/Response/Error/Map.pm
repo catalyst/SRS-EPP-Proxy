@@ -5,7 +5,8 @@ use YAML;
 use strict;
 
 use Sub::Exporter -setup => { exports => [
-	qw(map_error ERROR_MAP HINT_CODE_FALLBACK SEVERITY_FALLBACK)
+	qw(map_srs_error_code map_srs_error
+	   ERROR_MAP HINT_CODE_FALLBACK SEVERITY_FALLBACK)
 	] };
 
 # map SRS codes to EPP codes.  Remember that this list squashes a lot
@@ -170,22 +171,17 @@ use constant SEVERITY_FALLBACK => {
 	err => 2400,
        };
 
-sub map_error {
+sub map_srs_error_code {
 	my $srs_error = shift;
-
-	# first, convert the code.
-	my %result;
-	$result{code} = ERROR_MAP->{$srs_error->error_id} ||
+	ERROR_MAP->{$srs_error->error_id} ||
 		HINT_CODE_FALLBACK->{$srs_error->hint} ||
 			SEVERITY_FALLBACK->{$srs_error->severity} ||
 				2400;
+}
 
-	# next, convert the error message.  The RFC says that the msg
-	# should describe the error code, which we're taking to mean
-	# describing the error *condition*.
-	$result{msg} = $srs_error->desc;
+sub map_srs_error {
+	my $srs_error = shift;
 
-	# finally, any errordetails?
 	my @details = $srs_error->details;
 	my @errors;
 	while ( my ($value, $fieldName) = splice @details, 0, 2 ) {
@@ -194,9 +190,8 @@ sub map_error {
 			reason => $fieldName ? "SRS error field '$fieldName'" : '',
 			);
 	}
-	$result{errors} = \@errors;
 
-	%result;
+	@errors;
 }
 
 1;

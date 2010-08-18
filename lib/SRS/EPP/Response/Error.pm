@@ -18,7 +18,11 @@ use Data::Dumper;
 
 with 'MooseX::Log::Log4perl::Easy';
 
-use SRS::EPP::Response::Error::Map qw(map_error);
+use SRS::EPP::Response::Error::Map qw(map_srs_error map_srs_error_code);
+
+use XML::LibXML;
+use PRANG::Graph::Context;
+use XML::SRS::Error;
 
 extends 'SRS::EPP::Response';
 
@@ -34,44 +38,136 @@ has 'bad_node' =>
 has '+server_id' =>
 	required => 1,
 	;
-	
-# TODO: for errors, the code attribute could be made optional, and we could try to figure it
-#  out from the type of exeception given (as we are for SRS errors below). e.g. XML errors
-#  are always a particular code.
-around 'BUILDARGS' => sub {
-    my $orig = shift;
-    my $class = shift;
-    my %params = @_;
-    
-    # If they haven't provided a code, we look at the exception they gave us, and try to
-    #  work it out ourselves. We can only do this if the exception is a XML::SRS::Error
-    # TODO: we possibly want to do this (error mapping) even if they *do* provide a code
-    #  or at least make the interface a bit clearer - right now it's kind of an obscure
-    #  set of parameters that triggers this (useful) magic
-    unless ($params{code}) {        
-        confess "Must provide either a code or exception" unless $params{exception};
-        
-        $params{exception} = [$params{exception}] unless ref $params{exception} eq 'ARRAY';
-        
-        confess "Can only derive code if provided exception isa XML::SRS::Error: " . Dumper (\%params) 
-            if grep { ! blessed($_) || ! $_->isa('XML::SRS::Error') } @{ $params{exception} };
 
-        my @mapped_exceptions;            
-        foreach my $except (@{ $params{exception} }) {
-            my %result = map_error($except);
-            
-            push @mapped_exceptions, @{$result{errors}};
-             
-            # Use the code for the first error we find. The rfc is unclear on what we should use
-            #  (in fact, they probably never thought of it)
-            $params{code} ||= $result{code};
-        }
+has '+code' =>
+	lazy => 1,
+	default => \&derive_error_code,
+	;
 
-        # Overwrite the exception with the XML::EPP::Error(s)        
-        $params{exception} = \@mapped_exceptions;        
-    }
-        
-    return $class->$orig(%params);    
+sub derive_error_code {
+	my $self = shift;
+	my $exception = @_ ? shift : $self->exception;
+	if ( ref $exception and ref $exception eq "ARRAY" ) {
+		return $self->derive_error_code($exception->[0]);
+	}
+	given ($exception) {
+		when (!blessed $_) {
+			return 2400;
+		}
+		when ($_->isa("XML::LibXML::Error")) {
+			return 2001;
+		}
+		when ($_->isa("XML::SRS::Error")) {
+			return map_srs_error_code($exception);
+		}
+		when ($_->isa("PRANG::Graph::Context::Error")) {
+			return 2004;
+		}
+	}
+}
+
+has '+extra' =>
+	lazy => 1,
+	default => \&derive_extra,
+	;
+
+sub derive_extra {
+	my $self = shift;
+	my $exception = @_ ? shift : $self->exception;
+	given ($exception) {
+		when (!ref $_) {
+			return $_;
+		}
+		when (ref($_) eq "ARRAY") {
+			return join "; ", map {
+				$self->derive_extra($_);
+			} @$exception;
+		}
+		when (!blessed $_) {
+			return undef;
+		}
+		when ($_->isa("XML::LibXML::Error")) {
+			return "Input XML not valid (or xmlns error)";
+		}
+		when ($_->isa("XML::SRS::Error")) {
+			return $exception->desc;
+		}
+		when ($_->isa("PRANG::Graph::Context::Error")) {
+			return "Input violates XML Schema";
+		}
+		default {
+			return undef;
+		}
+	}
+}
+
+has 'mapped_errors' =>
+	is => "ro",
+	isa => "ArrayRef[XML::EPP::Error]",
+	lazy => 1,
+	default => sub {
+		my $self = shift;
+		my $exceptions_a = $self->exception;
+		unless ( ref $exceptions_a and
+				 ref $exceptions_a eq "ARRAY" ) {
+			$exceptions_a = [ $exceptions_a ];
+		}
+		[ map { map_exception($_) } @$exceptions_a ];
+	};
+
+sub map_exception {
+	my $except = shift;
+	given ($except) {
+		when (ref $_ eq 'ARRAY') {
+			return map { map_exception($_) } @$except;
+		}
+		when (!blessed($_)) {
+			my $errorstr = ref $_ ? Dumper $_ : $_;
+			my @lines = split /\n/, $errorstr;
+			my $reason = parse_moose_error($lines[0]);
+			return XML::EPP::Error->new(
+				value => 'Unknown',
+				reason => $reason,
+				);
+		}
+		when ($_->isa("PRANG::Graph::Context::Error")) {
+			use YAML;
+			my $xpath = $except->xpath;
+
+			my $message = $except->message;
+
+			my @lines = split /\n/, $message;
+
+			my $reason = "XML Schema validation error at $xpath";
+
+			$reason .= '; ' . parse_moose_error($lines[0]);
+
+			return XML::EPP::Error->new(
+				value => $except->node || '',
+				reason => $reason,
+				);
+		}
+		when ($_->isa("XML::LibXML::Error")) {
+			my @errors;
+			while ( $except ) {
+				my $error = XML::EPP::Error->new(
+					value => $except->context || "(n/a)",
+					reason => $except->message,
+					);
+				push @errors, $error;
+				# though called '_prev', this function
+				# is documented.
+				$except = $except->_prev;
+			}
+			return @errors;
+		}
+		when ($_->isa("XML::EPP::Error")) {
+			return $except;
+		}
+		when ($_->isa("XML::SRS::Error")) {
+			return map_error($except);
+		}
+	}
 };
 
 around 'build_response' => sub {
@@ -82,87 +178,52 @@ around 'build_response' => sub {
 	my $result = $message->message->result;
 
 	my $bad_node = $self->bad_node;
-	my $except = $self->exception;
+	my $errors_a = $self->mapped_errors;
 
-	given ($except) {
-        when (ref $_ eq 'ARRAY') {
-            foreach my $error (@$_) {
-                $result->[0]->add_error($error);
-            }
-        }
-		when (!blessed($_)) {
-		    my $reason = ref $_ ? Dumper $_ : $_;
-		    my @lines = split /\n/, $reason;
-		    my $error = XML::EPP::Error->new(
-				value => 'Unknown',
-				reason =>  parse_moose_error($lines[0]),
-			);
-			$result->[0]->add_error($error);
-		}
-		when ($_->isa("PRANG::Graph::Context::Error") ) {
-			use YAML;
-			my $xpath = $except->xpath;
-
-			my $message = $except->message;
-
-			my @lines = split /\n/, $message;			
-			
-			my $reason = "XML validation error at $xpath";
-			
-			$reason .= '; ' . parse_moose_error($lines[0]);
-
-			my $error = XML::EPP::Error->new(
-				value => $except->node || '',
-				reason => $reason,
-				);
-			$result->[0]->add_error($error);
-		}
-		when ($_->isa("XML::LibXML::Error") ) {
-			while ( $except ) {
-				my $error = XML::EPP::Error->new(
-					value => $except->context || "(n/a)",
-					reason => $except->message,
-					);
-				$result->[0]->add_error( $error );
-				# though called '_prev', this function
-				# is documented.
-				$except = $except->_prev;
-			}
-		}
-		when ($_->isa("XML::EPP::Error")) {
-            $result->[0]->add_error($except);   
-		}
-	}
-	$message;
+	$result->[0]->add_error( $_ ) for grep { defined } @$errors_a;
+	return $message;
 };
 
-# TODO: Moose supports structured errors, although might need an extension or a newer version
+# TODO: Moose supports structured errors, although might need an
+# extension or a newer version
 #  This would be much easier if we used those
 sub parse_moose_error {
-    my $string = shift;
-    
-    my $error = '';
-    
-	if ( $string =~ m{Validation failed for '.*::(\w+Type)' (?:failed )?with value (.*) at}) {
+	my $string = shift;
+
+	my $error = '';
+
+	if ( $string =~ m{
+		Validation \s failed \s for \s
+		'.*::(\w+Type)'
+		\s (?:failed \s )?with \s value \s
+		(.*) \s at
+		}x) {
 		$error = "'$2' does not meet schema requirements for $1";
 	}
-	elsif ($string =~ m{Attribute \((.+?)\) does not pass the type constraint because: Validation failed for '.+?' (?:failed )?with value (.+?) at}) {
-	    my ($label, $value) = ($1, $2);
-	    unless ($value =~ m{^(?:ARRAY|HASH)}) {
-	       $error = "Invalid value $value ($label)";
-	    }
+	elsif ($string =~ m{
+		Attribute \s \((.+?)\) \s does \s not \s
+		pass \s the \s type \s constraint \s
+		because: \s Validation \s failed \s for \s
+		'.+?' \s (?:failed \s )?
+		with \s value \s (.+?) \s at
+		}x) {
+		my ($label, $value) = ($1, $2);
+		unless ($value =~ m{^(?:ARRAY|HASH)}) {
+			$error = "Invalid value $value ($label)";
+		}
 	}
 	elsif ($string =~ m{Attribute \((.+?)\) is required}) {
-	    $error = "Missing required value ($1)";   
+		$error = "Missing required value ($1)";
 	}
 	else {
-	    # Catch-all - return the first line.
-	    # TODO: possibly too much information... might pay to remove this before go-live
-	    $string =~ m{^(.+?)(?:at .+? line \d+)?\.?$}; 
-	    $error = $1;
+		# Catch-all - return the first line.
+		# TODO: possibly too much information... might pay to
+		# remove this before go-live
+		$string =~ m{^(.+?)(?:at .+? line \d+)?\.?$};
+		$error = $1;
 	}
-	
-	return $error;   
+
+	return $error;
 }
 
 no Moose;

@@ -251,12 +251,9 @@ method input_packet( Str $data ) {
 			($queue_item->client_id ?
 				 (client_id => $queue_item->client_id) : ()),
 			server_id => $self->new_server_id,
-			code => 2001,
 			exception => $error,
 			);
 		$self->log_info("queuing response: $error_rs");
-		# insert a dummy command which returns a 2001
-		# response
 		$self->add_command_response(
 			$error_rs,
 			$queue_item,
