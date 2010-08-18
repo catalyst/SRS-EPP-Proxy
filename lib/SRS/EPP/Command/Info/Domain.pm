@@ -138,7 +138,7 @@ sub buildInfoResponse {
       created => ($domain->registered_date())->timestamptz, # crDate
       expiry_date => ($domain->billed_until())->timestamptz, # exDate
       ($domain_updated ? (updated => ($domain->audit->when->begin())->timestamptz) : ()), # upDate
-      ($domain_updated ? (updated_by_id => sprintf("%03d",$domain->audit->registrar_id)) : ()), # upId
+      ($domain_updated ? (updated_by_id => sprintf("%03d",$domain->audit->registrar_id)) : ()), # upID
   );
 }
 
