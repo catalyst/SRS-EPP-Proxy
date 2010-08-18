@@ -1,4 +1,4 @@
-# Test info domain on a newly created domain - should omit upDate and upId
+# Test info domain on a newly created domain - should omit upDate and upID
 template: info-domain.tt
 
 vars:
@@ -11,7 +11,7 @@ output_assertions:
   count:
     - [ '//epp:resData', 1, 'EPP: Check for resData' ]
     - [ '//domain:upDate', 0, 'EPP: upDate element not returned' ]
-    - [ '//domain:upId', 0, 'EPP: upId element not returned' ]
+    - [ '//domain:upID', 0, 'EPP: upID element not returned' ]
   match:
   match_all:
   attr_is:
