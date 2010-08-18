@@ -4,7 +4,7 @@ template: update-domain.tt
 vars:
   domain: updatable.co.te
   admin: registrant-001
-  admin_old: 10c
+  admin_old: 10d
 
 input_assertions:
   class: SRS::EPP::Command::Update::Domain
@@ -14,7 +14,7 @@ input_assertions:
   match:
     - [ '//domain:name', 'updatable.co.te', 'SRS: Check the domain name' ]
     - [ '//domain:add/domain:contact', 'registrant-001', 'SRS: Check the new admin' ]
-    - [ '//domain:rem/domain:contact', '10c', 'SRS: Check the old admin' ]
+    - [ '//domain:rem/domain:contact', '10d', 'SRS: Check the old admin' ]
   match_all:
     - [ '//domain:contact/@type', 'admin', 'SRS: Check all contacts are of type admin' ]
 

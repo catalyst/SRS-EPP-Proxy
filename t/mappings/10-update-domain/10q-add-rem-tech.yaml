@@ -3,8 +3,8 @@ template: update-domain.tt
 
 vars:
   domain: updatable.co.te
-  tech: registrant-001
-  tech_old: 10d
+  tech: 10d
+  tech_old: registrant-001
 
 input_assertions:
   class: SRS::EPP::Command::Update::Domain
@@ -23,7 +23,7 @@ SRS:
         - [ '//DomainNameFilter', 'updatable.co.te', 'Check for the domain name' ]
       match_all:
       attr_is:
-        - [ '//TechnicalContact', 'HandleId', 'registrant-001', 'Check for the tech contact' ]
+        - [ '//TechnicalContact', 'HandleId', '10d', 'Check for the tech contact' ]
 
 
 output_assertions:
