@@ -9,7 +9,7 @@ vars:
 output_assertions:
   count:
   match:
-    - [ '//epp:reason', 'XML validation error at /epp/command/info/domain:info; ''blah'' does not meet schema requirements for hostsType', 'EPP: correct reason' ]
+    - [ '//epp:reason', 'XML Schema validation error at /epp/command/info/domain:info/domain:name; invalid value of attribute hosts', 'EPP: correct reason' ]
   match_all:
   attr_is:
     - [ '//epp:result', 'code', 2001, 'EPP: command failed' ]
