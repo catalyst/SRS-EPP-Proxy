@@ -3,7 +3,7 @@ registrar: 1
 
 request: |-
    <NZSRSRequest VerMinor="0" VerMajor="5" RegistrarId="100">
-       <AckMessage OriginatingRegistrarId="1" ActionId="[% actionid %]-1" TransId="005b-2-create.yml 1"/>
+       <AckMessage OriginatingRegistrarId="1" ActionId="[% actionid %]-1" TransId="005e-2-create.yml 1"/>
    </NZSRSRequest>
 
 assertions:

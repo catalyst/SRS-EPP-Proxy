@@ -128,6 +128,16 @@ sub buildInfoResponse {
      $domain_updated = 1;
   }
 
+  ## Do we also want to include the auth_info (UDAI) data?
+  my $auth_info;
+  if ( my $udai = $domain->UDAI() ) {
+    $auth_info = XML::EPP::Domain::AuthInfo->new(
+      pw => XML::EPP::Common::Password->new(
+        content => $udai,
+      ),
+    );
+  }
+
   return XML::EPP::Domain::Info::Response->new(
       name => $domain->name,
       roid => substr(md5_hex($domain->name), 0, 12) . '-DOM',
@@ -139,6 +149,7 @@ sub buildInfoResponse {
       expiry_date => ($domain->billed_until())->timestamptz, # exDate
       ($domain_updated ? (updated => ($domain->audit->when->begin())->timestamptz) : ()), # upDate
       ($domain_updated ? (updated_by_id => sprintf("%03d",$domain->audit->registrar_id)) : ()), # upID
+      ($auth_info ? (auth_info => $auth_info) : ()),
   );
 }
 
