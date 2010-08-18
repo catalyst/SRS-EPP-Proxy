@@ -13,5 +13,5 @@ input_assertions:
 
 output_assertions:
   attr_is:
-    - [ '//epp:result', 'code', '2001', 'EPP: login failed' ]
+    - [ '//epp:result', 'code', '2004', 'EPP: login failed' ]
 

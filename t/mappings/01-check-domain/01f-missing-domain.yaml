@@ -14,4 +14,4 @@ output_assertions:
   match:
     - [ '//epp:reason', 'XML Schema validation error at /epp/command/check/domain:check/domain:name; bad value ''''', 'Correct reason' ]
   attr_is:
-    - [ '//epp:result', 'code', 2001, 'EPP: Error returned' ]
+    - [ '//epp:result', 'code', 2004, 'EPP: Error returned' ]
