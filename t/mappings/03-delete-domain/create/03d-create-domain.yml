@@ -1,6 +1,7 @@
 description: set up domain
 registrar: 1
 
+
 request: |-
  <NZSRSRequest VerMajor="4" VerMinor="4" RegistrarId="100">
    <DomainCreate
@@ -34,6 +35,6 @@ request: |-
       <TechnicalContact />
     </DomainCreate>
  </NZSRSRequest>
- 
+
 assertions:
  - xpath_matches: [ '//Error', '0', 'No errors' ]

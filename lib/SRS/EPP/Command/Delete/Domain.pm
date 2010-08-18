@@ -39,7 +39,7 @@ method notify( SRS::EPP::SRSResponse @rs ) {
     return $self->make_response(code => 2303);
   } 
   if ( $response->can("status") ) {
-    if ( $response->status eq "Available" ) {
+    if ( $response->status eq "Available" || $response->status eq 'PendingRelease' ) {
       return $self->make_response(code => 1000);
     }
   }
