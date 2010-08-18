@@ -24,7 +24,9 @@ SRS:
 
 output_assertions:
   count:
-    - [ '//contact:id', 1, 'SRS: Check for one ID' ]
+    - [ '//contact:id', 1, 'Check for one ID' ]
+    - [ '//contact:upDate', 0, 'No updated date returned' ]
+    - [ '//contact:upID', 0, 'No updated id returned' ]
   match:
     - [ '//contact:id', '04a', 'Correct id returned']
     - [ '//contact:name', 'A Person', 'Correct name returned']
@@ -37,6 +39,8 @@ output_assertions:
     - [ '//contact:voice', '+4.40000000', 'Phone number correct']
     - [ '//contact:email', 'someone@example.com', 'Email correct']
     - [ '//contact:roid', 'e0b1b9deeada-CON', 'Email correct']
+    - [ '//contact:crDate', '/\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d.\d\d:\d\d/', 'Created date returned' ]
+    - [ '//contact:crID', '100', 'Created id correct' ]
   match_all:
   attr_is:
     - [ '//epp:result', 'code', 1000, 'SRS: Check for correct result code' ]

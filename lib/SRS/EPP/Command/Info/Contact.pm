@@ -59,6 +59,12 @@ method notify( SRS::EPP::SRSResponse @rs ) {
     $addr{sp} = $response->address->region   if defined $response->address->region; # state or province
     $addr{pc} = $response->address->postcode if defined $response->address->postcode;
 
+    # Compare the contact's creation date against the audit time, to tell us if it's been updated    
+    my $contact_updated = 0;
+    if ($response->created_date->timestamptz ne $response->audit->when->begin->timestamptz) {
+       $contact_updated = 1;
+    }
+
     my $r = XML::EPP::Contact::Info::Response->new(
         id => $response->handle_id,
         postal_info => [ XML::EPP::Contact::PostalInfo->new(
@@ -71,6 +77,15 @@ method notify( SRS::EPP::SRSResponse @rs ) {
         ($response->phone ? (voice => $self->_translate_phone_number($response->phone)) : ()),
         ($response->fax   ? (fax   => $self->_translate_phone_number($response->fax))   : ()),
         email => $response->email,
+        created => $response->created_date->timestamptz,
+        creator_id => $response->registrar_id,
+        ($contact_updated ?
+            (
+                updated_by_id => $response->audit->registrar_id,
+                updated => $response->audit->when->begin->timestamptz,
+            )
+            : ()
+        ),
     );
 
     return $self->make_response(
