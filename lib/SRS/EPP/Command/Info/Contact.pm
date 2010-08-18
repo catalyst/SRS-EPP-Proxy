@@ -36,6 +36,11 @@ has 'code' => (
     isa => "Int",
 );
 
+sub zero_pad {
+	my $registrar_id = shift;
+	sprintf("%03d", $registrar_id);
+}
+
 method notify( SRS::EPP::SRSResponse @rs ) {
     my $message = $rs[0]->message;
     my $response = $message->response;
@@ -78,10 +83,10 @@ method notify( SRS::EPP::SRSResponse @rs ) {
         ($response->fax   ? (fax   => $self->_translate_phone_number($response->fax))   : ()),
         email => $response->email,
         created => $response->created_date->timestamptz,
-        creator_id => $response->registrar_id,
+        creator_id => zero_pad($response->registrar_id),
         ($contact_updated ?
             (
-                updated_by_id => $response->audit->registrar_id,
+                updated_by_id => zero_pad($response->audit->registrar_id),
                 updated => $response->audit->when->begin->timestamptz,
             )
             : ()
