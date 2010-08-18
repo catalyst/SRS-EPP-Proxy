@@ -84,7 +84,7 @@ sub derive_extra {
 			} @$exception;
 		}
 		when (!blessed $_) {
-			return undef;
+			return "";
 		}
 		when ($_->isa("XML::LibXML::Error")) {
 			return "Input XML not valid (or xmlns error)";
@@ -96,7 +96,7 @@ sub derive_extra {
 			return "Input violates XML Schema";
 		}
 		default {
-			return undef;
+			return "";
 		}
 	}
 }
