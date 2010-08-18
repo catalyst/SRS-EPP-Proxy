@@ -165,7 +165,7 @@ sub map_exception {
 			return $except;
 		}
 		when ($_->isa("XML::SRS::Error")) {
-			return map_error($except);
+			return map_srs_error($except);
 		}
 	}
 };
