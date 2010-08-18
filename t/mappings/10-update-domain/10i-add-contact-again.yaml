@@ -1,9 +1,10 @@
-# Update domain, add admin contact back in
+# Update domain, add admin contact after it's been removed (so is using the default)
 template: update-domain.tt
 
 vars:
   domain: updatable.co.te
   admin: registrant-001
+  admin_old: 10d
 
 input_assertions:
   class: SRS::EPP::Command::Update::Domain

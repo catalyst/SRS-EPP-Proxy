@@ -108,22 +108,27 @@ method process( SRS::EPP::Session $session ) {
     # If they've added or removed contacts, we also need to do a ddq
     #  to make sure they've added or removed the correct contacts
     if ($payload->add && $payload->add->contact || $payload->remove && $payload->remove->contact) {
-        my %contact_changes = (
-            ($payload->add ? (add => $payload->add->contact) : ()), 
-            ($payload->remove ? (remove => $payload->remove->contact) : ()),
-        );
-        $self->contact_changes(\%contact_changes);
+        my %contact_changes = ();
         
         for my $contact_type (qw/admin tech/) {
-            my $changes = 0;
+            for my $action (qw/add remove/) {
+                my @contacts;
+                @contacts = grep {$_->type eq $contact_type} @{$payload->$action->contact}
+                    if $payload->$action;
+                
+                $contact_changes{$contact_type}->{$action} = \@contacts;
+            }
+        }
+        $self->contact_changes(\%contact_changes);
+        
+        for my $contact_type (keys %contact_changes) {          
+            my %changes = %{$contact_changes{$contact_type}};
             
+            next unless %changes;            
+             
             # Check they're not adding or removing more than one contact of the same type
-            for my $action (keys %contact_changes) {
-                my $changes_count = grep { $_->type eq $contact_type } @{$contact_changes{$action}};
-                
-                $changes = 1 if $changes_count >= 1;
-                
-                if ($changes_count >= 2) {
+            for my $action (keys %changes) {
+                if (scalar @{$changes{$action}} > 1) {
                     return $self->make_response(
                         Error => (
                             code      => 2306,
@@ -132,11 +137,23 @@ method process( SRS::EPP::Session $session ) {
                                 reason => "Only one $contact_type contact per domain supported",                                
                             ),
                         )
-                    );                    
+                    );
                 }
-            }
+            }            
             
-            next unless $changes;
+            # The only valid actions are to remove, or add & remove. 
+            #  An add on its own is invalid (because there's always a default) so reject it
+            if (@{$changes{add}} && ! @{$changes{remove}}) {
+                return $self->make_response(
+                    Error => (
+                        code      => 2306,
+                        exception => XML::EPP::Error->new(
+                            value  => '',
+                            reason => "Only one $contact_type contact per domain supported",                                
+                        ),
+                    )
+                );                
+            }
             
             # We have some changes to this contact type, so we need to request it in the ddq
             my $long_type = $contact_type eq 'tech' ? 'technical' : $contact_type;
@@ -184,10 +201,7 @@ method notify( SRS::EPP::SRSResponse @rs ) {
                 my $method = 'contact_' . $long_type;
                 my $existing_contact = $res->$method;
                     
-                my $contact_removed;                      
-                if (my $rem = $self->contact_changes->{remove}) {
-                    ($contact_removed) = grep { $_->type eq $contact_type } @$rem;
-                }
+                my $contact_removed = $self->contact_changes->{$contact_type}{remove}[0];                      
                 
                 # Throw an error if they're removing a contact that doesn't exist
                 if ($contact_removed && (! $existing_contact || $existing_contact->handle_id ne $contact_removed->value)) {
@@ -203,19 +217,17 @@ method notify( SRS::EPP::SRSResponse @rs ) {
                 }                
                 
                 # If they're adding a contact, but one already exists (which hasn't been removed), throw an error
-                if (my $add = $self->contact_changes->{add}) {
-                    my ($contact_added) = grep { $_->type eq $contact_type } @$add;
-                    if ($contact_added && $existing_contact && ! $contact_removed) {
-                        return $self->make_response(
-                            Error => (
-                                code      => 2306,
-                                exception => XML::EPP::Error->new(
-                                    value  => '',
-                                    reason => "Only one $contact_type contact per domain supported",                                
-                                ),
-                            )
-                        );                         
-                    }
+                my $contact_added = $self->contact_changes->{$contact_type}{add}[0];
+                if ($contact_added && $existing_contact && ! $contact_removed) {
+                    return $self->make_response(
+                        Error => (
+                            code      => 2306,
+                            exception => XML::EPP::Error->new(
+                                value  => '',
+                                reason => "Only one $contact_type contact per domain supported",                                
+                            ),
+                        )
+                    );                         
                 }
             }
         } 

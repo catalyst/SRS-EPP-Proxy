@@ -8,15 +8,6 @@ vars:
 input_assertions:
   class: SRS::EPP::Command::Update::Domain
 
-SRS:
-  - assertions:
-      count:
-      match:
-        - [ '//DomainNameFilter', 'updatable.co.te', 'SRS: Check for the domain name' ]
-      match_all:
-      attr_is:
-        - [ '//FieldList', 'AdminContact', '1', 'SRS: Admin contact requested in DDQ field list' ]
-
 output_assertions:
   count:
     - [ '//epp:result', 1, 'EPP: Check for one result' ]

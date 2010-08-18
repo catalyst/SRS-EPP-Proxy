@@ -8,8 +8,14 @@
       [%~ IF admin %]
       <domain:contact type="admin">[% admin %]</domain:contact>
       [%~ END %]
+      [%~ IF admin2 %]
+      <domain:contact type="admin">[% admin2 %]</domain:contact>
+      [%~ END %]      
       [%~ IF tech %]
       <domain:contact type="tech">[% tech %]</domain:contact>
+      [%~ END %]
+      [%~ IF tech2 %]
+      <domain:contact type="tech">[% tech2 %]</domain:contact>
       [%~ END %]
       [%~ IF nslist %]
       <domain:ns>
@@ -33,9 +39,15 @@
       [%~ IF admin_old %]
       <domain:contact type="admin">[% admin_old %]</domain:contact>
       [%~ END %]
+      [%~ IF admin_old2 %]
+      <domain:contact type="admin">[% admin_old2 %]</domain:contact>
+      [%~ END %]      
       [%~ IF tech_old %]
       <domain:contact type="tech">[% tech_old %]</domain:contact>
       [%~ END %]
+      [%~ IF tech_old2 %]
+      <domain:contact type="tech">[% tech_old2 %]</domain:contact>
+      [%~ END %]      
       [%~ IF nslist_old %]
       <domain:ns>
         [%~ FOREACH ns IN nslist_old %]
