@@ -10,6 +10,8 @@ requires 'make_response';
 #  to the client (created via the required method 'make_response'. 
 # This might be a slightly unusual interface, but it means the generation of the
 #  response is consistent across consumers of this role
+# TODO: in hindsight, perhaps we should split this into validate/translate methods,
+#  similar to SRS::EPP::Common::Contact
 sub translate_ns_epp_to_srs {
     my $self = shift;
     my @ns = @_;
