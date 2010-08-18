@@ -3,7 +3,7 @@
 template: info-contact.tt
 
 vars:
-  contact_id: 04g
+  contact_id: 04h
 
 input_assertions:
   class: SRS::EPP::Command::Info::Contact
