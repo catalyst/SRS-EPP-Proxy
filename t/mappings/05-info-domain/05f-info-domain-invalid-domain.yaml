@@ -26,7 +26,7 @@ output_assertions:
     - [ '//epp:resData', 0, 'EPP: Check for resData' ]
   match:
     - [ '//epp:value', 'cheese.te', 'Incorrect value returned' ]
-    - [ '//epp:reason', 'SRS error field ''DomainName''', 'Incorrect field returned' ]
+    - [ '//epp:reason', 'value of ''DomainName''', 'Incorrect field returned' ]
   match_all:
   attr_is:
     - [ '//epp:result', 'code', 2306, 'EPP: correct error' ]

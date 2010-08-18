@@ -182,12 +182,12 @@ sub map_srs_error_code {
 sub map_srs_error {
 	my $srs_error = shift;
 
-	my @details = $srs_error->details;
+	my @details = $srs_error->named_details;
 	my @errors;
-	while ( my ($value, $fieldName) = splice @details, 0, 2 ) {
+	while ( my ($name, $value) = splice @details, 0, 2 ) {
 		push @errors, XML::EPP::Error->new(
 			value => $value,
-			reason => $fieldName ? "SRS error field '$fieldName'" : '',
+			reason => $name,
 			);
 	}
 

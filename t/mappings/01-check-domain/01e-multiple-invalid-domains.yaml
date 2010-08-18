@@ -27,8 +27,8 @@ output_assertions:
     - [ '//epp:resData', 0, 'EPP: No resData in the response' ]
   match:
     - [ '//epp:result/epp:extValue[1]/epp:value', 'cheese.te', 'cheese.te returned as first incorrect value' ]
-    - [ '//epp:result/epp:extValue[1]/epp:reason', 'SRS error field ''DomainName''', 'Incorrect field returned' ]
+    - [ '//epp:result/epp:extValue[1]/epp:reason', 'value of ''DomainName''', 'Incorrect field returned' ]
     - [ '//epp:result/epp:extValue[2]/epp:value', 'blah.te', 'blah.te returned as first incorrect value' ]
-    - [ '//epp:result/epp:extValue[2]/epp:reason', 'SRS error field ''DomainName''', 'Incorrect field returned' ]
+    - [ '//epp:result/epp:extValue[2]/epp:reason', 'value of ''DomainName''', 'Incorrect field returned' ]
   attr_is:
     - [ '//epp:result', 'code', 2306, 'EPP: Error returned' ]
