@@ -105,6 +105,10 @@ sub extract_fact {
     # returning a full info response...
     return SRS::EPP::Command::Info::Domain::buildInfoResponse($domain);
   }
+
+  if ( $action eq "DomainCreate" ) {
+    return SRS::EPP::Command::Info::Domain::buildInfoResponse($domain);
+  }
 }
 
 method notify( SRS::EPP::SRSResponse @rs ) {
