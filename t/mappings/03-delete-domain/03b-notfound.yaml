@@ -1,7 +1,7 @@
 template: delete-domain.tt
 
 vars:
-  domain: chedder.co.te
+  domain: chedder555.co.te
 
 input_assertions: {}
 

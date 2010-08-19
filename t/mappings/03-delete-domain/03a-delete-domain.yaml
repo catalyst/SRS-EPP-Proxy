@@ -1,17 +1,15 @@
 template: delete-domain.tt
 
 vars:
-  domain: chedder.co.te
+  domain: 03a.co.te
 
 input_assertions:
   class: SRS::EPP::Command::Delete::Domain
-  match:
-    - [ '//domain:name', 'chedder.co.te', 'Domain correctly included in XML' ]
 
 SRS:
   - assertions:
       match:
-        - [ '/NZSRSRequest/DomainUpdate/DomainNameFilter', 'chedder.co.te', 'SRS: Update correct domain' ]
+        - [ '/NZSRSRequest/DomainUpdate/DomainNameFilter', '03a.co.te', 'SRS: Update correct domain' ]
       attr_is:
         - [ '/NZSRSRequest/DomainUpdate', 'Cancel', '1', 'SRS: Cancel the domain' ]
 
