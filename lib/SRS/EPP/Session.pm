@@ -466,7 +466,7 @@ method connected() {
 			$self->log_trace("got input callback");
 			$self->input_event;
 		},
-		timeout => 30,
+		timeout => 300,
 		timeout_cb => sub {
 			$self->log_trace("got input timeout event");
 			$self->input_timeout;
@@ -481,7 +481,7 @@ method connected() {
 		cb => sub {
 			$self->output_event;
 		},
-		timeout => 30,
+		timeout => 300,
 		timeout_cb => sub {
 			$self->log_trace("got output timeout event");
 		},
