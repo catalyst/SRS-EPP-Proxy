@@ -3,9 +3,9 @@ template: update-domain.tt
 
 vars:
   domain: updatable.co.te
-  admin_old: registrant-001
+  admin_old: 10d
+  admin: registrant-001
   tech_old: 10d
-  admin: 10d
   tech: registrant-001
 
 input_assertions:
@@ -25,7 +25,7 @@ SRS:
         - [ '//DomainNameFilter', 'updatable.co.te', 'Check for the domain name' ]
       match_all:
       attr_is:
-        - [ '//AdminContact', 'HandleId', '10d', 'Check for the admin contact' ]
+        - [ '//AdminContact', 'HandleId', 'registrant-001', 'Check for the admin contact' ]
         - [ '//TechnicalContact', 'HandleId', 'registrant-001', 'Check for the tech contact' ]
 
 output_assertions:
