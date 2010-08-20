@@ -45,6 +45,7 @@ method process( SRS::EPP::Session $session ) {
         filter => [$payload->name],
         action_id => $message->client_id || sprintf("auto.%x",time()),
         udai => $pass->content(),
+        convert_contacts_to_handles => 1,
       ),
     );
   }
