@@ -39,6 +39,7 @@ method process( SRS::EPP::Session $session ) {
     }
     
     my $address;
+    my $name;
     if ($contact->postal_info) {
         $address = $self->translate_address($contact->postal_info->[0]->addr);
         
@@ -48,6 +49,8 @@ method process( SRS::EPP::Session $session ) {
         for my $field (qw/address2 region postcode/) {
             $address->$field('') unless $address->$field;
         }
+        
+        $name = $contact->postal_info->[0]->name;
     }
         
         
@@ -55,6 +58,7 @@ method process( SRS::EPP::Session $session ) {
         XML::SRS::Handle::Update->new(
             handle_id => $payload->id,
             action_id => $message->client_id,
+            ($name ? (name => $name) : ()),
             ($address ? (address => $address) : ()),
             ($contact->voice ? (phone => $contact->voice->content) : ()),
             ($contact->fax ? (fax => $contact->fax->content) : ()),
