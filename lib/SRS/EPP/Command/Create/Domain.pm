@@ -68,8 +68,8 @@ method process( SRS::EPP::Session $session ) {
         domain_name => $payload->name(),
         term => 1, # ToDo: check this
         contact_registrant => $contact_registrant,
-        contact_admin => $contact_admin,
-        contact_technical => $contact_technical,
+        $contact_admin ? (contact_admin => $contact_admin) : (),
+        $contact_technical ? (contact_technical => $contact_technical) : (),
         action_id => $message->client_id || sprintf('auto.%x',time()),
     );
 
