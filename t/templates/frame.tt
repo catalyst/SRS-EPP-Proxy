@@ -2,6 +2,6 @@
 <epp xmlns="urn:ietf:params:xml:ns:epp-1.0">
   <command>
 [% INCLUDE $command -%]
-  <clTRID>[% transaction_id || 'brause' %]</clTRID>
+[% IF transaction_id %]<clTRID>[% transaction_id %]</clTRID>[% END %]
   </command>
 </epp>

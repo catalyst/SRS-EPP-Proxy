@@ -54,7 +54,7 @@ method process( SRS::EPP::Session $session ) {
     return (
         XML::SRS::Handle::Update->new(
             handle_id => $payload->id,
-            action_id => $message->client_id,
+            action_id => $message->client_id || $self->server_id,
             ($address ? (address => $address) : ()),
             ($contact->voice ? (phone => $contact->voice->content) : ()),
             ($contact->fax ? (fax => $contact->fax->content) : ()),

@@ -2,6 +2,7 @@ template: delete-contact.tt
 
 vars:
   contact_id: c_id2
+  transaction_id: delete-this
 
 input_assertions:
   match:

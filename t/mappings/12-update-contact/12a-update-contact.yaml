@@ -7,6 +7,7 @@ vars:
   city: blah
   ccode: NZ
   street: street1
+  transaction_id: cheese
 
 input_assertions:
   class: SRS::EPP::Command::Update::Contact
