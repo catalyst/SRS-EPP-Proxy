@@ -126,7 +126,7 @@ method notify( SRS::EPP::SRSResponse @rs ) {
     if ( $response->isa("XML::SRS::Message::Ack::Response") ) {
       $self->remaining($response->remaining());
       my $msgQ = XML::EPP::MsgQ->new(
-        count => $self->remaining(), 
+        count => $self->remaining(),
         id => sprintf("%04d%s",$response->registrar_id(),$response->tx_id()),
       );
       return $self->make_response(code => 1000, msgQ => $msgQ);
@@ -137,7 +137,7 @@ method notify( SRS::EPP::SRSResponse @rs ) {
 
       my $id = sprintf("%04d%s",$record->by_id,$record->client_id);
       my $msgQ = XML::EPP::MsgQ->new(
-        count => $self->remaining(), 
+        count => $self->remaining(),
         id => $id,
       );
 

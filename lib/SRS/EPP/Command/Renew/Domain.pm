@@ -20,7 +20,7 @@ method duplicateRenew ( XML::SRS::TimeStamp $domainDate, Str $txnDate ) {
   # This is a bit mad!
   # The idea is that we just want to ensure that the same transaction doesn't
   # get repeated, and renew a domain twice.
-  # 
+  #
   # We are going to be very forgiving here - if the
   # String provied as part of the EPP transaction is within a few days of the
   # billed_until date on the domain - we'll allow the renew to happen
@@ -88,7 +88,7 @@ method notify( SRS::EPP::SRSResponse @rs ) {
     );
     return $self->make_response(
         code => 1000,
-        payload => $epp_resp,        
+        payload => $epp_resp,
     );
   }
 

@@ -32,7 +32,7 @@ method process( SRS::EPP::Session $session ) {
     # create all the contacts (using their handles)
     my $contact_registrant = XML::SRS::Contact->new( handle_id => $payload->registrant() );
     my ($contact_admin, $contact_technical);
-    
+
     foreach my $contact ( @$contacts ) {
         if ( $contact->type eq 'admin' ) {
             if ($contact_admin) {
@@ -63,7 +63,7 @@ method process( SRS::EPP::Session $session ) {
             $contact_technical = XML::SRS::Contact->new( handle_id => $contact->value );
         }
     }
-    
+
     my $request = XML::SRS::Domain::Create->new(
         domain_name => $payload->name(),
         term => 1, # ToDo: check this
@@ -74,7 +74,7 @@ method process( SRS::EPP::Session $session ) {
     );
 
     my $ns = $payload->ns ? $payload->ns->ns : undef;
-    
+
     if ($ns) {
         my @ns_objs = eval { $self->translate_ns_epp_to_srs(@$ns); };
         my $error = $@;
@@ -82,11 +82,11 @@ method process( SRS::EPP::Session $session ) {
             return $error if $error->isa('SRS::EPP::Response::Error');
             die $error; # rethrow
         }
-    
+
         my $list = XML::SRS::Server::List->new(
             nameservers => \@ns_objs,
         );
-        
+
         $request->nameservers($list);
     }
 

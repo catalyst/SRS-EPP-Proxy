@@ -37,8 +37,8 @@ method notify( SRS::EPP::SRSResponse @rs ) {
 	my @response_items;
 	my @errors;
 	for my $response ( @rs ) {
-		my $domain = $response->message->response;			
-		
+		my $domain = $response->message->response;
+
 		my $name_status = XML::EPP::Domain::Check::Name->new(
 			name => $domain->name,
 			available => ($domain->status eq "Available"
@@ -47,7 +47,7 @@ method notify( SRS::EPP::SRSResponse @rs ) {
 		my $result = XML::EPP::Domain::Check::Status->new(
 			name_status => $name_status,
 	    );
-	    
+
 	    push @response_items, $result;
 
 	}

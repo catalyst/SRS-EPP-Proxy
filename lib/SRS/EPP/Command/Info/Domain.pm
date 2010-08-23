@@ -40,14 +40,14 @@ method process( SRS::EPP::Session $session ) {
         effective_from     => 1,
         registrant_contact => 1,
         admin_contact      => 1,
-        technical_contact  => 1,   
+        technical_contact  => 1,
         status             => 1,
         locked_date        => 1,
         changed_by_registrar_id => 1,
     );
-    
+
     # We only want to return name servers if the 'hosts' attribute is 'all' or 'del'
-    $ddq_fields{name_servers} = 1 if $payload->name->hosts eq 'all' || $payload->name->hosts eq 'del'; 
+    $ddq_fields{name_servers} = 1 if $payload->name->hosts eq 'all' || $payload->name->hosts eq 'del';
 
 	return (
         XML::SRS::Whois->new(
@@ -67,7 +67,7 @@ method notify( SRS::EPP::SRSResponse @rs ) {
     # check there are two responses
     my $whois = $rs[0]->message->response;
     my $domain = $rs[1]->message->response;
-    
+
     # if status is available, then the object doesn't exist
     if ( $whois->status eq 'Available' ) {
         # since this is available, we already know the result is 'Object does not exist'
@@ -95,18 +95,18 @@ sub buildInfoResponse {
   # get some things out to make it easier on the eye below
   my $nsList;
   if ( $domain->nameservers ) {
-      my @nameservers = map { XML::EPP::Domain::HostAttr->new(name => $_->fqdn) } 
+      my @nameservers = map { XML::EPP::Domain::HostAttr->new(name => $_->fqdn) }
         @{$domain->nameservers->nameservers};
       $nsList = XML::EPP::Domain::NS->new( ns => [ @nameservers ] );
   }
-  
+
   my %contacts;
   for my $type (qw(registrant admin technical)) {
       my $method = 'contact_'.$type;
       my $contact = $domain->$method;
 
       next unless $contact && $contact->handle_id;
-      
+
       if ($contact) {
         if ($type eq 'registrant') {
             $contacts{$type} = $contact->handle_id;
@@ -120,7 +120,7 @@ sub buildInfoResponse {
         }
       }
   }
-  
+
   # If the domain's registered date is different to the audit time, we assume this domain
   #  has been updated at least once (which EPP thinks is important)
   my $domain_updated = 0;
@@ -166,7 +166,7 @@ sub getEppStatuses {
   if ( defined $domain->locked_date() ) {
       push @status, qw( serverDeleteProhibited serverRenewProhibited serverTransferProhibited serverUpdateProhibited );
   }
-  
+
   push @status, 'ok' unless @status;
 
   return map { XML::EPP::Domain::Status->new( status => $_ ) } @status

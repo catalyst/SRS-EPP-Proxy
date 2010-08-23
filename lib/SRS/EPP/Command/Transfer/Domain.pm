@@ -66,7 +66,7 @@ method notify( SRS::EPP::SRSResponse @rs ) {
   for ( @rs ) {
     my $message = $_->message;
     my $response = $message->response;
-    
+
     if ( $response ) {
       if ( $message->action() eq "Whois" ) {
         if ( $response->status eq "Available" ) {
@@ -85,11 +85,11 @@ method notify( SRS::EPP::SRSResponse @rs ) {
             requested => $response->audit->when->begin->timestamptz,
             action_id =>  $response->registrar_id,
             action_date => $response->audit->when->begin->timestamptz,
-          );            
-            
+          );
+
           return $self->make_response(
             code => 1000,
-            payload => $epp_resp,            
+            payload => $epp_resp,
           );
         }
       }

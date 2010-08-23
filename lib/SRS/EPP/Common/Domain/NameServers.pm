@@ -5,9 +5,9 @@ use Moose::Role;
 requires 'make_response';
 
 # Given a list of EPP nameservers, translate it into a list of SRS nameservers
-#  If a HostObj is found in the EPP list (which is not supported) then an 
+#  If a HostObj is found in the EPP list (which is not supported) then an
 #  exception is returned with an appropriate error response that can be returned
-#  to the client (created via the required method 'make_response'. 
+#  to the client (created via the required method 'make_response'.
 # This might be a slightly unusual interface, but it means the generation of the
 #  response is consistent across consumers of this role
 # TODO: in hindsight, perhaps we should split this into validate/translate methods,
@@ -27,11 +27,11 @@ sub translate_ns_epp_to_srs {
                         reason => 'hostObj not supported',
                     )
                 )
-            );   
+            );
         }
-        
+
         my $ips = $ns->addrs;
-        
+
         # We reject any requests that have more than 1 ip address, as the SRS
         #  doesn't really support that (altho an ipv4 and ipv6 address are allowed)
         my %translated_ips;
@@ -48,28 +48,28 @@ sub translate_ns_epp_to_srs {
                     )
                 );
             }
-            
+
             $translated_ips{$type} = $ip->value;
         }
-        
-        push @ns_objs, XML::SRS::Server->new( 
+
+        push @ns_objs, XML::SRS::Server->new(
             fqdn => $ns->name,
             ($translated_ips{v4} ? (ipv4_addr => $translated_ips{v4}) : ()),
             ($translated_ips{v6} ? (ipv6_addr => $translated_ips{v6}) : ()),
-        ); 
+        );
     }
-    
+
     return @ns_objs;
 }
 
 sub translate_ns_srs_to_epp {
     my $self = shift;
     my @ns = @_;
-    
+
     my @nameservers = map { XML::EPP::Domain::HostAttr->new(name => $_->fqdn) } @ns;
-    
+
     return scalar @ns != 1 ? @nameservers : $nameservers[0];
-       
+
 }
 
 1;

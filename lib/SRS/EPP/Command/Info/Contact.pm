@@ -58,14 +58,14 @@ method notify( SRS::EPP::SRSResponse @rs ) {
     # make the Info::Response object
     my %addr = (
         street => [ $response->address->address1, $response->address->address2 || ()],
-        city   => $response->address->city,        
+        city   => $response->address->city,
         cc     => $response->address->cc,
     );
-    
+
     $addr{sp} = $response->address->region   if defined $response->address->region; # state or province
     $addr{pc} = $response->address->postcode if defined $response->address->postcode;
 
-    # Compare the contact's creation date against the audit time, to tell us if it's been updated    
+    # Compare the contact's creation date against the audit time, to tell us if it's been updated
     my $contact_updated = 0;
     if ($response->created_date->timestamptz ne $response->audit->when->begin->timestamptz) {
        $contact_updated = 1;
@@ -105,19 +105,19 @@ method notify( SRS::EPP::SRSResponse @rs ) {
 sub _translate_phone_number {
     my $self = shift;
     my $srs_number = shift;
-    
+
     # The SRS local number field can contain anything alphanumeric. We grab anything numeric from the beginning
     #  of the string (including spaces, dashes, etc. which we strip out) and call that part the phone number.
     #  Anything after that goes into the 'x' field of the E164 object.
     $srs_number->subscriber =~ m{(^[\d\s\-\.]*)(.*?)$};
     my ($local_number, $x) = ($1, $2);
-    
+
     # If we didn't get anything assigned to either field, our regex could be wrong. Just stick the whole thing in $x
     $x = $srs_number->subscriber unless $local_number || $x;
-    
+
     # Strip out anything non-numeric from $local_number
-    $local_number =~ s/[^\d]//g;  
-    
+    $local_number =~ s/[^\d]//g;
+
     return XML::EPP::Contact::E164->new(
         content => "+" . $srs_number->cc . "." . $srs_number->ndc . $local_number,
         ($x ? (x => $x) : ()),

@@ -27,7 +27,7 @@ method process( SRS::EPP::Session $session ) {
 
 method notify( SRS::EPP::SRSResponse @rs ) {
     my $handles = $rs[0]->message->responses;
-    
+
     my %used;
     %used = map { $_->handle_id => 1 } @$handles if $handles;
 

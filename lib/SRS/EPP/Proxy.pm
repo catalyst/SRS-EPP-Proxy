@@ -79,11 +79,11 @@ sub BUILD {
 
 	Log::Log4perl->init( $logging );
 	# pass configuration options to the session class?
-	
+
 	# Register namespaces to be returned by greeting
 	# TODO: Probably should be configured...
 	use XML::EPP;
-	XML::EPP::register_obj_uri(qw/urn:ietf:params:xml:ns:epp:domain-1.0 urn:ietf:params:xml:ns:epp:contact-1.0/); 
+	XML::EPP::register_obj_uri(qw/urn:ietf:params:xml:ns:epp:domain-1.0 urn:ietf:params:xml:ns:epp:contact-1.0/);
 }
 
 our $VERSION = "0.21";
@@ -285,15 +285,15 @@ method accept_one() {
 		my $ssl = eval {
 		    $self->ssl_engine->accept($socket);
 		};
-		
+
 		my $error = $@;
 		if ($error) {
 		    # We got an SSL error - send it back to the client, and close the connection
 		    $socket->print($error);
 		    $socket->close();
-		    die $error;   
+		    die $error;
 		}
-		
+
 		$0 = "srs-epp-proxy [$peerhost] - setup";
 
 		# RFC3734 and updates specify the use of client
@@ -402,34 +402,34 @@ method accept_loop() {
 				my $event = shift;
 				my $exception = shift;
 				$self->log_error("Exception during ".$event->w->desc."; $exception");
-				
+
 				# Send back a generic error message
 				# TODO: perhaps only do this if a response is not ready?
 				if ($session) {
 				    eval {
-    				    my $error = SRS::EPP::Response::Error->new(        			
+    				    my $error = SRS::EPP::Response::Error->new(
                 			server_id => $session->new_server_id,
                 			code => 2400,
                 			exception => $exception,
             			);
             			my $xml = $error->to_xml;
             			my $length = pack("N", bytes::length($xml)+4);
-            			
+
             			my $left_to_write = bytes::length $xml;
             			while ($left_to_write) {
             			    my $written = $session->write_to_client([$length, $xml]);
-            			    
+
             			    last if $written <= 0;
-            			    
+
             			    $left_to_write -= $written;
-            			}            			
+            			}
 				    };
 				    my $error = $@;
 				    if ($@) {
-				        $self->log_error("Failed in sending generic response back to client: $@");   
+				        $self->log_error("Failed in sending generic response back to client: $@");
 				    }
 				}
-				
+
 				Event::unloop_all;
 			};
 			Event::loop(120);

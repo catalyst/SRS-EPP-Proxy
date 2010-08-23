@@ -37,7 +37,7 @@ method notify( SRS::EPP::SRSResponse @rs ) {
   if ( ! $response ) {
     # Lets just assume the domain doesn't exist
     return $self->make_response(code => 2303);
-  } 
+  }
   if ( $response->can("status") ) {
     if ( $response->status eq "Available" || $response->status eq 'PendingRelease' ) {
       return $self->make_response(code => 1000);

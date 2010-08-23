@@ -16,7 +16,7 @@ sub xmlns {
 
 method process( SRS::EPP::Session $session ) {
     $self->session($session);
-    
+
     my $epp = $self->message;
     my $message = $epp->message;
     my $payload = $message->argument->payload;
@@ -30,18 +30,18 @@ method process( SRS::EPP::Session $session ) {
     unless ( $payload->change ) {
         return $self->make_response(code => 2002);
     }
-    
+
     my $contact = $payload->change;
-    
+
     # Check they haven't given us some invalid fields
     if (my $resp = $self->validate_epp_contact($contact)) {
-        return $resp;   
+        return $resp;
     }
-    
+
     my $address;
     if ($contact->postal_info) {
         $address = $self->translate_address($contact->postal_info->[0]->addr);
-        
+
         # Blank out any optional fields they didn't provide in the address. Otherwise
         #  the original values will be left in by the SRS (EPP considers the
         #  address one unit to be replaced)
@@ -49,8 +49,8 @@ method process( SRS::EPP::Session $session ) {
             $address->$field('') unless $address->$field;
         }
     }
-        
-        
+
+
     return (
         XML::SRS::Handle::Update->new(
             handle_id => $payload->id,
@@ -60,7 +60,7 @@ method process( SRS::EPP::Session $session ) {
             ($contact->fax ? (fax => $contact->fax->content) : ()),
             ($contact->email ? (email => $contact->email) : ()),
         )
-    ); 
+    );
 }
 
 method notify( SRS::EPP::SRSResponse @rs ) {

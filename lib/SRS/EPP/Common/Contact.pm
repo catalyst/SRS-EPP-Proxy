@@ -29,7 +29,7 @@ sub validate_epp_contact {
         );
     }
     my $postalInfo = $epp_postal_info->[0];
-    
+
     return unless $postalInfo;
 
     # The SRS doesn't have a 'org' field, we don't want to lose info, so
@@ -44,7 +44,7 @@ sub validate_epp_contact {
             )
         );
     }
-    
+
     # SRS requires at least one address line, but not more than 2. Reject request if they send 0
     #  or 3 street lines
     my $street_lines = $postalInfo->addr->street;
@@ -57,7 +57,7 @@ sub validate_epp_contact {
                     reason => 'At least 1 and no more than 2 street lines must be supplied in the address',
                 ),
             )
-        );        
+        );
     }
 
     return;
@@ -77,7 +77,7 @@ sub translate_address {
         cc => $epp_address->cc,
         ( $epp_address->pc ? ( postcode => $epp_address->pc ) : () ),
     );
-        
+
     return $address;
 }
 

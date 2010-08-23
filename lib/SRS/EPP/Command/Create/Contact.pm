@@ -24,9 +24,9 @@ method process( SRS::EPP::Session $session ) {
   my $payload = $message->argument->payload;
 
   if (my $resp = $self->validate_epp_contact($payload)) {
-    return $resp;   
+    return $resp;
   }
-  
+
   my $epp_postal_info = $payload->postal_info();
   my $postalInfo = $epp_postal_info->[0];
 
@@ -57,7 +57,7 @@ method process( SRS::EPP::Session $session ) {
 method notify( SRS::EPP::SRSResponse @rs ) {
   my $message = $rs[0]->message;
   my $response = $message->response;
-  
+
   my $r = XML::EPP::Contact::Create::Response->new(
     id => $response->handle_id,
     created => $message->server_time->timestamptz,

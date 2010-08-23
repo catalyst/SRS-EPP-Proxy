@@ -144,8 +144,8 @@ method yield(Str $method, @args) {
 				"Calling $method".(@args?"(@args)":"")
 					);
 			}
-			
-			eval {			
+
+			eval {
 			    $self->$method(@args);
 			};
 			my $error = $@;
@@ -376,15 +376,15 @@ method process_queue( Int $count = 1 ) {
                     code => 2400,
                 );
 			    push @messages, $error_resp;
-                
+
 			}
 
             unless (blessed $messages[0]) {
                 my $error = "Got an unblessed reference from process(). Cannot process queue";
                 $error .= "Messages: " . Dumper \@messages;
                 $self->log_info($error);
-                confess $error;   
-            }            
+                confess $error;
+            }
 
 			# check what kind of messages these are
 			if ( $messages[0] and
@@ -424,12 +424,12 @@ method process_queue( Int $count = 1 ) {
 			}
 			elsif ($messages[0] and
 			       $messages[0]->isa('SRS::EPP::Response') ) {
-			           
-			   
+
+
 			   $self->add_command_response(
 					$messages[0], $command,
 					);
-			}			
+			}
 			else {
                 # We got something else unknown... return an error
                 $self->log_debug("process_queue: Unknown message type - $messages[0] ... doesn't appear to be a SRS or EPP request, returning error");
@@ -439,7 +439,7 @@ method process_queue( Int $count = 1 ) {
                 $self->add_command_response(
                     $rs,
                     $command,
-                );                
+                );
 			}
 		}
 		$self->yield("send_pending_replies")
@@ -522,14 +522,14 @@ has 'user_agent' =>
 					$self->log_trace(
 			"UA input event fired, calling backend_response",
 						);
-						
+
 					eval {
 					   $self->backend_response;
 					};
 					if ($@) {
 					   my $error = "Uncaught exception calling backend_response in user_agent: $@";
 					   $self->log_info($error);
-					   
+
 					   die $error;
 					}
 				}
@@ -683,14 +683,14 @@ method be_response( SRS::EPP::SRSMessage $rs_tx ) {
 method process_responses() {
 	while ( $self->backend_response_ready ) {
 		my ($cmd, @rs) = $self->dequeue_backend_response;
-		
+
 		my $resp;
 		my $is_error;
 		if ($resp = $self->check_for_be_error($cmd, @rs)) {
 		    $self->log_info("found srs errors in response to $cmd, converting into errors and not calling notify");
 		    $is_error = 1;
 		}
-		else {	
+		else {
 		    $self->log_info("notifying command $cmd of back-end response");
 		    $resp = $cmd->notify(@rs);
 		}
@@ -732,7 +732,7 @@ method process_responses() {
 		}
 		else {
 		    # TODO: should handle this more gracefully, i.e. return a response to the client
-            confess "Unknown response type: " . ref $resp;    
+            confess "Unknown response type: " . ref $resp;
 		}
 	}
 }
@@ -743,29 +743,29 @@ method check_for_be_error( SRS::EPP::Command $cmd, SRS::EPP::SRSResponse @rs ) {
     my @errors;
     foreach my $rs (@rs) {
         my $message = $rs->message;
-                
+
         my $resps = $message->can('responses') ? $message->responses : [$message];
-        
+
         next unless $resps;
-        
+
         foreach my $resp (@$resps) {
             if ($resp->isa('XML::SRS::Error')) {
                 push @errors, $resp;
-                
+
                 # If it's a system error (i.e. the original message is an XML::SRS::Error, not
                 #  an error wrapped in a response), or if this command type doesn't expect multiple
-                #  responses, we're done here. 
+                #  responses, we're done here.
                 last if $message->isa('XML::SRS::Error') || ! $cmd->multiple_responses;
             }
         }
     }
-    
+
     if (@errors) {
         return $cmd->make_error_response(
             \@errors,
         );
     }
-    
+
     return;
 }
 
@@ -919,7 +919,7 @@ method write_to_client(ArrayRef $oq) {
 	$self->log_trace(
 	"write_to_client wrote $written bytes, ".@$oq." chunk(s) remaining"
 		);
-		
+
 	return $written;
 }
 
