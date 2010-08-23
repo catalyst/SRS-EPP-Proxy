@@ -98,5 +98,29 @@ method notify( SRS::EPP::SRSResponse @rs ) {
   return $self->make_response(code => 2400);
 }
 
+method make_error_response( ArrayRef[XML::SRS::Error] $srs_errors ) {
+    # If we get the below error, it's because we've tried to transfer a domain
+    #  the registrar already owns. We don't want to return this to the client.
+    foreach my $srs_error (@$srs_errors) {
+        if ($srs_error->error_id eq 'CONVERT_TO_HANDLES_ONLY_FOR_TRANSFER') {
+            
+            my $epp = $self->message;
+            my $message = $epp->message;
+            my $payload = $message->argument->payload;
+            
+            return $self->make_response(
+                Error => (
+                    code      => 2002,
+                    exception => XML::EPP::Error->new(
+                        value  => $payload->name,
+                        reason => 'Cannot transfer a domain you already own',
+                    ),
+                )
+            );        
+        }
+    }
+        
+    return $self->SUPER::make_error_response($srs_errors);
+}
 
 1;
