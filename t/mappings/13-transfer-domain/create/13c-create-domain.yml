@@ -37,4 +37,3 @@ request: |-
 
 assertions:
  - xpath_matches: [ '//Error', '0', 'No errors' ]
- - xpath_attr_is: [ '//Response/Domain', 'UDAI', '/\w{8}/', 'Got UDAI', 'auth' ]
