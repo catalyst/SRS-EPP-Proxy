@@ -319,7 +319,12 @@ sub make_request {
         filter => [ $payload->name() ],
         %contacts,
         ( $ns_list ? ( nameservers => $ns_list ) : () ),
-        action_id => $message->client_id || sprintf('auto.%x', time()),
+        action_id => $message->client_id || sprintf('auto.%x', time()),        
+        
+        # Always uncancel domains when updating. This should (theoretically) have no affect
+        #  on active domains. For pending release domains, this is the only way they can
+        #  be uncancelled via EPP (since this is not supported without an extension). 
+        cancel => 0,        
     );
 
 
