@@ -22,7 +22,7 @@
       </TechnicalContact>
       <BilledUntil Day="12" Hour="08" Minute="44" Month="9" Second="15" TimeZoneOffset="+12:00" Year="2010" />
       <RegisteredDate Day="12" Hour="08" Minute="44" Month="8" Second="15" TimeZoneOffset="+12:00" Year="2010" />
-      <AuditDetails>
+      <AuditDetails RegistrarId="50">
         <AuditTime>
           <From Day="27" Hour="08" Minute="44" Month="8" Second="15" TimeZoneOffset="+12:00" Year="2010" />
         </AuditTime>
