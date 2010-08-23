@@ -192,6 +192,9 @@ method process( SRS::EPP::Session $session ) {
 		# query first
 		$self->state('SRS-DomainDetailsQry');
 
+		# two stages = stall.
+		$self->session->stalled($self);
+
 		# need to do a DomainDetailsQry
 		return XML::SRS::Domain::Query->new(
 			domain_name_filter => $payload->name,
@@ -219,6 +222,9 @@ method notify( SRS::EPP::SRSResponse @rs ) {
 	my $res = $rs[0]->message->response;
 
 	if ( $self->state eq 'SRS-DomainDetailsQry' ) {
+
+		# restart the processing pipeline
+		$self->session->stalled(0);
 
 		# Check if the contacts added or removed are correct
 		if (my $cc = $self->contact_changes) {
