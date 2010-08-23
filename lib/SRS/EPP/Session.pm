@@ -146,13 +146,15 @@ method yield(Str $method, @args) {
 			}
 
 			eval {
-			    $self->$method(@args);
+				$self->$method(@args);
 			};
 			my $error = $@;
 			if ($error) {
-			    $self->log_info("Uncaught exception when yielding to $method: $error");
+				$self->log_info(
+			"Uncaught exception when yielding to $method: $error"
+					);
 
-			    die $error;
+				die $error;
 			}
 		});
 }
@@ -342,49 +344,52 @@ method process_queue( Int $count = 1 ) {
 			# "simple" commands include "hello" and "logout"
 			my $response = $command->process($self);
 			$self->log_debug(
-				"processed simple command $command; response is $response"
+		"processed simple command $command; response is $response"
 				);
 			$self->add_command_response($response, $command);
 		}
 		elsif ( $command->authenticated xor $self->user ) {
-		    my $reason = ($self->user?"already":"not")." logged in";
+			my $reason = ($self->user?"already":"not")." logged in";
 			$self->add_command_response(
 				$command->make_response(
 					Error => (
-					    code => 2001,
-					    exception => $reason,
-					)
-				),
+						code => 2001,
+						exception => $reason,
+						)
+					),
 				$command,
 			);
 			$self->log_info(
-	           "rejecting command: $reason"
+				"rejecting command: $reason"
 			);
 		}
 		else {
-			# regular message which may need to talk to the SRS backend
+			# regular message which may need to talk to
+			# the SRS backend
 			my @messages = eval {
-			    $command->process($self);
+				$command->process($self);
 			};
 			my $error = $@;
 			if ($error) {
-			    $self->log_info("Error when calling process on $command: $error");
-			    # TODO: we're not setting the code correctly
-			    my $error_resp = SRS::EPP::Response::Error->new(
-                    exception => $error,
-                    server_id => $command->server_id,
-                    code => 2400,
-                );
-			    push @messages, $error_resp;
-
+				$self->log_info(
+			"Error when calling process on $command: $error",
+					);
+				# TODO: we're not setting the code correctly
+				my $error_resp = SRS::EPP::Response::Error->new(
+					exception => $error,
+					server_id => $command->server_id,
+					code => 2400,
+					);
+				push @messages, $error_resp;
 			}
 
-            unless (blessed $messages[0]) {
-                my $error = "Got an unblessed reference from process(). Cannot process queue";
-                $error .= "Messages: " . Dumper \@messages;
-                $self->log_info($error);
-                confess $error;
-            }
+			unless (blessed $messages[0]) {
+				my $error =
+	"Got an unblessed reference from process(). Cannot process queue";
+				$error .= "Messages: " . Dumper \@messages;
+				$self->log_info($error);
+				confess $error;
+			}
 
 			# check what kind of messages these are
 			if ( $messages[0] and
@@ -425,21 +430,24 @@ method process_queue( Int $count = 1 ) {
 			elsif ($messages[0] and
 			       $messages[0]->isa('SRS::EPP::Response') ) {
 
-
 			   $self->add_command_response(
 					$messages[0], $command,
 					);
 			}
 			else {
-                # We got something else unknown... return an error
-                $self->log_debug("process_queue: Unknown message type - $messages[0] ... doesn't appear to be a SRS or EPP request, returning error");
-                my $rs = $command->make_response(
-                    code => 2400
-                );
-                $self->add_command_response(
-                    $rs,
-                    $command,
-                );
+
+				# We got something else unknown... return an error
+				$self->log_debug(
+"process_queue: Unknown message type - $messages[0] ... doesn't appear"
+." to be a SRS or EPP request, returning error"
+					);
+				my $rs = $command->make_response(
+					code => 2400
+					);
+				$self->add_command_response(
+					$rs,
+					$command,
+					);
 			}
 		}
 		$self->yield("send_pending_replies")
@@ -664,8 +672,8 @@ method be_response( SRS::EPP::SRSMessage $rs_tx ) {
 			."active request ".@$rq_parts." parts"
 		);
 	if ( @$rs_parts < @$rq_parts and @$rs_parts == 1 and
-		     $rs_parts->[0]->message->isa("XML::SRS::Error")
-	     ) {
+	     $rs_parts->[0]->message->isa("XML::SRS::Error")
+	   ) {
 		# this is a more fundamental type of error than others
 		# ... 'extend' to the other messages
 		@$rs_parts = ((@$rs_parts) x @$rq_parts);
@@ -687,12 +695,17 @@ method process_responses() {
 		my $resp;
 		my $is_error;
 		if ($resp = $self->check_for_be_error($cmd, @rs)) {
-		    $self->log_info("found srs errors in response to $cmd, converting into errors and not calling notify");
-		    $is_error = 1;
+			$self->log_info(
+				"found srs errors in response to $cmd, "
+			."converting into errors and not calling notify"
+				);
+			$is_error = 1;
 		}
 		else {
-		    $self->log_info("notifying command $cmd of back-end response");
-		    $resp = $cmd->notify(@rs);
+			$self->log_info(
+				"notifying command $cmd of back-end response"
+				);
+			$resp = $cmd->notify(@rs);
 		}
 		$self->log_trace("Resp isa " . ref $resp);
 
@@ -715,8 +728,8 @@ method process_responses() {
 			$self->yield("send_pending_replies")
 				if $self->response_ready;
 		}
-        elsif ( $resp->does('XML::SRS::Action') ||
-                $resp->does('XML::SRS::Query') ) {
+		elsif ( $resp->does('XML::SRS::Action') ||
+				$resp->does('XML::SRS::Query') ) {
 			$self->log_info( "command $cmd not yet complete" );
 			my @messages = map {
 				SRS::EPP::SRSRequest->new(
@@ -731,8 +744,9 @@ method process_responses() {
 			$self->yield("send_backend_queue");
 		}
 		else {
-		    # TODO: should handle this more gracefully, i.e. return a response to the client
-            confess "Unknown response type: " . ref $resp;
+			# TODO: should handle this more gracefully,
+			# i.e. return a response to the client
+			confess "Unknown response type: " . ref $resp;
 		}
 	}
 }
@@ -740,33 +754,40 @@ method process_responses() {
 # Check responses for an error from the SRS. If we find one, we create
 #  an appropriate response and return it
 method check_for_be_error( SRS::EPP::Command $cmd, SRS::EPP::SRSResponse @rs ) {
-    my @errors;
-    foreach my $rs (@rs) {
-        my $message = $rs->message;
 
-        my $resps = $message->can('responses') ? $message->responses : [$message];
+	my @errors;
+	foreach my $rs (@rs) {
+		my $message = $rs->message;
 
-        next unless $resps;
+		my $resps = $message->can('responses')
+			? $message->responses : [$message];
 
-        foreach my $resp (@$resps) {
-            if ($resp->isa('XML::SRS::Error')) {
-                push @errors, $resp;
+		next unless $resps;
 
-                # If it's a system error (i.e. the original message is an XML::SRS::Error, not
-                #  an error wrapped in a response), or if this command type doesn't expect multiple
-                #  responses, we're done here.
-                last if $message->isa('XML::SRS::Error') || ! $cmd->multiple_responses;
-            }
-        }
-    }
+		foreach my $resp (@$resps) {
+			if ($resp->isa('XML::SRS::Error')) {
+				push @errors, $resp;
 
-    if (@errors) {
-        return $cmd->make_error_response(
-            \@errors,
-        );
-    }
+				# If it's a system error (i.e. the
+				# original message is an
+				# XML::SRS::Error, not an error
+				# wrapped in a response), or if this
+				# command type doesn't expect multiple
+				# responses, we're done here.
 
-    return;
+				last if $message->isa('XML::SRS::Error')
+					|| ! $cmd->multiple_responses;
+			}
+		}
+	}
+
+	if (@errors) {
+		return $cmd->make_error_response(
+			\@errors,
+			);
+	}
+
+	return;
 }
 
 method send_pending_replies() {
@@ -865,7 +886,7 @@ method empty_read() {
 method output_event() {
 	my $oq = $self->output_queue;
 
-    my $written = $self->write_to_client($oq);
+	my $written = $self->write_to_client($oq);
 
 	if ( @$oq ) {
 		$self->output_event_watcher->start;
