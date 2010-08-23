@@ -17,7 +17,7 @@
 	    </contact:postalInfo>
 	    [% END %]
 	    [% IF phone.defined %]<contact:voice>[% phone %]</contact:voice>[% END %]
-	    [% IF fax.defined %]<contact:fax>[% fax %]</contact:fax>[% END %]
+	    <contact:fax>[% fax %]</contact:fax>
 	    [% IF email.defined %]<contact:email>[% email %]</contact:email>[% END %]
 	    <contact:authInfo>
 	      <contact:pw></contact:pw>
