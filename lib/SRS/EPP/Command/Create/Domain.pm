@@ -63,10 +63,16 @@ method process( SRS::EPP::Session $session ) {
             $contact_technical = XML::SRS::Contact->new( handle_id => $contact->value );
         }
     }
+    
+    my $term = 1;
+    if ($payload->period) {
+        $term = $payload->period->value;
+        $term *= 12 if $payload->period->unit eq 'y';   
+    }    
 
     my $request = XML::SRS::Domain::Create->new(
         domain_name => $payload->name(),
-        term => 1, # ToDo: check this
+        term => $term,
         contact_registrant => $contact_registrant,
         $contact_admin ? (contact_admin => $contact_admin) : (),
         $contact_technical ? (contact_technical => $contact_technical) : (),

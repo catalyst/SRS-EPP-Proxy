@@ -19,6 +19,7 @@ vars:
   owner: id123
   admin: shazzam1234
   tech: alcatraz367
+  period: 1
 
 input_assertions:
   class: SRS::EPP::Command::Create::Domain

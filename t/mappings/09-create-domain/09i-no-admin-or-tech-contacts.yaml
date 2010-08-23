@@ -19,7 +19,6 @@ SRS:
       match_all:
       attr_is:
         - [ '//DomainCreate', 'DomainName', '09i.co.te', 'SRS: Check the domain name to be registered' ]
-        - [ '//DomainCreate', 'Term', '1', 'SRS: Check the term is one' ]
         - [ '//RegistrantContact', 'HandleId', 'id123', 'SRS: RegistrantContact handle' ]
 
 

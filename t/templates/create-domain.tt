@@ -1,6 +1,7 @@
 <create>
   <domain:create xmlns:domain="urn:ietf:params:xml:ns:domain-1.0">
     <domain:name>[% domain %]</domain:name>
+      [% IF period.defined %]<domain:period unit="[% period_unit || 'm' %]">[% period %]</domain:period>[% END %]
       [% UNLESS no_ns %]
       <domain:ns>
         [%~ FOREACH dns IN ns %]
