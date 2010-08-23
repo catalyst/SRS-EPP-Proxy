@@ -23,6 +23,7 @@ use constant ERROR_MAP => {
         DELETE_FLAG_WITH_OTHER_FIELDS => 2002,
         DOMAIN_CANCEL_AND_RENEW => 2002,
         INVALID_FIELDSET => 2002,
+        MESSAGE_DOES_NOT_EXIST => 2002,
 
 	# 22xx are for security; 2200 means 'login failed', so any
 	# kind of PGP error will map to that.
