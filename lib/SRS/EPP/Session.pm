@@ -308,9 +308,13 @@ method check_queues() {
 #  eg, "login" and "logout" both stall the queue, as will the
 #  <transform><renew> command, if we have to first query the back-end
 #  to determine what the correct renewal message is.
+#
+#  the value in 'stalled' is the command which stalled the pipeline;
+#  so that it can be restarted without the command doing anything
+#  special.
 has stalled =>
 	is => "rw",
-	isa => "Bool",
+	isa => "Maybe[SRS::EPP::Command|Bool]",
 	trigger => sub {
 		my $self = shift;
 		my $val = shift;
@@ -399,7 +403,6 @@ method process_queue( Int $count = 1 ) {
 					);
 				if ( $command->isa("SRS::EPP::Command::Login") ) {
 					$self->state("Processing <login>");
-					#$self->stalled(1);
 				}
 				else {
 					$self->state("Processing Command");
@@ -682,17 +685,28 @@ method process_responses() {
 		my ($cmd, @rs) = $self->dequeue_backend_response;
 		
 		my $resp;
+		my $is_error;
 		if ($resp = $self->check_for_be_error($cmd, @rs)) {
 		    $self->log_info("found srs errors in response to $cmd, converting into errors and not calling notify");
+		    $is_error = 1;
 		}
 		else {	
 		    $self->log_info("notifying command $cmd of back-end response");
 		    $resp = $cmd->notify(@rs);
 		}
 		$self->log_trace("Resp isa " . ref $resp);
-		
+
 		if ( $resp->isa("SRS::EPP::Response") ) {
 			$self->log_info( "command $cmd is complete" );
+			if ( $self->stalled and $self->stalled == $cmd ) {
+				$self->log_info(
+					$is_error ?
+		"re-enabling pipeline after command received untrapped error"
+		: "command did not re-enable processing pipeline!"
+					);
+				$self->stalled(0);
+			}
+
 			$self->state("Prepare Response");
 			$self->log_debug(
 				"response to $cmd is response $resp",

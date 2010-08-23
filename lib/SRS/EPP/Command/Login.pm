@@ -68,7 +68,7 @@ method process( SRS::EPP::Session $session ) {
 		if $login->new_password;
 	$self->uid($uid);
 	$self->session->want_user($uid);
-	$session->stalled(1);
+	$session->stalled($self);
 
 	return (XML::SRS::Registrar::Query->new(
 		registrar_id => $uid,
