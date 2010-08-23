@@ -1,7 +1,7 @@
 template: poll-ack.tt
 
 vars:
-  msg_id: 0001Test /tmp/srsregn-regression//submodules/SRS-EPP-Proxy/t/mappings/005-poll/create/005a-2-renew.yml 0
+  msg_id: 0001Test /tmp/srsregn-regression//submodules/SRS-EPP-Proxy/t/mappings/005-poll/create/005b-2-renew.yml 0
 
 input_assertions:
   class: SRS::EPP::Command::Poll

@@ -383,6 +383,13 @@ method make_request( $message, $payload, ArrayRef $new_nameservers? ) {
 		%contacts,
 		( $ns_list ? ( nameservers => $ns_list ) : () ),
 		action_id => $self->client_id || $self->server_id,
+
+		# Always uncancel domains when updating. This should
+		# (theoretically) have no affect on active
+		# domains. For pending release domains, this is the
+		# only way they can be uncancelled via EPP (since this
+		# is not supported without an extension).
+		cancel => 0,
 	       );
 
 	# Do we need to set or clear Delegate flag?

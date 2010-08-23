@@ -2,6 +2,7 @@
 template: update-contact.tt
 
 vars:
+  name: updated name
   contact_id: full1
   street: updated street1
   street2: updated street2
@@ -21,6 +22,7 @@ SRS:
  - assertions:
      attr_is:
        - [ '/NZSRSRequest/HandleUpdate', 'HandleId', 'full1', 'SRS: handle id correct on request' ]
+       - [ '/NZSRSRequest/HandleUpdate', 'Name', 'updated name', 'SRS: name correct on request' ]
        - [ '/NZSRSRequest/HandleUpdate', 'Email', 'update@email.com', 'SRS: email correct on request' ]
        - [ '/NZSRSRequest/HandleUpdate/PostalAddress', 'Address1', 'updated street1', 'SRS: address1 correct on request' ]
        - [ '/NZSRSRequest/HandleUpdate/PostalAddress', 'Address2', 'updated street2', 'SRS: address2 correct on request' ]
