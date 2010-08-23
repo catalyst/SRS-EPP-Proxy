@@ -2,7 +2,7 @@
 <Response Action="GetMessages" FeId="8" FeSeq="4798881" MoreRowsAvailable="1" OrigRegistrarId="171" RecipientRegistrarId="171" Rows="1">
 <FeTimeStamp Day="7" Hour="09" Minute="31" Month="7" Second="40" TimeZoneOffset="+12:00" Year="2010"/>
 <Message Remaining="0">
-<Response Action="DomainUpdate" FeId="8" FeSeq="4798347" OrigRegistrarId="1" RecipientRegistrarId="171" Rows="1" TransId="Test /tmp/srsregn-regression//submodules/SRS-EPP-Proxy/t/mappings/005-poll/create/005a-2-renew.yml 0">
+<Response Action="DomainUpdate" FeId="8" FeSeq="4798347" OrigRegistrarId="1" RecipientRegistrarId="171" Rows="1" TransId="Test /tmp/srsregn-regression//submodules/SRS-EPP-Proxy/t/mappings/005-poll/create/005b-2-renew.yml 0">
 <FeTimeStamp Day="7" Hour="00" Minute="02" Month="7" Second="23" TimeZoneOffset="+12:00" Year="2010"/>
 <Domain Delegate="1" DomainName="tasty.co.te" RegistrantRef="e63a482-715-4f-a108" RegistrarId="171" Status="Active" Term="1">
 <NameServers>
