@@ -148,12 +148,32 @@ sub make_response {
 		);
 }
 
+# this one is for convenience in returning errors
+method make_error( Int :$code, Str :$message, Str :$value?, Str :$reason?, :$exception?) {
+	if ( defined $value or defined $reason ) {
+		$exception ||= XML::EPP::Error->new(
+			value => $value//"",
+			reason => $reason,
+		       );
+	}
+
+	return $self->make_response(
+		Error => (
+			($code ? (code => $code) : ()),
+			($exception ? (exception => $exception) : ()),
+			($message ? (extra => $message) : ()),
+		       ),
+	       );
+}
+
+# this one is intended for commands to override particular error
+# cases, so must use a simpler calling convention.
 method make_error_response( XML::SRS::Error|ArrayRef[XML::SRS::Error] $srs_error ) {
-    return SRS::EPP::Response::Error->new(
-        server_id => $self->server_id,
-        ($self->client_id ? (client_id => $self->client_id) : () ),
-        exception => $srs_error,
-    );
+	return SRS::EPP::Response::Error->new(
+		server_id => $self->server_id,
+		($self->client_id ? (client_id => $self->client_id) : () ),
+		exception => $srs_error,
+		);
 }
 
 has "client_id" =>

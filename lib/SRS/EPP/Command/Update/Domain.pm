@@ -41,24 +41,6 @@ has 'contact_changes' => (
 	'isa' => 'HashRef',
 	);
 
-method error_response( Int :$code, Str :$message, Str :$value?, Str :$reason?) {
-	my $exception;
-	if ( defined $value or defined $reason ) {
-		$exception = XML::EPP::Error->new(
-			value => $value//"",
-			reason => $reason,
-		       );
-	}
-
-	return $self->make_response(
-		Error => (
-			code => $code,
-			($exception ? (exception => $exception) : ()),
-			($message ? (extra => $message) : ()),
-		       ),
-	       );
-}
-
 # we only ever enter here once, so we know what state we're in
 method process( SRS::EPP::Session $session ) {
 	$self->session($session);
@@ -87,7 +69,7 @@ method process( SRS::EPP::Session $session ) {
 		foreach my $status (@{$statuses{$key}}) {
 			unless ($allowed_statuses{$status->status}) {
 				# They supplied a status that's not allowed
-				return $self->error_response(
+				return $self->make_error(
 					code => 2307,
 					value => $status->status,
 					reason =>
@@ -98,7 +80,7 @@ method process( SRS::EPP::Session $session ) {
 			if ($used{$status->status}) {
 				# They've added and removed the same
 				# status. Throw an error
-				return $self->error_response(
+				return $self->make_error(
 					code => 2002,
 					value => $status->status,
 					reason =>
@@ -154,7 +136,7 @@ method process( SRS::EPP::Session $session ) {
 			# one contact of the same type
 			for my $action (keys %changes) {
 				if (scalar @{$changes{$action}} > 1) {
-					return $self->error_response(
+					return $self->make_error(
 						code => 2306,
 						value => '',
 						reason =>
@@ -168,7 +150,7 @@ method process( SRS::EPP::Session $session ) {
 			#  (because there's always a default) so
 			#  reject it
 			if (@{$changes{add}} && ! @{$changes{remove}}) {
-				return $self->error_response(
+				return $self->make_error(
 					code => 2306,
 					value => '',
 					reason =>
@@ -244,7 +226,7 @@ method notify( SRS::EPP::SRSResponse @rs ) {
 					   $existing_contact->handle_id
 						   ne $contact_removed->value))
 				{
-					return $self->error_response(
+					return $self->make_error(
 						code => 2002,
 						value =>
 							$contact_removed->value,
@@ -261,7 +243,7 @@ method notify( SRS::EPP::SRSResponse @rs ) {
 
 				if ($contact_added && $existing_contact
 					    && ! $contact_removed) {
-					return $self->error_response(
+					return $self->make_error(
 						code => 2306,
 						value  => '',
 						reason =>
