@@ -20,7 +20,7 @@ request: |-
       <Server FQDN="ns1.everydns.net"/>
       <Server FQDN="ns2.everydns.net"/>
       <Server FQDN="ns3.everydns.net"/>
-      <Server FQDN="ns4.everydns.net"/>
+      <Server FQDN="ns4.cheese123.co.te" IP4Addr="1.2.3.4" IP6Addr="2401:1::7"/>
     </NameServers>
    <AuditText><![CDATA[Domain Agent Update]]></AuditText>
   </DomainCreate>

@@ -190,8 +190,19 @@ sub getEppStatuses {
 
 sub convert_nameserver {
 	my $ns = shift;
+	my @addr = map { XML::EPP::Host::Address->new($_) }
+		grep { defined } (
+			$ns->ipv4_addr && +{
+				value => $ns->ipv4_addr,
+			},
+			$ns->ipv6_addr && +{
+				value => $ns->ipv6_addr,
+				ip => "v6",
+			},
+		       );
 	XML::EPP::Domain::HostAttr->new(
 		name => $ns->fqdn,
+		@addr ? ( addrs => \@addr ) : (),
 	       );
 }
 

@@ -38,6 +38,9 @@ output_assertions:
   count:
     - [ '//epp:resData', 1, 'EPP: Check for resData' ]
     - [ '//domain:hostAttr', '4', 'EPP: Four nameservers' ]
+    - [ '//domain:hostAttr/domain:hostAddr', '2', 'EPP: Two glue records' ]
+    - [ '//domain:hostAttr/domain:hostAddr[@ip="v6"]', '1', 'EPP: One of which is v6' ]
+    - [ '//domain:hostAttr/domain:hostAddr[@ip="v4"]', '1', 'EPP: One of which is v4' ]
   match:
     - [ '//domain:name', 'cheese123.co.te', 'EPP: Check domain name is correct' ]
     - [ '//domain:roid', 'a6e226cce5cb-DOM', 'EPP: Check domain roid is correct' ]
@@ -47,7 +50,10 @@ output_assertions:
     - [ '//domain:hostAttr[1]/domain:hostName', 'ns1.everydns.net', 'EPP: correct nameserver 1']
     - [ '//domain:hostAttr[2]/domain:hostName', 'ns2.everydns.net', 'EPP: correct nameserver 2']
     - [ '//domain:hostAttr[3]/domain:hostName', 'ns3.everydns.net', 'EPP: correct nameserver 3']
-    - [ '//domain:hostAttr[4]/domain:hostName', 'ns4.everydns.net', 'EPP: correct nameserver 4']
+    - [ '//domain:hostAttr[4]/domain:hostName', 'ns4.cheese123.co.te', 'EPP: correct nameserver 4']
+    - [ '//domain:hostAttr[4]/domain:hostAddr[@ip="v6"]', '2401:1::7', 'EPP: correct nameserver 4 ipv6 glue']
+    - [ '//domain:hostAttr[4]/domain:hostAddr[@ip="v4"]', '1.2.3.4', 'EPP: correct nameserver 4 ipv4 glue']
+    - [ '//domain:clID', '100', 'EPP: Creating Registrar ID returned correctly']
     - [ '//domain:clID', '100', 'EPP: Creating Registrar ID returned correctly']
     - [ '//domain:upID', '001', 'EPP: Updating Registrar ID returned correctly']
   match_all:
