@@ -376,12 +376,8 @@ method make_request( $message, $payload, ArrayRef $new_nameservers? ) {
 		filter => [ $payload->name() ],
 		%contacts,
 		( $ns_list ? ( nameservers => $ns_list ) : () ),
-		action_id => (
-			$message->client_id
-				|| sprintf('auto.%x', time())
-			       ),
+		action_id => $self->client_id || $self->server_id,
 	       );
-
 
 	# Do we need to set or clear Delegate flag?
 	my $status_changes = $self->status_changes;
