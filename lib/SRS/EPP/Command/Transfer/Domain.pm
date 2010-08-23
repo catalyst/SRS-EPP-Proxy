@@ -61,8 +61,6 @@ method process( SRS::EPP::Session $session ) {
 method notify( SRS::EPP::SRSResponse @rs ) {
   my $epp = $self->message;
 
-  my $original_registrar;
-
   for ( @rs ) {
     my $message = $_->message;
     my $response = $message->response;
@@ -75,8 +73,6 @@ method notify( SRS::EPP::SRSResponse @rs ) {
       }
       if ( $message->action() eq "DomainUpdate" ) {
         if ( $response->isa("XML::SRS::Domain") ) {
-          $original_registrar = sprintf("%.16s", $original_registrar);
-          $original_registrar =~ s/\s*$//;
           my $epp_resp = XML::EPP::Domain::Transfer::Response->new(
             name => $response->name,
             trStatus => 'serverApproved',
