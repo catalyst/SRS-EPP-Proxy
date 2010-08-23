@@ -810,12 +810,15 @@ method send_pending_replies() {
 
 #----
 # Sending responses back
+
+# this is a queue of byte strings, which are ready for transmission
 has 'output_queue' =>
 	is => "ro",
 	isa => "ArrayRef[Str]",
 	default => sub { [] },
 	;
 
+# this is the interface for sending replies.
 method send_reply( SRS::EPP::Response $rs ) {
 	$self->log_debug(
 		"converting response $rs to XML"
@@ -910,13 +913,8 @@ method output_event() {
 	return $written;
 }
 
-# This accepts an arrayref of data to be written to the client, one chunk at a time.
-# Note, the client expects to read the length of the data before the data itself, and
-#  this *must* be passed in along in the array prior to the data itself
-# TODO: This is a somewhat crappy interface, but abstracting it would require a fairly
-#  large refactoring, as this method expects to be called in Event mode, so it only
-#  sends the first chunk, then exits. If the length was calculated inside this method,
-#  we'd need to keep track of whether it had already been sent to the client.
+# write at much to the client as the output buffer will accept this
+# time around and re-queue any partial fragments
 method write_to_client(ArrayRef $oq) {
 	my $written = 0;
 	my $io = $self->io;
