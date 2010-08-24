@@ -108,7 +108,14 @@ has 'server_id' =>
 	predicate => "has_server_id",
 	default => sub {
 		my $self = shift;
-		$self->session->new_server_id;
+		my $session = $self->session;
+		if ( $session ) {
+			$session->new_server_id;
+		}
+		else {
+			our $counter = "aaaa";
+			$counter++;
+		}
 	}
 	;
 
@@ -189,6 +196,14 @@ use Module::Pluggable
 	require => 1,
 	search_path => [__PACKAGE__],
 	;
+
+sub ids {
+	my $self = shift;
+	return (
+		$self->server_id,
+		$self->client_id||(),
+		);
+}
 
 __PACKAGE__->plugins;
 

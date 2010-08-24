@@ -11,4 +11,9 @@ has "+message" =>
 	handles => [qw(action_id)],
 	;
 
+sub ids {
+	my $self = shift;
+	$self->message->results->[0]->result_id;
+}
+
 1;

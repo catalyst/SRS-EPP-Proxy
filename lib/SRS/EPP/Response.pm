@@ -94,6 +94,15 @@ use Module::Pluggable
 	search_path => [__PACKAGE__],
 	;
 
+sub ids {
+	my $self = shift;
+	return (
+		$self->server_id || sprintf("0x%x",(0+$self)),
+		$self->client_id||(),
+		);
+}
+
+
 __PACKAGE__->plugins;
 
 no Moose;
