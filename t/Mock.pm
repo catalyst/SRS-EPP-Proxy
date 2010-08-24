@@ -171,7 +171,7 @@ package Mock;
 			$data = Encode::encode("utf8", $data)
 				if utf8::is_utf8($data);
 			if ( $data =~ /^(.*?[\200-\377])/ and !$been_evil ) {
-				print STDERR "BEING DELIGHTFULLY EVIL\n";
+				#print STDERR "BEING DELIGHTFULLY EVIL\n";
 				$how_much = bytes::length($1);
 				$been_evil++;
 			}
