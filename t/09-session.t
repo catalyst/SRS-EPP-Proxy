@@ -97,7 +97,7 @@ do {
 # 3. check that we got an error!
 use utf8;
 like($error->message->result->[0]->msg->content,
-     qr/Command syntax error/i,
+     qr/not logged in/i,
      "got an appropriate error");
 is($error->message->tx_id->client_id,
    "ÄBC-12345", "returned client ID OK");
