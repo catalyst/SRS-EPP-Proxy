@@ -71,7 +71,7 @@ method notify( SRS::EPP::SRSResponse @rs ) {
               filter => [$response->name],
               action_id => $self->client_id || $self->server_id,
               renew => 1,
-              term => $eppPayload->period->value,
+              term => $eppPayload->period->months,
               );
           }
       }
