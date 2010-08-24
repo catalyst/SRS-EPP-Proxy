@@ -20,7 +20,7 @@ method process( SRS::EPP::Session $session ) {
     my $message = $epp->message;
 
     my $payload = $message->argument->payload;
-    my $action_id = $message->client_id || sprintf("auto.%x",time());
+    my $action_id = $self->client_id || $self->server_id;
 
     return XML::SRS::Handle::Update->new(
             handle_id => $payload->id,

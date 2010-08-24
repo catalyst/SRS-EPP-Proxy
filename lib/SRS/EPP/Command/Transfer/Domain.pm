@@ -43,7 +43,7 @@ method process( SRS::EPP::Session $session ) {
       ),
       XML::SRS::Domain::Update->new(
         filter => [$payload->name],
-        action_id => $message->client_id || sprintf("auto.%x",time()),
+        action_id => $self->client_id || $self->server_id,
         udai => $pass->content(),
         convert_contacts_to_handles => 1,
       ),

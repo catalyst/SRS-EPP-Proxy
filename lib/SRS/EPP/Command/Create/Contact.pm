@@ -39,7 +39,7 @@ method process( SRS::EPP::Session $session ) {
       phone => $payload->voice()->content(),
       address => $address,
       email => $payload->email(),
-      action_id => $message->client_id || sprintf("auto.%x",time()),
+      action_id => $self->client_id || $self->server_id,
     };
     if ( $payload->fax() && $payload->fax()->content() ) {
       $txn->{fax} = $payload->fax()->content();

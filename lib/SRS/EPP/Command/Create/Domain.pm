@@ -76,7 +76,7 @@ method process( SRS::EPP::Session $session ) {
         contact_registrant => $contact_registrant,
         $contact_admin ? (contact_admin => $contact_admin) : (),
         $contact_technical ? (contact_technical => $contact_technical) : (),
-        action_id => $message->client_id || sprintf('auto.%x',time()),
+	action_id => $self->client_id || $self->server_id,
     );
 
     my $ns = $payload->ns ? $payload->ns->ns : undef;

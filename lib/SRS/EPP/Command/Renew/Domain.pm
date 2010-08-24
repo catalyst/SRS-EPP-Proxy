@@ -69,7 +69,7 @@ method notify( SRS::EPP::SRSResponse @rs ) {
             $self->billed_until($response->billed_until());
             return XML::SRS::Domain::Update->new(
               filter => [$response->name],
-              action_id => $eppMessage->client_id || sprintf("auto.%x",time()),
+              action_id => $self->client_id || $self->server_id,
               renew => 1,
               term => $eppPayload->period->value,
               );

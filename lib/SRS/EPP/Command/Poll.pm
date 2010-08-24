@@ -58,7 +58,7 @@ method process( SRS::EPP::Session $session ) {
     return XML::SRS::AckMessage->new(
       transaction_id => $client_id,
       originating_registrar => $registrar_id+0,
-      action_id => $message->client_id || sprintf("auto.%x",time()),
+      action_id => $self->client_id || $self->server_id,
     );
   }
 
