@@ -21,5 +21,8 @@ SRS:
 
 output_assertions:
   attr_is:
-      - [ '//epp:result', 'code', 2400, 'EPP: Correct response code' ]
+      - [ '//epp:result', 'code', 2304, 'EPP: Correct response code' ]
+  match:
+      - [ '//epp:reason', '/[Nn]ot close enough/', 'EPP: useful reason' ]
+      - [ '//epp:reason', '/(\d+-\d+-\d+)/', 'EPP: reason contains current expiry' ]
 
