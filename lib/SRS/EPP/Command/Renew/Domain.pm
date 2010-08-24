@@ -33,8 +33,6 @@ method process( SRS::EPP::Session $session ) {
 	my $message = $epp->message;
 	my $payload = $message->argument->payload;
 
-	$session->stalled($self);
-
 	return XML::SRS::Whois->new(
 		domain => $payload->name(),
 		);
@@ -72,14 +70,13 @@ method notify( SRS::EPP::SRSResponse @rs ) {
 			my $reason = "Not close enough to current "
 				."expiry date ($current)";
 			return $self->make_error(
-				code => 2304,
+				code => 2306,
 				value => $eppPayload->expiry_date,
 				reason => $reason,
 				);
 		}
 
 		$self->billed_until( $response->billed_until() );
-		$self->session->stalled(0);
 
 		return XML::SRS::Domain::Update->new(
 			filter => [$response->name],
