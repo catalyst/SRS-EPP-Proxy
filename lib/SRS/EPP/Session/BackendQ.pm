@@ -108,7 +108,7 @@ method dequeue_backend_response() {
 			($owner, @$rs_a);
 		}
 		else {
-			$owner->notify(@$rs_a);
+			$rs_a;
 		}
 	}
 	else {
