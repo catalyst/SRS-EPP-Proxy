@@ -124,13 +124,7 @@ method process( SRS::EPP::Session $session ) {
 }
 
 method notify( SRS::EPP::SRSResponse @rs ) {
-	my $result;
-	if ( my $server_id = eval {
-		$result = $rs[0]->message;
-		$result->fe_id.",".$result->unique_id
-	} ) {
-		$self->server_id($server_id);
-	}
+	return $self->make_response(code => 2400);
 }
 
 sub make_response {
