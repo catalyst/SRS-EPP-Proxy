@@ -667,8 +667,11 @@ method be_response( SRS::EPP::SRSMessage $rs_tx ) {
 	#$self->active_request(undef);
 	my $rq_parts = $request->parts;
 	my $rs_parts = $rs_tx->parts;
-	$self->log_debug(
-		"response from back-end has ".@$rs_parts." parts, "
+	my $result_id = eval { $rs_parts->[0]->message->result_id }
+		|| "(no unique_id)";
+	$self->log_info(
+		"response $result_id from back-end has "
+			.@$rs_parts." parts, "
 			."active request ".@$rq_parts." parts"
 		);
 	if ( @$rs_parts < @$rq_parts and @$rs_parts == 1 and
@@ -683,6 +686,9 @@ method be_response( SRS::EPP::SRSMessage $rs_tx ) {
 	};
 
 	for (my $i = 0; $i <= $#$rq_parts; $i++ ) {
+		if (@$rq_parts > 1) {
+			eval { $rs_parts->[$i]->message->part($i+1); };
+		}
 		$self->add_backend_response($rq_parts->[$i], $rs_parts->[$i]);
 	}
 	$self->yield("process_responses");
@@ -692,8 +698,27 @@ method process_responses() {
 	while ( $self->backend_response_ready ) {
 		my ($cmd, @rs) = $self->dequeue_backend_response;
 
+		# for easier tracking of messages.
+		if ( my $server_id = eval {
+			$rs[0]->message->result_id;
+		} ) {
+			my $before = $cmd->server_id
+				if $cmd->has_server_id;
+			if ( @rs > 1 ) {
+				$server_id .= "+".(@rs-1);
+			}
+			$cmd->server_id($server_id);
+			if ( $before ) {
+				my $after = $cmd->server_id;
+				$self->log_info(
+			"changing server_id: $before => $after"
+					);
+			}
+		}
+
 		my $resp;
 		my $is_error;
+
 		if ($resp = $self->check_for_be_error($cmd, @rs)) {
 			$self->log_info(
 				"found srs errors in response to $cmd, "

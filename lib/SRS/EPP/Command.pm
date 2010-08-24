@@ -105,6 +105,7 @@ has 'server_id' =>
 	is => "rw",
 	isa => "XML::EPP::trIDStringType",
 	lazy => 1,
+	predicate => "has_server_id",
 	default => sub {
 		my $self = shift;
 		$self->session->new_server_id;
