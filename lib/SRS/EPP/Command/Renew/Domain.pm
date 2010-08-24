@@ -74,9 +74,21 @@ method notify( SRS::EPP::SRSResponse @rs ) {
               term => $eppPayload->period->value,
               );
           }
+          else {
+            return $self->make_response(
+                Error => (
+                    code      => 2202,
+                    exception => XML::EPP::Error->new(
+                        value  => $eppPayload->expiry_date,
+                        reason => 'The expiry date specified is not correct',
+                    ),
+                )
+            );
+         }
       }
+
+      
     }
-    return $self->make_response(code => 2400);
   }
 
   # By now, we must be dealing with the response to our update TXN
