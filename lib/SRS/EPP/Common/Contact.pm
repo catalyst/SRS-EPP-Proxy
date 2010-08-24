@@ -7,6 +7,9 @@ use Moose::Util::TypeConstraints;
 requires 'make_error';
 
 BEGIN {
+	class_type "XML::EPP::Contact::Change";
+	class_type "XML::EPP::Contact::Create";
+	class_type "XML::EPP::Contact::Addr";
 	subtype 'SRS::EPP::Common::Contact::Arg'
 		=> as "XML::EPP::Contact::Change|XML::EPP::Contact::Create";
 }
