@@ -70,7 +70,7 @@ method notify( SRS::EPP::SRSResponse @rs ) {
 			my $reason = "Not close enough to current "
 				."expiry date ($current)";
 			return $self->make_error(
-				code => 2306,
+				code => 2304,
 				value => $eppPayload->expiry_date,
 				reason => $reason,
 				);
