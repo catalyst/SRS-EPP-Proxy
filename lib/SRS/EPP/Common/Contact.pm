@@ -18,6 +18,9 @@ BEGIN {
 #  Return an error message if they do, nothing if it's valid
 method validate_epp_contact( SRS::EPP::Common::Contact::Arg $contact ) {
 
+	$self->log_debug(
+		"$self validating_epp_contact checking a ".ref($contact)
+	       );
 	my $epp_postal_info = $contact->postal_info();
 	if ( $epp_postal_info && scalar @$epp_postal_info != 1 ) {
 
@@ -27,7 +30,11 @@ method validate_epp_contact( SRS::EPP::Common::Contact::Arg $contact ) {
 		# throw an error if they try to provide both types
 		# (because the SRS can't have two translations for one
 		# address)
-
+		$self->log_error(
+			"$self validating_epp_contact found "
+				.@$epp_postal_info
+				." contacts, wanted 1"
+		       );
 		return $self->make_error(
 			code => 2306,
 			value  => '',
@@ -42,6 +49,10 @@ method validate_epp_contact( SRS::EPP::Common::Contact::Arg $contact ) {
 	# The SRS doesn't have a 'org' field, we don't want to lose
 	# info, so
 	if ( $postalInfo->org ) {
+		$self->log_error(
+			"$self validating_epp_contact found unsupported "
+				."field organization"
+			       );
 		return $self->make_error(
 			code => 2306,
 			value  => $postalInfo->org,
@@ -57,6 +68,11 @@ method validate_epp_contact( SRS::EPP::Common::Contact::Arg $contact ) {
 		|| @$street_lines > 2
 		)
 	{
+		$self->log_error(
+			"$self validating_epp_contact found "
+				.@$street_lines
+				." lines of street address, 1-2 allowed"
+			       );
 		return $self->make_error(
 			code => 2306,
 			value  => '',

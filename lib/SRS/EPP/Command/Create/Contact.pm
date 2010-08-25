@@ -45,6 +45,10 @@ method process( SRS::EPP::Session $session ) {
 			$txn->{fax} = $payload->fax()->content();
 		}
 		if ( my $srsTxn =  XML::SRS::Handle::Create->new(%$txn) ) {
+			$self->log_info(
+				"$self: prepared HandleCreate, ActionId = "
+					.$txn->{action_id}
+			);
 			return $srsTxn;
 		}
 	}
@@ -56,6 +60,11 @@ method process( SRS::EPP::Session $session ) {
 method notify( SRS::EPP::SRSResponse @rs ) {
 	my $message = $rs[0]->message;
 	my $response = $message->response;
+
+	$self->log_info(
+		"$self: Handle ".$response->handle_id
+			." created OK"
+	);
 
 	my $r = XML::EPP::Contact::Create::Response->new(
 		id => $response->handle_id,
