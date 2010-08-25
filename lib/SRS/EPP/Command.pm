@@ -153,6 +153,8 @@ sub make_response {
 	my %fields = @_;
 	$fields{client_id} ||= $self->client_id if $self->has_client_id;
 	$fields{server_id} ||= $self->server_id;
+	$self->log_debug("making a response: @{[%fields]}")
+		if $self->log->is_debug;
 	$type->new(
 		%fields,
 	);

@@ -475,7 +475,7 @@ method reap_children() {
 		$kid = waitpid(-1, WNOHANG);
 		if ($kid > 0) {
 			$reaped{$kid} = $?;
-			$self->log_debug(
+			$self->log_info(
 				"child $kid, ".(
 					$?&255
 					?" killed by signal "

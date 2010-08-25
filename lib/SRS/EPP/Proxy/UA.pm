@@ -135,7 +135,7 @@ has 'ua' =>
 method loop() {
 	$SIG{TERM} = sub { exit(0) };
 	while (1) {
-		$self->log_trace("UA waiting for request");
+		$self->log_debug("UA waiting for request");
 		$0 = __PACKAGE__." - idle";
 		my $request = eval { fd_retrieve($self->read_fh) }
 			or do {
