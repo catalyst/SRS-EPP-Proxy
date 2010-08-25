@@ -15,6 +15,8 @@ use Moose::Util::TypeConstraints;
 
 extends 'SRS::EPP::Message';
 
+with 'MooseX::Log::Log4perl::Easy';
+
 use XML::EPP;
 use XML::SRS::Error;
 
