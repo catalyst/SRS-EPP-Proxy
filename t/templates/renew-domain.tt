@@ -2,6 +2,6 @@
   <domain:renew xmlns:domain="urn:ietf:params:xml:ns:domain-1.0">
     <domain:name>[% domain %]</domain:name>
     <domain:curExpDate>[% expDate %]</domain:curExpDate>
-    <domain:period>[% period %]</domain:period>
+    <domain:period[% IF unit %] unit='[% unit %]'[% END %]>[%- period -%]</domain:period>
   </domain:renew>
 </renew>
