@@ -73,8 +73,7 @@ method backend_pending() {
 # add a response corresponding to a request - must be in order as
 # there is no other way to correlate read-only responses with their
 # requests (no client_tx_id in SRS requests)
-method add_backend_response( SRS::EPP::SRSRequest $request, SRS::EPP::SRSResponse $response )
-{
+method add_backend_response( SRS::EPP::SRSRequest $request, SRS::EPP::SRSResponse $response ) {
 	my $rq_a = $self->queue->[0];
 	my $rs_a = $self->responses->[0];
 	for ( my $i = 0; $i <= $#$rq_a; $i++ ) {

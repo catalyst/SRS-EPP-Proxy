@@ -56,8 +56,7 @@ method queue_command( SRS::EPP::Command $cmd ) {
 }
 
 # with a command object, place a response at the same place in the queue
-method add_command_response( SRS::EPP::Response $response, SRS::EPP::Command $cmd? )
-{
+method add_command_response( SRS::EPP::Response $response, SRS::EPP::Command $cmd? ) {
 	my $q = $self->queue;
 	my $rs = $self->responses;
 	my $ok;
