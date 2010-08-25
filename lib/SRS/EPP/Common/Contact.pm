@@ -70,7 +70,7 @@ method validate_epp_contact( SRS::EPP::Common::Contact::Arg $contact ) {
 	{
 		$self->log_error(
 			"$self validating_epp_contact found "
-				.@$street_lines
+				.@{$street_lines||[]}
 				." lines of street address, 1-2 allowed"
 			       );
 		return $self->make_error(
