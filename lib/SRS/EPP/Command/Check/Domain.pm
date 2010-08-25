@@ -21,6 +21,10 @@ method process( SRS::EPP::Session $session ) {
 
 	my @domains = $payload->names;
 
+	$self->log_info(
+		"$self checking domains: @domains",
+	);
+
 	return map {
 		XML::SRS::Whois->new(
 			domain => $_,
@@ -35,6 +39,7 @@ method notify( SRS::EPP::SRSResponse @rs ) {
 
 	my @response_items;
 	my @errors;
+	my @available;
 	for my $response (@rs) {
 		my $domain = $response->message->response;
 
@@ -46,6 +51,8 @@ method notify( SRS::EPP::SRSResponse @rs ) {
 				: 0
 			),
 		);
+		push @available, $domain->name
+			if $domain->status eq "Available";
 		my $result = XML::EPP::Domain::Check::Status->new(
 			name_status => $name_status,
 		);
@@ -53,6 +60,13 @@ method notify( SRS::EPP::SRSResponse @rs ) {
 		push @response_items, $result;
 
 	}
+	$self->log_info(
+		"$self: ".(
+			@available
+			? "available: @available"
+			: "all unavailable"
+		),
+	);
 
 	my $r = XML::EPP::Domain::Check::Response->new(
 		items => \@response_items,
