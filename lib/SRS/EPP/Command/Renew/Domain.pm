@@ -33,6 +33,8 @@ method process( SRS::EPP::Session $session ) {
 	my $message = $epp->message;
 	my $payload = $message->argument->payload;
 
+	$session->stalled($self);
+
 	return XML::SRS::Whois->new(
 		domain => $payload->name(),
 		);
@@ -77,6 +79,8 @@ method notify( SRS::EPP::SRSResponse @rs ) {
 		}
 
 		$self->billed_until( $response->billed_until() );
+
+		$self->session->stalled(0);
 
 		return XML::SRS::Domain::Update->new(
 			filter => [$response->name],
