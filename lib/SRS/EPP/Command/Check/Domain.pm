@@ -39,20 +39,22 @@ method notify( SRS::EPP::SRSResponse @rs ) {
 
 	my @response_items;
 	my @errors;
-	my @available;
+	my (@available, @unavailable);
 	for my $response (@rs) {
 		my $domain = $response->message->response;
 
+		my $available = $domain->is_available;
+
 		my $name_status = XML::EPP::Domain::Check::Name->new(
 			name => $domain->name,
-			available => (
-				$domain->status eq "Available"
-				? 1
-				: 0
-			),
+			available => $available,
 		);
-		push @available, $domain->name
-			if $domain->status eq "Available";
+		if ($available) {
+			push @available, $domain->name;
+		}
+		else {
+			push @unavailable, $domain->name;
+		}
 		my $result = XML::EPP::Domain::Check::Status->new(
 			name_status => $name_status,
 		);
@@ -60,13 +62,16 @@ method notify( SRS::EPP::SRSResponse @rs ) {
 		push @response_items, $result;
 
 	}
-	$self->log_info(
-		"$self: ".(
-			@available
-			? "available: @available"
-			: "all unavailable"
-		),
-	);
+	if (@available) {
+		$self->log_info(
+			"$self: available: @available",
+		);
+	}
+	if (@unavailable) {
+		$self->log_info(
+			"$self: unavailable: @unavailable",
+		);
+	}
 
 	my $r = XML::EPP::Domain::Check::Response->new(
 		items => \@response_items,
