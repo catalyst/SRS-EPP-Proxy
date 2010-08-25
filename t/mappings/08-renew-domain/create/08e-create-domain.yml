@@ -37,6 +37,6 @@ request: |-
 
 assertions:
  - xpath_matches: [ '//Error', '0', 'No errors' ]
- - xpath_datetrunc_matches: [ '//BilledUntil', 'Got expiry date', 'expDate' ]
+ - xpath_datetrunc_matches: [ '//BilledUntil', 'Got expiry date', 'expDate_8e' ]
 
 

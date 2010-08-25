@@ -1,5 +1,8 @@
 template: renew-domain.tt
 
+stash_map:
+  expDate_8a: 'expDate'
+
 vars:
   domain: chedder4.co.te
   expDate: 2010-01-01

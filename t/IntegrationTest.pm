@@ -15,6 +15,12 @@ use Data::Dumper;
 use Scriptalicious;
 use File::Basename;
 
+# run_tests expects a list of files to be passed in containing the test YAML
+# If the first item passed in is a hashref, it's assumed to be 'stash' variables. These
+#  variables will replace anything in 'vars' with the same key name. This replacement won't
+#  happen if 'int_dont_use_stash' is true
+# If the stash_map variable is set (a hashref), the stash key names are first mapped from
+#  the keys to the values of stash_map 
 sub run_tests {
 	my @files = @_;
 
@@ -58,6 +64,8 @@ sub run_tests {
 			? $test_dir . 'auth/' . $data->{ssl_cert}
 			: $test_dir . '/auth/client-cert.pem',
 		);
+		
+		$stash = map_stash_vars($data->{stash_map}, $stash);
 
 		my $vars = { %{$data->{vars} || {}}, ($data->{int_dont_use_stash} ? () : %$stash) };
 		$vars->{command} = $data->{template};
@@ -106,6 +114,23 @@ sub run_tests {
 	}
 
 	done_testing();
+}
+
+
+sub map_stash_vars {
+    my $map = shift;
+    my $stash = shift;
+    
+    return $stash unless ref $map eq 'HASH' && ref $stash eq 'HASH';
+    
+    foreach my $key (keys %$map) {
+        if ($stash->{$key}) {
+            $stash->{$map->{$key}} = $stash->{$key};
+            delete $stash->{$key};   
+        }   
+    }
+    
+    return $stash;
 }
 
 1;
