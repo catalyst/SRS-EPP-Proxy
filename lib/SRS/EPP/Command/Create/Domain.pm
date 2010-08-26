@@ -95,11 +95,12 @@ method process( SRS::EPP::Session $session ) {
 	if ($ns) {
 		my @ns_objs = eval { $self->translate_ns_epp_to_srs(@$ns); };
 		my $error = $@;
-		$self->log_info("$self provided ".@ns_objs." nameserver(s)");
 		if ($error) {
+			$self->log_error("$self error in nameservers; $error");
 			return $error if $error->isa('SRS::EPP::Response::Error');
 			die $error; # rethrow
 		}
+		$self->log_info("$self provided ".@ns_objs." nameserver(s)");
 
 		my $list = XML::SRS::Server::List->new(
 			nameservers => \@ns_objs,
