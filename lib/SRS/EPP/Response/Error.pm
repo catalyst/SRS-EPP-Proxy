@@ -129,7 +129,7 @@ sub map_exception {
 			my $reason = parse_moose_error($lines[0]);
 			return XML::EPP::Error->new(
 				value => 'Unknown',
-				reason => $reason,
+				reason => $reason||$lines[0]||'(none)',
 			);
 		}
 		when ($_->isa("PRANG::Graph::Context::Error")) {
@@ -146,7 +146,7 @@ sub map_exception {
 
 			return XML::EPP::Error->new(
 				value => $except->node || '',
-				reason => $reason,
+				reason => $reason || '',
 			);
 		}
 		when ($_->isa("XML::LibXML::Error")) {
@@ -154,7 +154,7 @@ sub map_exception {
 			while ($except) {
 				my $error = XML::EPP::Error->new(
 					value => $except->context || "(n/a)",
-					reason => $except->message,
+					reason => $except->message || '',
 				);
 				push @errors, $error;
 
@@ -181,7 +181,8 @@ around 'build_response' => sub {
 	my $result = $message->message->result;
 
 	my $bad_node = $self->bad_node;
-	my $errors_a = $self->mapped_errors;
+	my $errors_a = $self->exception ?
+		$self->mapped_errors : [];
 
 	$result->[0]->add_error($_) for grep {defined} @$errors_a;
 	return $message;

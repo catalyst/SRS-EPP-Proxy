@@ -162,7 +162,7 @@ sub make_response {
 
 # this one is for convenience in returning errors
 method make_error( Int :$code, Str :$message, Str :$value?, Str :$reason?, :$exception?) {
-	if ( defined $value or defined $reason ) {
+	if ( defined $reason ) {
 		$exception ||= XML::EPP::Error->new(
 			value => $value//"",
 			reason => $reason,
