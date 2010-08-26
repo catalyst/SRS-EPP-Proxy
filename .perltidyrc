@@ -2,10 +2,10 @@
 #  1. allow the user to set their preferred indent, by using tabs
 #  2. try to avoid changes on one line affecting whitespace on other
 #     nearby lines which didn't change.
---maximum-line-length=72
---indent-columns=4
---continuation-indentation=4
---entab-leading-whitespace=4
+--maximum-line-length=100
+--indent-columns=8
+--continuation-indentation=8
+--entab-leading-whitespace=8
 --vertical-tightness=2
 --vertical-tightness-closing=0
 --closing-token-indentation=0
@@ -17,8 +17,8 @@
 --nospace-for-semicolon
 -naws
 -ndnl
---outdent-long-quotes
---outdent-long-comments
+--no-outdent-long-quotes
+--no-outdent-long-comments
 --stack-opening-tokens
 --break-at-old-comma-breakpoints
 --comma-arrow-breakpoints=0
