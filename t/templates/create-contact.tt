@@ -3,7 +3,7 @@
     <contact:id>[% contact_id %]</contact:id>
     <contact:postalInfo type="int">
       <contact:name>[% name %]</contact:name>
-      [% UNLESS org_not_provided %]<contact:org>[% company %]</contact:org>[% END %]
+      [% IF company.defined %]<contact:org>[% company %]</contact:org>[% END %]
       <contact:addr>
         <contact:street>[% street %]</contact:street>
         <contact:street>[% street2 %]</contact:street>
@@ -13,15 +13,15 @@
         <contact:cc>[% ccode %]</contact:cc>
       </contact:addr>
     </contact:postalInfo>
-    <contact:voice>[% phone %]</contact:voice>
-    <contact:fax>[% fax %]</contact:fax>
+    [% IF phone.defined %]<contact:voice>[% phone %]</contact:voice>[% END -%]
+    [% IF fax.defined %]<contact:fax>[% fax %]</contact:fax>[% END %]
     <contact:email>[% email %]</contact:email>
     <contact:authInfo>
       <contact:pw></contact:pw>
     </contact:authInfo>
-    <contact:disclose flag="0">
+    [% IF disclose %]<contact:disclose flag="0">
       <contact:voice/>
       <contact:email/>
-    </contact:disclose>
+    </contact:disclose>[% END %]
   </contact:create>
 </create>
