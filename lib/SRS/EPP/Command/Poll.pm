@@ -152,12 +152,15 @@ method notify( SRS::EPP::SRSResponse @rs ) {
 			for my $resp ( $record->response() ) {
 				my $action = $record->action();
 				my ($reason,$payload) = $self->extract_fact($action,$resp);
+				my $mixed_msg = XML::EPP::MixedMsg->new(
+					contents => [$reason],
+					nodenames => [""],
+				);
 				my $msgQ = XML::EPP::MsgQ->new(
 					count => $response->unacked(),
 					id => $id,
 					qDate => $record->server_time->timestamptz,
-					## TODO: samv, please uncomment the following line, (and fix!)
-					#msg => XML::EPP::MixedMsg->new(contents => [$reason]),
+					msg => $mixed_msg,
 				);
 				return $self->make_response(
 					code => 1301,
