@@ -71,17 +71,18 @@ sub extract_fact {
 
 	if ( $action eq "DomainTransfer" ) {
 		my $name = $domain->TransferredDomain();
-		return XML::EPP::Domain::Info::Response->new(
+		return "Domain Transfer",
+			XML::EPP::Domain::Info::Response->new(
 			name => $name,
 			roid => substr(md5_hex($name), 0, 12) . '-DOM',
 			transfer_date => $domain->timestamptz,
 			status => [],
-		);
+			);
 	}
 
 	if ( $action eq "DomainUpdate" ) {
 		if ( my $udai = $domain->UDAI() ) {
-			return XML::EPP::Domain::Info::Response->new(
+			return "New UDAI", XML::EPP::Domain::Info::Response->new(
 				name => $domain->name,
 				roid => substr(md5_hex($domain->name), 0, 12) . '-DOM',
 				status => [
@@ -96,23 +97,27 @@ sub extract_fact {
 		}
 
 		if ( $domain->audit()->comment() =~ m/RenewDomains/ ) {
-			return XML::EPP::Domain::Info::Response->new(
+			return "Domain Renewal", XML::EPP::Domain::Info::Response->new(
 				name => $domain->name,
 				roid => substr(md5_hex($domain->name), 0, 12) . '-DOM',
 				status => [
 					SRS::EPP::Command::Info::Domain::getEppStatuses($domain)
 				],
 				expiry_date => $domain->billed_until->timestamptz,
-				),
+			);
 		}
 
 		# didn't notice anything specifically interesting, so we'll default to
 		# returning a full info response...
-		return SRS::EPP::Command::Info::Domain::buildInfoResponse($domain);
+		return ("Domain Update",
+			SRS::EPP::Command::Info::Domain::buildInfoResponse($domain)
+		);
 	}
 
 	if ( $action eq "DomainCreate" ) {
-		return SRS::EPP::Command::Info::Domain::buildInfoResponse($domain);
+		return ("Domain Create",
+			SRS::EPP::Command::Info::Domain::buildInfoResponse($domain)
+		);
 	}
 }
 
@@ -143,17 +148,20 @@ method notify( SRS::EPP::SRSResponse @rs ) {
 			my $record = $response->result();
 
 			my $id = sprintf("%04d%s",$record->by_id,$record->client_id);
-			my $msgQ = XML::EPP::MsgQ->new(
-				count => $self->remaining(),
-				id => $id,
-			);
 
 			for my $resp ( $record->response() ) {
 				my $action = $record->action();
-				my $fact = $self->extract_fact($action,$resp);
+				my ($reason,$payload) = $self->extract_fact($action,$resp);
+				my $msgQ = XML::EPP::MsgQ->new(
+					count => $self->remaining(),
+					id => $id,
+					qDate => $record->server_time->timestamptz,
+					## TODO: samv, please uncomment the following line, (and fix!)
+					#msg => XML::EPP::MixedMsg->new(contents => [$reason]),
+				);
 				return $self->make_response(
-					code => 1301, payload => $fact,
-					msgQ => $msgQ
+					code => 1301,
+					payload => $payload, msgQ => $msgQ
 				);
 			}
 		}
