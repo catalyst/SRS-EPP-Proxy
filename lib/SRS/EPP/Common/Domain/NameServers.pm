@@ -21,7 +21,7 @@ sub translate_ns_epp_to_srs {
 		unless ($ns->isa('XML::EPP::Domain::HostAttr')) {
 			die $self->make_response(
 				Error => (
-					code => 2306,
+					code => 2102,
 					exception => XML::EPP::Error->new(
 						value => $ns,
 						reason => 'hostObj not supported',
@@ -40,7 +40,7 @@ sub translate_ns_epp_to_srs {
 			if ($translated_ips{$type}) {
 				die $self->make_response(
 					Error => (
-						code => 2306,
+						code => 2102,
 						exception => XML::EPP::Error->new(
 							value => $ns->name,
 							reason =>

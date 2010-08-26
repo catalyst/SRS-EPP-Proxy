@@ -16,7 +16,7 @@ input_assertions:
 
 output_assertions:
   attr_is:
-    - [ '//epp:result', 'code', '2306', 'EPP: correct response code' ]
+    - [ '//epp:result', 'code', '2102', 'EPP: correct response code' ]
   match:
     - [ '//epp:value', 'ns1.hidns.com', 'EPP: correct value returned' ]
     - [ '//epp:reason', 'hostObj not supported', 'EPP: correct reason returned' ]
