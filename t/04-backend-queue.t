@@ -13,20 +13,23 @@ BEGIN {
 # SRS::EPP::Command objects.
 
 {
+
 	package Mock::Anything;
-	sub isa { 1 }  # trump most type constraints :->
-        use Moose;
-	sub root_element { 'yomomma' }
+	sub isa {1}  # trump most type constraints :->
+	use Moose;
+	sub root_element {'yomomma'}
 	with 'XML::SRS::Action';  # fool a role typeconstraint
+
 	sub new {
 		my $class = shift;
-		bless { @_ }, $class;
+		bless {@_}, $class;
 	}
 	our $AUTOLOAD;
+
 	sub AUTOLOAD {
 		my $self = shift;
 		$AUTOLOAD=~/.*::(.*)/;
-		if ( @_ ) {
+		if (@_) {
 			$self->{$1} = shift;
 		}
 		else {
@@ -40,20 +43,20 @@ my $command = SRS::EPP::Command->new(
 	message => Mock::Anything->new(
 		name => "login",
 		message => Mock::Anything->new(
-		       )
-	       ),
-       );
+			)
+	),
+);
 
 # converts to a *list* of SRS Actions / Queries, eg
 my @commands = qw(RegistrarDetailsQry AccessControlListQry1
-		  AccessControlListQry2);
+	AccessControlListQry2);
 my @command_rq = map {
 	SRS::EPP::SRSRequest->new(
 		message => Mock::Anything->new(
 			request => 1,
 			name => $_,
-		       ),
-	       );
+		),
+	);
 } @commands;
 
 # each action/query has a response/error
@@ -62,14 +65,15 @@ my @command_rs = map {
 		message => Mock::Anything->new(
 			response => 1,
 			name => $_,
-		       ),
-	       );
+		),
+	);
 } @commands;
 
 # ok.  we've got some data, construct our test object.
 my $BE_q = SRS::EPP::Session::BackendQ->new();
-isa_ok($BE_q, "SRS::EPP::Session::BackendQ",
-       "SRS::EPP::Session::BackendQ->new()");
+isa_ok( $BE_q, "SRS::EPP::Session::BackendQ",
+	"SRS::EPP::Session::BackendQ->new()"
+);
 
 # some basic tests
 is($BE_q->queue_size, 0, "->queue_size (null)");
@@ -112,9 +116,14 @@ my ($owner, @rs) = $BE_q->dequeue_backend_response;
 is($owner, $command, "->dequeue_backend_response (got all rs) - correct command");
 is(@rs, 3, "->dequeue_backend_response (got all rs) - correct # responses");
 
-ok(!(grep{ $rs[$_]->message->name ne $command_rq[$_]->message->name or !$rs[$_]->message->response }
-	     0..2),
-   "got results back in correct order");
+ok(     !(      grep{
+			$rs[$_]->message->name ne $command_rq[$_]->message->name
+				or !$rs[$_]->message->response
+		}
+		0..2
+	),
+	"got results back in correct order"
+);
 
 # Copyright (C) 2009  NZ Registry Services
 #

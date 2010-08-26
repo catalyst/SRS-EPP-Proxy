@@ -106,13 +106,15 @@ has 'mapped_errors' =>
 	isa => "ArrayRef[XML::EPP::Error]",
 	lazy => 1,
 	default => sub {
-		my $self = shift;
-		my $exceptions_a = $self->exception;
-		unless ( ref $exceptions_a and
-				 ref $exceptions_a eq "ARRAY" ) {
-			$exceptions_a = [ $exceptions_a ];
-		}
-		[ map { map_exception($_) } @$exceptions_a ];
+	my $self = shift;
+	my $exceptions_a = $self->exception;
+	unless (ref $exceptions_a
+		and
+		ref $exceptions_a eq "ARRAY"
+		)
+	{       $exceptions_a = [$exceptions_a];
+	}
+	[ map { map_exception($_) } @$exceptions_a ];
 	};
 
 sub map_exception {
@@ -128,7 +130,7 @@ sub map_exception {
 			return XML::EPP::Error->new(
 				value => 'Unknown',
 				reason => $reason,
-				);
+			);
 		}
 		when ($_->isa("PRANG::Graph::Context::Error")) {
 			use YAML;
@@ -145,16 +147,17 @@ sub map_exception {
 			return XML::EPP::Error->new(
 				value => $except->node || '',
 				reason => $reason,
-				);
+			);
 		}
 		when ($_->isa("XML::LibXML::Error")) {
 			my @errors;
-			while ( $except ) {
+			while ($except) {
 				my $error = XML::EPP::Error->new(
 					value => $except->context || "(n/a)",
 					reason => $except->message,
-					);
+				);
 				push @errors, $error;
+
 				# though called '_prev', this function
 				# is documented.
 				$except = $except->_prev;
@@ -168,7 +171,7 @@ sub map_exception {
 			return map_srs_error($except);
 		}
 	}
-};
+}
 
 around 'build_response' => sub {
 	my $orig = shift;
@@ -180,7 +183,7 @@ around 'build_response' => sub {
 	my $bad_node = $self->bad_node;
 	my $errors_a = $self->mapped_errors;
 
-	$result->[0]->add_error( $_ ) for grep { defined } @$errors_a;
+	$result->[0]->add_error($_) for grep {defined} @$errors_a;
 	return $message;
 };
 
@@ -192,22 +195,24 @@ sub parse_moose_error {
 
 	my $error = '';
 
-	if ( $string =~ m{
+	if (    $string =~ m{
 		Validation \s failed \s for \s
 		'.*::(\w+Type)'
 		\s (?:failed \s )?with \s value \s
 		(.*) \s at
-		}x) {
-		$error = "'$2' does not meet schema requirements for $1";
+		}x
+		)
+	{       $error = "'$2' does not meet schema requirements for $1";
 	}
-	elsif ($string =~ m{
+	elsif ( $string =~ m{
 		Attribute \s \((.+?)\) \s does \s not \s
 		pass \s the \s type \s constraint \s
 		because: \s Validation \s failed \s for \s
 		'.+?' \s (?:failed \s )?
 		with \s value \s (.+?) \s at
-		}x) {
-		my ($label, $value) = ($1, $2);
+		}x
+		)
+	{       my ($label, $value) = ($1, $2);
 		unless ($value =~ m{^(?:ARRAY|HASH)}) {
 			$error = "Invalid value $value ($label)";
 		}
@@ -216,6 +221,7 @@ sub parse_moose_error {
 		$error = "Missing required value ($1)";
 	}
 	else {
+
 		# Catch-all - return the first line.
 		# TODO: possibly too much information... might pay to
 		# remove this before go-live

@@ -32,13 +32,13 @@ method process( SRS::EPP::Session $session ) {
 
 	return XML::SRS::Handle::Query->new(
 		handle_id_filter => $payload->id,
-	       );
+	);
 }
 
 has 'code' => (
 	is => "rw",
 	isa => "Int",
-	);
+);
 
 sub zero_pad {
 	my $registrar_id = shift;
@@ -53,7 +53,8 @@ method notify( SRS::EPP::SRSResponse @rs ) {
 		return $self->make_response(code => $self->code);
 	}
 
-	unless ( $response ) {
+	unless ($response) {
+
 		# assume the contact doesn't exist
 		return $self->make_response(code => 2303);
 	}
@@ -63,10 +64,10 @@ method notify( SRS::EPP::SRSResponse @rs ) {
 		street => [
 			$response->address->address1,
 			$response->address->address2||(),
-		       ],
+		],
 		city   => $response->address->city,
 		cc     => $response->address->cc,
-		);
+	);
 
 	# state or province
 	$addr{sp} = $response->address->region
@@ -78,15 +79,20 @@ method notify( SRS::EPP::SRSResponse @rs ) {
 	# Compare the contact's creation date against the audit time,
 	# to tell us if it has been updated
 	my $contact_updated = 0;
-	if ($response->created_date->timestamptz ne
-	    $response->audit->when->begin->timestamptz) {
-		$contact_updated = 1;
+	if (    $response->created_date->timestamptz ne
+		$response->audit->when->begin->timestamptz
+		)
+	{       $contact_updated = 1;
 	}
 
 	# generate this required field
-	my $roid = substr(md5_hex(
-		$response->registrar_id . $response->handle_id
-	       ), 0, 12) . '-CON';
+	my $roid = substr(
+		md5_hex(
+			$response->registrar_id . $response->handle_id
+		),
+		0,
+		12
+	) . '-CON';
 
 	# build the response
 	my $r = XML::EPP::Contact::Info::Response->new(
@@ -96,9 +102,9 @@ method notify( SRS::EPP::SRSResponse @rs ) {
 				name => $response->name,
 				addr => XML::EPP::Contact::Addr->new(
 					%addr,
-				       ),
-			       ),
-		       ],
+				),
+			),
+		],
 		roid => $roid,
 		$self->_maybe_phone_number($response->phone, "voice"),
 		$self->_maybe_phone_number($response->fax, "fax"),
@@ -106,18 +112,21 @@ method notify( SRS::EPP::SRSResponse @rs ) {
 		created => $response->created_date->timestamptz,
 		creator_id => zero_pad($response->registrar_id),
 		status => [XML::EPP::Contact::Status->new(status => 'ok')],
-		($contact_updated ? (
-			updated_by_id => zero_pad(
-				$response->audit->registrar_id,
-			       ),
-			updated => $response->audit->when->begin->timestamptz,
-		       ) : ()),
-	       );
+		(       $contact_updated
+			? (
+				updated_by_id => zero_pad(
+					$response->audit->registrar_id,
+				),
+				updated => $response->audit->when->begin->timestamptz,
+				)
+			: ()
+		),
+	);
 
 	return $self->make_response(
 		code => 1000,
 		payload => $r,
-	       );
+	);
 }
 
 sub _maybe_phone_number {
@@ -158,9 +167,9 @@ sub _translate_phone_number {
 
 	return XML::EPP::Contact::E164->new(
 		content => $global_number,
-		($x ? (x => $x) : (),
+		(       $x ? (x => $x) : (),
 		),
-       );
+	);
 }
 
 1;

@@ -1,5 +1,4 @@
 
-
 package SRS::EPP::Command::Logout;
 
 use Moose;
@@ -10,7 +9,7 @@ sub action {
 	"logout";
 }
 
-sub simple { 1 }
+sub simple {1}
 
 method process( SRS::EPP::Session $session ) {
 	$session->shutdown;

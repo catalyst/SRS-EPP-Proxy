@@ -24,7 +24,7 @@ has 'next' =>
 	default => 0,
 	traits => ['Number'],
 	handles   => {
-		add_next => 'add',
+	add_next => 'add',
 	},
 	;
 
@@ -32,6 +32,7 @@ method next_command() {
 	my $q = $self->queue;
 	my $next = $self->next;
 	while ( $self->responses->[$next] ) {
+
 		# no processing needed?  skip
 		$self->add_next(1);
 		$next++;
@@ -61,9 +62,11 @@ method add_command_response( SRS::EPP::Response $response, SRS::EPP::Command $cm
 	my $rs = $self->responses;
 	my $ok;
 	for ( my $i = 0; $i <= $#$q; $i++ ) {
-		if ( ($cmd and $q->[$i] == $cmd) or
-			!defined $rs->[$i] ) {
-			$rs->[$i] = $response;
+		if (    ($cmd and $q->[$i] == $cmd)
+			or
+			!defined $rs->[$i]
+			)
+		{       $rs->[$i] = $response;
 			$ok = 1;
 			last;
 		}
@@ -82,7 +85,7 @@ method dequeue_response() {
 		if ( $self->next ) {
 			$self->add_next(-1);
 		}
-		if ( wantarray ) {
+		if (wantarray) {
 			($response, $cmd);
 		}
 		else {

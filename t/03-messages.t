@@ -19,16 +19,15 @@ BEGIN {
 
 my $command = SRS::EPP::Command->new(
 	xmlstring => "not really",
-       );
+);
 
 isa_ok($command, "SRS::EPP::Command", "new 'vanilla' command");
 
 my $response = SRS::EPP::Response->new(
 	code => 1000,
-       );
+);
 
 isa_ok($response, "SRS::EPP::Response", "new 'vanilla' response");
-
 
 # Copyright (C) 2009  NZ Registry Services
 #

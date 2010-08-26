@@ -11,8 +11,6 @@ BEGIN {
 	use_ok("SRS::EPP::OpenPGP");
 }
 
-
-
 # Copyright (C) 2009  NZ Registry Services
 #
 # This program is free software: you can redistribute it and/or modify

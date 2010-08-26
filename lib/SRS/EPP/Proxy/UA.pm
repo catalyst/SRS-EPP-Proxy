@@ -12,6 +12,7 @@ use Storable qw(store_fd retrieve_fd);
 with 'MooseX::Log::Log4perl::Easy';
 
 enum __PACKAGE__."::states" => qw(waiting busy ready);
+
 BEGIN {
 	class_type "HTTP::Request";
 	class_type "HTTP::Response";
@@ -49,6 +50,7 @@ method ready() {
 	}
 	$self->state eq "ready";
 }
+
 method waiting() {
 	$self->state eq "waiting";
 }
@@ -60,7 +62,7 @@ method check_reader_ready( Num $timeout = 0 ) {
 	my $win = '';
 	my $ein = $rin;
 	my ($nfound) = select($rin, $win, $ein, $timeout);
-	if ( $nfound ) {
+	if ($nfound) {
 		if ( vec($ein, fileno($fh), 1) ) {
 			die "reader handle in error state";
 		}
@@ -86,11 +88,11 @@ sub BUILD {
 		$self->log_trace("forking...");
 		my $pid = fork;
 		defined $pid or die "fork failed; $!";
-		if ( $pid ) {
+		if ($pid) {
 			$self->log_trace(
-"parent, child pid = $pid, reading from ".fileno($rs_rdr)
-	.", writing to ".fileno($rq_wtr)
-			       );
+				"parent, child pid = $pid, reading from ".fileno($rs_rdr)
+					.", writing to ".fileno($rq_wtr)
+			);
 			$self->pid($pid);
 			$self->read_fh($rs_rdr);
 			$self->write_fh($rq_wtr);
@@ -98,9 +100,9 @@ sub BUILD {
 		}
 		else {
 			$self->log_trace(
-"child, I am $$, reading from "
-	.fileno($rq_rdr).", writing to ".fileno($rs_wtr)
-			       );
+				"child, I am $$, reading from "
+					.fileno($rq_rdr).", writing to ".fileno($rs_wtr)
+			);
 			$0 = __PACKAGE__;
 			$self->read_fh($rq_rdr);
 			$self->write_fh($rs_wtr);
@@ -124,21 +126,22 @@ has 'ua' =>
 	isa => "LWP::UserAgent",
 	lazy => 1,
 	default => sub {
-		LWP::UserAgent->new(
-			agent => __PACKAGE__,
-			timeout => 30,  # 'fast' timeout for EPP sessions
-		       )
+	LWP::UserAgent->new(
+		agent => __PACKAGE__,
+		timeout => 30,  # 'fast' timeout for EPP sessions
+		)
 	};
 
 method loop() {
 	$SIG{TERM} = sub { exit(0) };
-	while ( 1 ) {
+	while (1) {
 		$self->log_trace("UA waiting for request");
 		$0 = __PACKAGE__." - idle";
 		my $request = eval { fd_retrieve($self->read_fh) }
 			or do {
-				#$self->log_error("failed to read request; $@");
-				last;
+
+			#$self->log_error("failed to read request; $@");
+			last;
 			};
 		$self->log_debug("sending a request to back-end");
 		$0 = __PACKAGE__." - active";

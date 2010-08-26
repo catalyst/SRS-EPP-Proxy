@@ -24,10 +24,13 @@ with 'MooseX::Log::Log4perl::Easy';
 with 'MooseX::Daemonize';
 
 has '+configfile' => (
-	default => sub { [
-		"$ENV{HOME}/.srs_epp_proxy.yaml",
-		'/etc/srs-epp-proxy.yaml'
-	       ] });
+	default => sub {
+		[
+			"$ENV{HOME}/.srs_epp_proxy.yaml",
+			'/etc/srs-epp-proxy.yaml'
+		];
+		}
+);
 
 sub BUILD {
 	my $self = shift;
@@ -42,25 +45,26 @@ sub BUILD {
 		$logging = "INFO";
 	}
 
-	if ( !ref $logging and ! -f $logging ) {
+	if ( !ref $logging and !-f $logging ) {
+
 		# 'default'
 		if ( $self->is_daemon ) {
 			$logging = {
-		rootLogger => "$logging, Syslog",
-		"appender.Syslog" => "Log::Log4perl::JavaMap::SyslogAppender",
-		"appender.Syslog.logopt" => "pid",
-		"appender.Syslog.Facility" => "daemon",
-		"appender.Syslog.layout" =>
-			"Log::Log4perl::Layout::SimpleLayout",
+				rootLogger => "$logging, Syslog",
+				"appender.Syslog" => "Log::Log4perl::JavaMap::SyslogAppender",
+				"appender.Syslog.logopt" => "pid",
+				"appender.Syslog.Facility" => "daemon",
+				"appender.Syslog.layout" =>
+					"Log::Log4perl::Layout::SimpleLayout",
 			};
 		}
 		else {
 			$logging = {
-		rootLogger => "$logging, Screen",
-		"appender.Screen" => "Log::Log4perl::Appender::Screen",
-		"appender.Screen.stderr" => 1,
-		"appender.Screen.layout" =>
-			"Log::Log4perl::Layout::SimpleLayout",
+				rootLogger => "$logging, Screen",
+				"appender.Screen" => "Log::Log4perl::Appender::Screen",
+				"appender.Screen.stderr" => 1,
+				"appender.Screen.layout" =>
+					"Log::Log4perl::Layout::SimpleLayout",
 			};
 		}
 	}
@@ -68,22 +72,26 @@ sub BUILD {
 	# prepend "log4perl." to config hashes
 	if ( ref $logging and ref $logging eq "HASH" ) {
 		for my $key ( keys %$logging ) {
-			if ( $key !~ /^log4perl\./ and
-				     !exists $logging->{"log4perl.$key"}
-				    ) {
-				$logging->{"log4perl.$key"} =
+			if (    $key !~ /^log4perl\./
+				and
+				!exists $logging->{"log4perl.$key"}
+				)
+			{       $logging->{"log4perl.$key"} =
 					delete $logging->{$key};
 			}
 		}
 	}
 
-	Log::Log4perl->init( $logging );
+	Log::Log4perl->init($logging);
+
 	# pass configuration options to the session class?
 
 	# Register namespaces to be returned by greeting
 	# TODO: Probably should be configured...
 	use XML::EPP;
-	XML::EPP::register_obj_uri(qw/urn:ietf:params:xml:ns:epp:domain-1.0 urn:ietf:params:xml:ns:epp:contact-1.0/);
+	XML::EPP::register_obj_uri(
+		qw/urn:ietf:params:xml:ns:epp:domain-1.0 urn:ietf:params:xml:ns:epp:contact-1.0/
+	);
 }
 
 our $VERSION = "0.21";
@@ -103,15 +111,15 @@ has 'listener' =>
 	is => "rw",
 	isa => "SRS::EPP::Proxy::Listener",
 	default => sub {
-		require SRS::EPP::Proxy::Listener;
-		my $self = shift;
-		SRS::EPP::Proxy::Listener->new(
-			($self->listen ? (listen => $self->listen) : () ),
-		       );
+	require SRS::EPP::Proxy::Listener;
+	my $self = shift;
+	SRS::EPP::Proxy::Listener->new(
+		($self->listen ? (listen => $self->listen) : () ),
+	);
 	},
 	lazy => 1,
 	handles => {
-		'init_listener' => 'init',
+	'init_listener' => 'init',
 	},
 	;
 
@@ -141,15 +149,16 @@ has 'server_name' =>
 	isa => "Str",
 	lazy => 1,
 	default => sub {
-		my $self = shift;
-		my @listen = @{ $self->listen };
-		if ( @listen == 1 and $listen[0] !~ /^(?:\d+\.|\[)/ ) {
-			# listen address seems a reasonable default...
-			$listen[0];
-		}
-		else {
-			hostname;
-		}
+	my $self = shift;
+	my @listen = @{ $self->listen };
+	if ( @listen == 1 and $listen[0] !~ /^(?:\d+\.|\[)/ ) {
+
+		# listen address seems a reasonable default...
+		$listen[0];
+	}
+	else {
+		hostname;
+	}
 	};
 
 has 'ssl_engine' =>
@@ -167,8 +176,8 @@ use Net::SSLeay::OO;
 use Net::SSLeay::OO::Error qw(die_if_ssl_error);
 use Net::SSLeay::OO::Constants
 	qw(MODE_ENABLE_PARTIAL_WRITE MODE_ACCEPT_MOVING_WRITE_BUFFER
-	   OP_ALL OP_NO_SSLv2 VERIFY_PEER VERIFY_FAIL_IF_NO_PEER_CERT
-	   FILETYPE_PEM);
+	OP_ALL OP_NO_SSLv2 VERIFY_PEER VERIFY_FAIL_IF_NO_PEER_CERT
+	FILETYPE_PEM);
 
 method init_ssl() {
 	my $ctx = Net::SSLeay::OO::Context->new;
@@ -176,8 +185,8 @@ method init_ssl() {
 	my $options = VERIFY_PEER;
 	if ( $self->rfc_compliant_ssl) {
 		$self->log_info(
-"Strict RFC5734-compliant SSL enabled (client certificates required)"
-		       );
+			"Strict RFC5734-compliant SSL enabled (client certificates required)"
+		);
 		$options |= VERIFY_FAIL_IF_NO_PEER_CERT;
 	}
 	$ctx->set_verify($options);
@@ -185,8 +194,8 @@ method init_ssl() {
 	$ctx->load_verify_locations("", $self->ssl_cert_dir);
 	$self->log_info(
 		"SSL private key: ".$self->ssl_key_file
-		.", public certificate chain: ".$self->ssl_cert_file
-	       );
+			.", public certificate chain: ".$self->ssl_cert_file
+	);
 	$ctx->use_PrivateKey_file($self->ssl_key_file, FILETYPE_PEM);
 	$ctx->use_certificate_chain_file($self->ssl_cert_file);
 	die_if_ssl_error;  # one last check...
@@ -207,17 +216,17 @@ has 'openpgp' =>
 	isa => "SRS::EPP::OpenPGP",
 	lazy => 1,
 	default => sub {
-		my $self = shift;
-		require SRS::EPP::OpenPGP;
-		my $pgp_dir = $self->pgp_dir;
-		my $secring_file = "$pgp_dir/secring.gpg";
-		my $pubring_file = "$pgp_dir/pubring.gpg";
-		my $pgp = SRS::EPP::OpenPGP->new(
-			public_keyring => $pubring_file,
-			secret_keyring => $secring_file,
-		       );
-		$pgp->uid($self->pgp_keyid);
-		$pgp;
+	my $self = shift;
+	require SRS::EPP::OpenPGP;
+	my $pgp_dir = $self->pgp_dir;
+	my $secring_file = "$pgp_dir/secring.gpg";
+	my $pubring_file = "$pgp_dir/pubring.gpg";
+	my $pgp = SRS::EPP::OpenPGP->new(
+		public_keyring => $pubring_file,
+		secret_keyring => $secring_file,
+	);
+	$pgp->uid($self->pgp_keyid);
+	$pgp;
 	},
 	handles => ["pgp"],
 	;
@@ -233,7 +242,7 @@ has 'pgp_dir' =>
 	is => "ro",
 	isa => "Str",
 	default => sub {
-		$ENV{GNUPGHOME} || "$ENV{HOME}/.gnupg";
+	$ENV{GNUPGHOME} || "$ENV{HOME}/.gnupg";
 	},
 	;
 
@@ -275,6 +284,7 @@ method accept_one() {
 		return ();
 	}
 	else {
+
 		# We'll also want to know the address of the other end
 		# of the socket, for checking it against the back-end
 		# ACL
@@ -283,15 +293,16 @@ method accept_one() {
 		$0 = "srs-epp-proxy [$peerhost] - SSL init";
 
 		my $ssl = eval {
-		    $self->ssl_engine->accept($socket);
+			$self->ssl_engine->accept($socket);
 		};
 
 		my $error = $@;
 		if ($error) {
-		    # We got an SSL error - send it back to the client, and close the connection
-		    $socket->print($error);
-		    $socket->close();
-		    die $error;
+
+			# We got an SSL error - send it back to the client, and close the connection
+			$socket->print($error);
+			$socket->close();
+			die $error;
 		}
 
 		$0 = "srs-epp-proxy [$peerhost] - setup";
@@ -300,7 +311,8 @@ method accept_one() {
 		# certificates.  So, fetch it and get its subject.
 		my $client_cert = $ssl->get_peer_certificate;
 		my $peer_cn;
-		if ( $client_cert ) {
+		if ($client_cert) {
+
 			# should use subjectAltName if present..
 			$peer_cn = $client_cert->get_subject_name->cn;
 			$self->log_info("have a valid peer certificate, cn=$peer_cn");
@@ -310,8 +322,10 @@ method accept_one() {
 		}
 
 		# set the socket to non-blocking for event-driven fun.
-		my $mode = ( MODE_ENABLE_PARTIAL_WRITE |
-				     MODE_ACCEPT_MOVING_WRITE_BUFFER );
+		my $mode = (
+			MODE_ENABLE_PARTIAL_WRITE |
+				MODE_ACCEPT_MOVING_WRITE_BUFFER
+		);
 		$ssl->set_mode($mode);
 		$socket->blocking(0);
 
@@ -325,7 +339,8 @@ method accept_one() {
 			event => "Event",
 			peerhost => $peerhost,
 			($self->rfc_compliant_ssl ? (peer_cn => lc $peer_cn) : ()),
-		       );
+		);
+
 		# let it know it's connected.
 		$session->connected;
 
@@ -335,7 +350,7 @@ method accept_one() {
 
 method show_state( Str $state, SRS::EPP::Session $session? ) {
 	my ($regid, $peer_host_or_cn);
-	if ( $session ) {
+	if ($session) {
 		$regid = $session->user;
 		$peer_host_or_cn = $session->peer_cn
 			|| $session->peerhost;
@@ -378,56 +393,66 @@ method catch_signal(Str $sig, CodeRef $sub) {
 }
 
 method accept_loop() {
-	$self->catch_signal(TERM => sub {
-				    $self->log_info("Shutting down.");
-				    for my $kid ( @{ $self->child_pids } ) {
-					    kill "TERM", $kid;
-				    }
-				    $self->running(0);
-			    });
+	$self->catch_signal(
+		TERM => sub {
+			$self->log_info("Shutting down.");
+			for my $kid ( @{ $self->child_pids } ) {
+				kill "TERM", $kid;
+			}
+			$self->running(0);
+			}
+	);
 	if ( !$self->foreground ) {
 		$self->catch_signal(CHLD => sub { $self->reap_children });
 	}
 	$0 = "srs-epp-proxy - listener";
 	while ( $self->running ) {
 		my $session = $self->accept_one;
-		if ( $session ) {
+		if ($session) {
 			unless ( $self->foreground ) {
-				$self->catch_signal(TERM => sub {
-							    $session->shutdown;
-						    });
+				$self->catch_signal(
+					TERM => sub {
+						$session->shutdown;
+						}
+				);
 			}
 			$self->log_trace("accepted a new session, entering event loop");
 			local($Event::DIED) = sub {
 				my $event = shift;
 				my $exception = shift;
-				$self->log_error("Exception during ".$event->w->desc."; $exception");
+				$self->log_error(
+					"Exception during ".$event->w->desc."; $exception"
+				);
 
 				# Send back a generic error message
 				# TODO: perhaps only do this if a response is not ready?
 				if ($session) {
-				    eval {
-    				    my $error = SRS::EPP::Response::Error->new(
-                			server_id => $session->new_server_id,
-                			code => 2400,
-                			exception => $exception,
-            			);
-            			my $xml = $error->to_xml;
-            			my $length = pack("N", bytes::length($xml)+4);
+					eval {
+						my $error = SRS::EPP::Response::Error->new(
+							server_id => $session->new_server_id,
+							code => 2400,
+							exception => $exception,
+						);
+						my $xml = $error->to_xml;
+						my $length = pack("N", bytes::length($xml)+4);
 
-            			my $left_to_write = bytes::length $xml;
-            			while ($left_to_write) {
-            			    my $written = $session->write_to_client([$length, $xml]);
+						my $left_to_write = bytes::length $xml;
+						while ($left_to_write) {
+							my $written = $session->write_to_client(
+								[$length, $xml]
+							);
 
-            			    last if $written <= 0;
+							last if $written <= 0;
 
-            			    $left_to_write -= $written;
-            			}
-				    };
-				    my $error = $@;
-				    if ($@) {
-				        $self->log_error("Failed in sending generic response back to client: $@");
-				    }
+							$left_to_write -= $written;
+						}
+					};
+					my $error = $@;
+					if ($@) {
+						$self->log_error(
+							"Failed in sending generic response back to client: $@"
+						);
+					}
 				}
 
 				Event::unloop_all;
@@ -451,10 +476,14 @@ method reap_children() {
 		if ($kid > 0) {
 			$reaped{$kid} = $?;
 			$self->log_debug(
-"child $kid, ".($?&255 ?" killed by signal ".($?&127)
-			.($?&128?" (core dumped)":"")
-:"exited with error code ".($?>>8))
-			       );
+				"child $kid, ".(
+					$?&255
+					?" killed by signal "
+						.($?&127)
+						.($?&128?" (core dumped)":"")
+					:"exited with error code ".($?>>8)
+					)
+			);
 		}
 	} while ($kid > 0);
 	my $child_pids = $self->child_pids;
@@ -469,11 +498,13 @@ method reap_children() {
 		my %args = @_;
 		$args{dont_close_all_files} = 1;
 		$SIG{__DIE__} = sub {
+
 			# be sure to re-throw exceptions whilst inside
 			# eval { }
-			if ( $^S ) {
+			if ($^S) {
 				die @_;
-			} else {
+			}
+			else {
 				$self->log_error("Uncaught exception, exiting: @_");
 				$self->log_error("stack trace: ".Carp::longmess);
 				exit(1);

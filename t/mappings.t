@@ -28,7 +28,7 @@ getopt;
 
 my @files = map { s|^t/||; $_ } @ARGV;
 
-our @testfiles = @files ? @files : find_tests ;
+our @testfiles = @files ? @files : find_tests;
 
 # create an SRS::EPP::Session
 my $proxy = Mock::Proxy->new();
@@ -43,10 +43,10 @@ run_unit_tests(
 			user => 11,
 			peerhost => '192.168.1.1',
 			peer_cn => 'peer_cn',
-		       );
+		);
 	},
 	@testfiles,
-       );
+);
 
 # Copyright (C) 2010  NZ Registry Services
 #

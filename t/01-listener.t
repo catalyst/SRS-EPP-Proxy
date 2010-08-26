@@ -24,7 +24,7 @@ sub try_connect {
 		PeerPort => $port,
 		Proto => "tcp",
 		Timeout => 1,
-	       )
+		)
 		or die "failed to connect to $address:$port; $!";
 	$socket->shutdown(1);
 }
@@ -32,7 +32,7 @@ sub try_connect {
 our ($rfd, $wfd);
 
 sub try_connect_loop {
-	while ( <$rfd> ) {
+	while (<$rfd>) {
 		my ($addr, $port_num) = m{(.*) (\d+)} or next;
 		&try_connect($addr, $port_num);
 	}
@@ -60,7 +60,7 @@ $wfd->autoflush(1);
 # test v4
 my $listener =  SRS::EPP::Proxy::Listener->new(
 	listen => [ "localhost:2047", "localhost:2048" ],
-       );
+);
 $listener->init;
 pass("init listener OK");
 
@@ -80,8 +80,8 @@ SKIP:{
 		1 unless $have_v6;
 
 	my $listener = SRS::EPP::Proxy::Listener->new(
-		listen => [ "[::]:2047" ],
-	       );
+		listen => ["[::]:2047"],
+	);
 	$listener->init;
 	pass("listen on a v6 alias");
 	print $wfd "127.0.0.1 2047\n";

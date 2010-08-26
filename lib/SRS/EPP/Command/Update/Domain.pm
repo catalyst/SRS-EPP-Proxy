@@ -29,17 +29,17 @@ has 'state' => (
 	'is' => 'rw',
 	'isa' => 'Str',
 	'default' => 'EPP-DomainUpdate'
-	);
+);
 
 has 'status_changes' => (
 	'is' => 'rw',
 	'isa' => 'HashRef',
-	);
+);
 
 has 'contact_changes' => (
 	'is' => 'rw',
 	'isa' => 'HashRef',
-	);
+);
 
 # we only ever enter here once, so we know what state we're in
 method process( SRS::EPP::Session $session ) {
@@ -53,14 +53,14 @@ method process( SRS::EPP::Session $session ) {
 	unless ( $payload->add or $payload->remove or $payload->change ) {
 		return $self->make_response(
 			code => 2002,
-		       );
+		);
 	}
 
 	# Validate that statuses supplied (if any)
 	my %statuses = (
 		($payload->add ? (add => $payload->add->status) : ()),
 		($payload->remove ? (remove => $payload->remove->status) : ()),
-	       );
+	);
 
 	my %allowed_statuses = map { $_ => 1 } @ALLOWED_STATUSES;
 
@@ -68,24 +68,26 @@ method process( SRS::EPP::Session $session ) {
 	foreach my $key (keys %statuses) {
 		foreach my $status (@{$statuses{$key}}) {
 			unless ($allowed_statuses{$status->status}) {
+
 				# They supplied a status that's not allowed
 				return $self->make_error(
 					code => 2307,
 					value => $status->status,
 					reason =>
-			'Adding or removing this status is not allowed',
-				       );
+						'Adding or removing this status is not allowed',
+				);
 			}
 
 			if ($used{$status->status}) {
+
 				# They've added and removed the same
 				# status. Throw an error
 				return $self->make_error(
 					code => 2002,
 					value => $status->status,
 					reason =>
-				'Cannot add and remove the same status',
-				       );
+						'Cannot add and remove the same status',
+				);
 			}
 
 			$used{$status->status} = 1;
@@ -99,16 +101,21 @@ method process( SRS::EPP::Session $session ) {
 
 	# if they want to add/remove a nameserver, then we need to hit the SRS
 	# first to find out what they are currently set to
-	if ( ( $payload->add and $payload->add->ns )
-		     or ( $payload->remove and $payload->remove->ns ) ) {
+	if (    ( $payload->add and $payload->add->ns )
+		or ( $payload->remove and $payload->remove->ns )
+		)
+	{
 
 		$ddq_fields{name_servers} = 1;
 	}
 
 	# If they've added or removed contacts, we also need to do a ddq
 	#  to make sure they've added or removed the correct contacts
-	if ($payload->add && $payload->add->contact
-		    || $payload->remove && $payload->remove->contact) {
+	if (    $payload->add
+		&& $payload->add->contact
+		|| $payload->remove && $payload->remove->contact
+		)
+	{
 
 		my %contact_changes = ();
 
@@ -117,7 +124,7 @@ method process( SRS::EPP::Session $session ) {
 				my @contacts;
 				@contacts = grep {
 					$_->type eq $contact_type
-				} @{$payload->$action->contact}
+					} @{$payload->$action->contact}
 					if $payload->$action;
 
 				$contact_changes{$contact_type}{$action}
@@ -140,8 +147,8 @@ method process( SRS::EPP::Session $session ) {
 						code => 2306,
 						value => '',
 						reason =>
-		"Only one $contact_type contact per domain supported",
-					       );
+							"Only one $contact_type contact per domain supported",
+					);
 				}
 			}
 
@@ -149,13 +156,13 @@ method process( SRS::EPP::Session $session ) {
 			#  & remove.  An add on its own is invalid
 			#  (because there's always a default) so
 			#  reject it
-			if (@{$changes{add}} && ! @{$changes{remove}}) {
+			if (@{$changes{add}} && !@{$changes{remove}}) {
 				return $self->make_error(
 					code => 2306,
 					value => '',
 					reason =>
-		"Only one $contact_type contact per domain supported",
-				       );
+						"Only one $contact_type contact per domain supported",
+				);
 			}
 
 			# We have some changes to this contact type,
@@ -182,8 +189,8 @@ method process( SRS::EPP::Session $session ) {
 			domain_name_filter => $payload->name,
 			field_list => XML::SRS::FieldList->new(
 				\%ddq_fields,
-			       ),
-		       );
+			),
+		);
 	}
 
 	# ok, we have all the info we need, so create the request
@@ -191,7 +198,6 @@ method process( SRS::EPP::Session $session ) {
 	$self->state('SRS-DomainUpdate');
 	return $request;
 }
-
 
 method notify( SRS::EPP::SRSResponse @rs ) {
 
@@ -221,18 +227,22 @@ method notify( SRS::EPP::SRSResponse @rs ) {
 
 				# Throw an error if they're removing a
 				# contact that doesn't exist
-				if ($contact_removed &&
-					(! $existing_contact ||
-					   $existing_contact->handle_id
-						   ne $contact_removed->value))
+				if (    $contact_removed
+					&&
+					(       !$existing_contact
+						||
+						$existing_contact->handle_id
+						ne $contact_removed->value
+					)
+					)
 				{
 					return $self->make_error(
 						code => 2002,
 						value =>
 							$contact_removed->value,
 						reason =>
-"Attempting to remove $contact_type contact which does not exist on the domain",
-					       );
+							"Attempting to remove $contact_type contact which does not exist on the domain",
+					);
 				}
 
 				# If they're adding a contact, but one
@@ -241,14 +251,17 @@ method notify( SRS::EPP::SRSResponse @rs ) {
 				my $contact_added =
 					$cc->{$contact_type}{add}[0];
 
-				if ($contact_added && $existing_contact
-					    && ! $contact_removed) {
+				if (    $contact_added
+					&& $existing_contact
+					&& !$contact_removed
+					)
+				{
 					return $self->make_error(
 						code => 2306,
 						value  => '',
 						reason =>
-			"Only one $contact_type contact per domain supported",
-					       );
+							"Only one $contact_type contact per domain supported",
+					);
 				}
 			}
 		}
@@ -267,7 +280,7 @@ method notify( SRS::EPP::SRSResponse @rs ) {
 				my $add_ns = $payload->add->ns->ns;
 
 				# loop through and add them
-				foreach my $ns ( @$add_ns ) {
+				foreach my $ns (@$add_ns) {
 					$ns{$ns->name} = $ns;
 				}
 			}
@@ -277,7 +290,7 @@ method notify( SRS::EPP::SRSResponse @rs ) {
 				my $rem_ns = $payload->remove->ns->ns;
 
 				# loop through and remove them
-				foreach my $ns ( @$rem_ns ) {
+				foreach my $ns (@$rem_ns) {
 					delete $ns{$ns->name};
 				}
 			}
@@ -289,7 +302,7 @@ method notify( SRS::EPP::SRSResponse @rs ) {
 		# request to the SRS
 		my $request = $self->make_request(
 			$message, $payload, \@ns_list,
-		       );
+		);
 		$self->state('SRS-DomainUpdate');
 		return $request;
 	}
@@ -300,16 +313,17 @@ method notify( SRS::EPP::SRSResponse @rs ) {
 		# match anything
 
 		unless ( defined $res ) {
+
 			# Object does not exist
 			return $self->make_response(
 				code => 2303,
-			       );
+			);
 		}
 
 		# everything looks ok, so let's return a successful message
 		return $self->make_response(
 			code => 1000,
-		       );
+		);
 	}
 }
 
@@ -320,6 +334,7 @@ method make_request( $message, $payload, ArrayRef $new_nameservers? ) {
 	my %contacts;
 	if ( $payload->change ) {
 		if ( my $registrant = $payload->change->registrant ) {
+
 			# changing the registrant, so let's remember that
 			$contacts{contact_registrant} =
 				_make_contact($registrant);
@@ -330,14 +345,14 @@ method make_request( $message, $payload, ArrayRef $new_nameservers? ) {
 	for my $contact (qw/admin technical/) {
 		my $contact_new = _extract_contact(
 			$payload, 'add', $contact,
-		       );
+		);
 		my $contact_old = _extract_contact(
 			$payload, 'remove', $contact,
-		       );
+		);
 
 		my $new_contact = _make_contact(
 			$contact_new, $contact_old,
-		       );
+		);
 
 		$contacts{'contact_' . $contact} = $new_contact
 			if defined $new_contact;
@@ -357,7 +372,7 @@ method make_request( $message, $payload, ArrayRef $new_nameservers? ) {
 		}
 		$ns_list = XML::SRS::Server::List->new(
 			nameservers => \@ns_objs,
-		       );
+		);
 	}
 
 	my $request = XML::SRS::Domain::Update->new(
@@ -372,21 +387,24 @@ method make_request( $message, $payload, ArrayRef $new_nameservers? ) {
 		# only way they can be uncancelled via EPP (since this
 		# is not supported without an extension).
 		cancel => 0,
-	       );
+	);
 
 	# Do we need to set or clear Delegate flag?
 	my $status_changes = $self->status_changes;
 	if ($status_changes) {
-		if ($status_changes->{add} &&
-			    grep { $_->status eq 'clientHold' }
-				    @{$status_changes->{add}}
-			) {
-			$request->delegate(0);
+		if (    $status_changes->{add}
+			&&
+			grep { $_->status eq 'clientHold' }
+			@{$status_changes->{add}}
+			)
+		{       $request->delegate(0);
 		}
-		elsif ($status_changes->{remove} &&
-			       grep { $_->status eq 'clientHold' }
-				       @{$status_changes->{remove}} ) {
-			$request->delegate(1);
+		elsif ( $status_changes->{remove}
+			&&
+			grep { $_->status eq 'clientHold' }
+			@{$status_changes->{remove}}
+			)
+		{       $request->delegate(1);
 		}
 	}
 
@@ -421,7 +439,7 @@ sub _extract_contact {
 	return unless $payload->$action;
 
 	my $contacts = $payload->$action->contact;
-	foreach my $c ( @$contacts ) {
+	foreach my $c (@$contacts) {
 		return $c->value if $c->type eq $type;
 	}
 	return;

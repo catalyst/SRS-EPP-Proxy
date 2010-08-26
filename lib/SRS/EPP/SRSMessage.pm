@@ -29,11 +29,12 @@ after 'message_trigger' => sub {
 		$method = "results";
 	}
 	$self->parts( [
-		map {
-			$class->new( message => $_ )
-		}
-			@{ $message->$method//[] }
-		       ] );
+			map {
+				$class->new( message => $_ )
+				}
+				@{ $message->$method//[] }
+		]
+	);
 };
 
 1;

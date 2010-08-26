@@ -7,6 +7,7 @@ use Test::More qw(no_plan);
 
 use SRS::EPP::Command;
 use SRS::EPP::Response;
+
 BEGIN {
 	use_ok("SRS::EPP::Session::CmdQ");
 }
@@ -15,17 +16,20 @@ BEGIN {
 # SRS::EPP::Response partners
 
 {
+
 	package Mock::Anything;
-	sub isa { 1 }  # trump most type constraints :->
+	sub isa {1}  # trump most type constraints :->
+
 	sub new {
 		my $class = shift;
-		bless { @_ }, $class;
+		bless {@_}, $class;
 	}
 	our $AUTOLOAD;
+
 	sub AUTOLOAD {
 		my $self = shift;
 		$AUTOLOAD=~/.*::(.*)/;
-		if ( @_ ) {
+		if (@_) {
 			$self->{$1} = shift;
 		}
 		else {
@@ -39,8 +43,8 @@ my $command = SRS::EPP::Command->new(
 	message => Mock::Anything->new(
 		name => "login",
 		message => Mock::Anything->new(),
-	       ),
-       );
+	),
+);
 
 # is answered by a *single* EPP response
 my $response = SRS::EPP::Response->new(
@@ -48,20 +52,20 @@ my $response = SRS::EPP::Response->new(
 	message => Mock::Anything->new(
 		response => 1,
 		name => "greeting",
-	       ),
-       );
+	),
+);
 
 # Ad infinitum
 my @commands = qw(check1 info create1 transfer1 delete1 transfer2
-		  delete2 create2 check2);
+	delete2 create2 check2);
 
 my @command_rq = map {
 	SRS::EPP::Command->new(
 		message => Mock::Anything->new(
 			name => $_,
 			message => Mock::Anything->new(),
-		       ),
-	       );
+		),
+	);
 } @commands;
 
 my @command_rs = map {
@@ -71,21 +75,22 @@ my @command_rs = map {
 			name => $_,
 			request => 1,
 			message => Mock::Anything->new(),
-		       ),
-	       );
+		),
+	);
 } @commands;
 
 # ok.  we've got some data, construct our test object.
 my $cq = SRS::EPP::Session::CmdQ->new();
-isa_ok($cq, "SRS::EPP::Session::CmdQ",
-       "SRS::EPP::Session::CmdQ->new()");
+isa_ok( $cq, "SRS::EPP::Session::CmdQ",
+	"SRS::EPP::Session::CmdQ->new()"
+);
 
 # some basic tests
 is($cq->commands_queued, 0, "->commands_queued (null)");
 ok(!$cq->response_ready, "->response_ready (null)");
 
 # data in: enqueue the command and SRS Request objects
-$cq->queue_command( $command );
+$cq->queue_command($command);
 
 is($cq->commands_queued, 1, "->commands_queued (added rq)");
 
@@ -123,7 +128,7 @@ while ( @rq_q or @rs_q ) {
 	}
 	if ( rand(1) < 0.6 and $cq->response_ready ) {
 		my @output = $cq->dequeue_response;
-		if ( @output ) {
+		if (@output) {
 			push @output_q, \@output;
 		}
 	}
@@ -131,34 +136,40 @@ while ( @rq_q or @rs_q ) {
 push @output_q, [ $cq->dequeue_response ]
 	while $cq->response_ready;
 
-is($cq->next, 0,
-   "->next not decremented even if the commands were not dequeued");
+is(     $cq->next, 0,
+	"->next not decremented even if the commands were not dequeued"
+);
 
-ok(!(grep{
-	my $rv = (
-	!$output_q[$_]
-		or
-	!$output_q[$_][0]->message->request
-		or
-	$output_q[$_][1]->message->request
-		or
-	$output_q[$_][0] != $command_rs[$_]
-		or
-	$output_q[$_][1] != $command_rq[$_]
-       );
-	#$DB::single = 1 if $rv;
-	$rv;
-} 0..$#command_rq),
-   "got results back in correct order") or do {
-	   require Data::Dumper;
-	   diag("results: ".Data::Dumper::Dumper(\@output_q));
-   };
+ok(     !(      grep{
+			my $rv = (
+				!$output_q[$_]
+					or
+					!$output_q[$_][0]->message->request
+					or
+					$output_q[$_][1]->message->request
+					or
+					$output_q[$_][0] != $command_rs[$_]
+					or
+					$output_q[$_][1] != $command_rq[$_]
+			);
+
+			#$DB::single = 1 if $rv;
+			$rv;
+		} 0..$#command_rq
+	),
+	"got results back in correct order"
+	)
+	or do {
+	require Data::Dumper;
+	diag("results: ".Data::Dumper::Dumper(\@output_q));
+	};
 
 $cq->queue_command( $command_rq[0] );
 $cq->add_command_response($command_rs[0]);
 
-is($cq->next_command, undef,
-   "commands with immediate responses not returned by ->next_command");
+is(     $cq->next_command, undef,
+	"commands with immediate responses not returned by ->next_command"
+);
 
 # Copyright (C) 2009  NZ Registry Services
 #

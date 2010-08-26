@@ -14,6 +14,7 @@ use Socket;
 use IO::Socket::INET;
 
 our ($HAVE_V6, @SOCKET_TYPES);
+
 BEGIN {
 	my $sock = eval {
 		require Socket6;
@@ -24,7 +25,7 @@ BEGIN {
 			LocalAddr => '::1',
 			LocalPort => int(rand(60000)+1024),
 			Proto     => 'tcp',
-		       );
+		);
 	};
 	if ( $sock or $!{EADDRINUSE} ) {
 		$HAVE_V6 = 1;
@@ -37,13 +38,16 @@ sub resolve {
 	my $hostname = shift;
 	my @addr;
 	$DB::single = 1;
-	if ( $HAVE_V6 ) {
+	if ($HAVE_V6) {
 		my @res = getaddrinfo($hostname, "", AF_UNSPEC);
-		while ( my ($family, $socktype, $proto, $address,
-			    $canonical) = splice @res, 0, 5 ) {
-			my ($addr) = getnameinfo($address, &NI_NUMERICHOST);
+		while ( my (    $family, $socktype, $proto, $address,
+				$canonical
+			)
+			= splice @res, 0, 5
+			)
+		{       my ($addr) = getnameinfo($address, &NI_NUMERICHOST);
 			push @addr, $addr unless grep { $_ eq $addr }
-				@addr;
+					@addr;
 		}
 	}
 	else {
@@ -91,13 +95,13 @@ method init() {
 		# way to supply a default port number.
 		my ($hostname, $port) = $addr =~
 			m{^(?|\[([^]]+)\]|([^:]+))(?::(\d+))?$}
-				or die "bad listen address: $addr";
+			or die "bad listen address: $addr";
 		$port ||= EPP_DEFAULT_LOCAL_PORT;
 
 		my @addr = resolve($hostname);
 		$self->log_debug("$hostname resolved to @addr");
 
-		for my $addr ( @addr ) {
+		for my $addr (@addr) {
 			my $SOCKET_TYPE = "IO::Socket::INET";
 			if ( $addr =~ /:/ ) {
 				$SOCKET_TYPE .= "6";
@@ -108,19 +112,19 @@ method init() {
 				LocalPort => $port,
 				Proto => "tcp",
 				ReuseAddr => 1,
-			       );
+			);
 
 			my $addr_port = fmt_addr_port($addr,$port);
 
 			if ( !$socket ) {
 				$self->log_error(
-				"Failed to listen on $addr_port; $!",
-				       );
+					"Failed to listen on $addr_port; $!",
+				);
 			}
 			else {
 				$self->log_info(
 					"Listening on $addr_port",
-				       );
+				);
 				push @sockets, $socket;
 			}
 		}
@@ -136,7 +140,7 @@ method init() {
 method accept( Int $timeout? ) {
 	my $select = IO::Select->new();
 	$select->add($_) for @{$self->sockets};
-	my @ready = $select->can_read( $timeout )
+	my @ready = $select->can_read($timeout)
 		or return;
 	while ( @ready > 1 ) {
 		if ( rand(1) > 0.5 ) {

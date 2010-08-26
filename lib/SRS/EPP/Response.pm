@@ -31,7 +31,6 @@ has 'extra' =>
 has 'msgQ' =>
 	is => "ro",
 	isa => "XML::EPP::msgQType";
-	;
 
 has 'payload' =>
 	is => "ro",
@@ -42,8 +41,8 @@ has "+message" =>
 	isa => "XML::EPP",
 	lazy => 1,
 	default => sub {
-		my $self = shift;
-		$self->build_response;
+	my $self = shift;
+	$self->build_response;
 	},
 	;
 
@@ -51,31 +50,31 @@ method build_response() {
 	my $server_id = $self->server_id;
 	my $client_id = $self->client_id;
 	my $tx_id;
-	if ( $server_id ) {
+	if ($server_id) {
 		$tx_id = XML::EPP::TrID->new(
 			server_id => $server_id,
 			($client_id ? (client_id => $client_id) : () ),
-			);
+		);
 	}
 	my $msg = $self->extra;
 	my $result = XML::EPP::Result->new(
 		($msg ? (msg => $msg) : ()),
 		code => $self->code,
-		);
+	);
 	my $payload;
 	if ( $self->payload ) {
 		$payload = XML::EPP::SubResponse->new(
 			payload => $self->payload,
-			);
+		);
 	}
 	XML::EPP->new(
 		message => XML::EPP::Response->new(
-			result => [ $result ],
+			result => [$result],
 			($payload ? (response => $payload) : ()),
 			($self->msgQ ? (msgQ => $self->msgQ) : ()),
 			($tx_id ? (tx_id => $tx_id) : () ),
-			),
-		);
+		),
+	);
 }
 
 has "client_id" =>
@@ -99,9 +98,8 @@ sub ids {
 	return (
 		$self->server_id || sprintf("0x%x",(0+$self)),
 		$self->client_id||(),
-		);
+	);
 }
-
 
 __PACKAGE__->plugins;
 

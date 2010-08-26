@@ -30,12 +30,13 @@ sub rebless_class {
 	if ( !$map ) {
 		$map = {
 			map {
-				$_->can("match_class") ?
+				$_->can("match_class")
+					?
 					( $_->match_class => $_ )
-						: ();
-			}# map { print "rebless_class checking plugin $_\n"; $_ }
+					: ();
+				}# map { print "rebless_class checking plugin $_\n"; $_ }
 				grep m{${\(__PACKAGE__)}::[^:]*$},
-				__PACKAGE__->plugins,
+			__PACKAGE__->plugins,
 		};
 	}
 	$map->{ref $object};
@@ -47,15 +48,16 @@ sub action_class {
 	if ( !$action_classes ) {
 		$action_classes = {
 			map {
-				$_->can("action") ?
+				$_->can("action")
+					?
 					($_->action => $_)
-						: ();
-			}# map { print "action_class checking plugin $_\n"; $_ }
+					: ();
+				}# map { print "action_class checking plugin $_\n"; $_ }
 				grep m{^${\(__PACKAGE__)}::[^:]*$},
 			__PACKAGE__->plugins,
 		};
 	}
-	$action_classes->{ $action };
+	$action_classes->{$action};
 }
 
 sub REBLESS {
@@ -67,11 +69,15 @@ sub BUILD {
 	if ( my $epp = $self->message ) {
 		my $class;
 		$class = rebless_class( $epp->message );
-		if ( !$class and $epp->message and
-			     $epp->message->can("action") ) {
-			$class = action_class($epp->message->action);
+		if (    !$class
+			and $epp->message
+			and
+			$epp->message->can("action")
+			)
+		{       $class = action_class($epp->message->action);
 		}
-		if ( $class ) {
+		if ($class) {
+
 			#FIXME: use ->meta->rebless_instance
 			bless $self, $class;
 			$self->REBLESS;
@@ -107,15 +113,15 @@ has 'server_id' =>
 	lazy => 1,
 	predicate => "has_server_id",
 	default => sub {
-		my $self = shift;
-		my $session = $self->session;
-		if ( $session ) {
-			$session->new_server_id;
-		}
-		else {
-			our $counter = "aaaa";
-			$counter++;
-		}
+	my $self = shift;
+	my $session = $self->session;
+	if ($session) {
+		$session->new_server_id;
+	}
+	else {
+		our $counter = "aaaa";
+		$counter++;
+	}
 	}
 	;
 
@@ -147,7 +153,7 @@ sub make_response {
 	$fields{server_id} ||= $self->server_id;
 	$type->new(
 		%fields,
-		);
+	);
 }
 
 # this one is for convenience in returning errors
@@ -156,7 +162,7 @@ method make_error( Int :$code, Str :$message, Str :$value?, Str :$reason?, :$exc
 		$exception ||= XML::EPP::Error->new(
 			value => $value//"",
 			reason => $reason,
-		       );
+		);
 	}
 
 	return $self->make_response(
@@ -164,8 +170,8 @@ method make_error( Int :$code, Str :$message, Str :$value?, Str :$reason?, :$exc
 			($code ? (code => $code) : ()),
 			($exception ? (exception => $exception) : ()),
 			($message ? (extra => $message) : ()),
-		       ),
-	       );
+		),
+	);
 }
 
 # this one is intended for commands to override particular error
@@ -175,7 +181,7 @@ method make_error_response( XML::SRS::Error|ArrayRef[XML::SRS::Error] $srs_error
 		server_id => $self->server_id,
 		($self->client_id ? (client_id => $self->client_id) : () ),
 		exception => $srs_error,
-		);
+	);
 }
 
 has "client_id" =>
@@ -202,7 +208,7 @@ sub ids {
 	return (
 		$self->server_id,
 		$self->client_id||(),
-		);
+	);
 }
 
 __PACKAGE__->plugins;

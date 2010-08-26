@@ -44,9 +44,9 @@ use overload '""' => sub {
 	push @bits, @ids;
 	s{:}{\xff1a}g for @bits;
 	join ":", @bits
-},
+	},
 	'0+' => sub {
-		refaddr(shift);
+	refaddr(shift);
 	},
 	fallback => 1;
 

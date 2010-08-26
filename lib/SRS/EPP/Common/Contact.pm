@@ -32,8 +32,8 @@ method validate_epp_contact( SRS::EPP::Common::Contact::Arg $contact ) {
 			code => 2306,
 			value  => '',
 			reason =>
-		'Only one postal info element per contact supported',
-		       );
+				'Only one postal info element per contact supported',
+		);
 	}
 	my $postalInfo = $epp_postal_info->[0];
 
@@ -46,20 +46,23 @@ method validate_epp_contact( SRS::EPP::Common::Contact::Arg $contact ) {
 			code => 2306,
 			value  => $postalInfo->org,
 			reason => 'org field not supported',
-		       );
+		);
 	}
 
 	# SRS requires at least one address line, but not more than
 	# 2; Reject request if they send 0 or 3 street lines
 	my $street_lines = $postalInfo->addr->street;
-	if (! $street_lines || scalar @$street_lines < 1
-		    || @$street_lines > 2) {
+	if (    !$street_lines
+		|| scalar @$street_lines < 1
+		|| @$street_lines > 2
+		)
+	{
 		return $self->make_error(
 			code => 2306,
 			value  => '',
 			reason =>
-'At least 1 and no more than 2 street lines must be supplied in the address',
-		       );
+				'At least 1 and no more than 2 street lines must be supplied in the address',
+		);
 	}
 
 	return;
@@ -76,7 +79,7 @@ method translate_address( XML::EPP::Contact::Addr $epp_address ) {
 		( $epp_address->sp ? ( region => $epp_address->sp ) : () ),
 		cc => $epp_address->cc,
 		( $epp_address->pc ? ( postcode => $epp_address->pc ) : () ),
-	       );
+	);
 
 	return $address;
 }

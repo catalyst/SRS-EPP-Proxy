@@ -59,7 +59,7 @@ method input_event( Str $data? ) {
 	$self->log_trace(
 		"input event: "
 			.(defined($data)?length($data)." byte(s)":"will read")
-		       );
+	);
 	if ( defined $data and $data ne "") {
 		push @{ $self->input_buffer }, $data;
 
@@ -73,7 +73,7 @@ method input_event( Str $data? ) {
 		if ( defined $data ) {
 			$self->log_trace(
 				"input_event read ".length($data)." byte(s)"
-			       );
+			);
 			if ( length($data) == 0 ) {
 				$self->empty_read;
 			}
@@ -94,18 +94,18 @@ method input_event( Str $data? ) {
 			$self->input_expect(unpack("N", $data)-4);
 			$self->log_trace(
 				"expecting ".$self->input_expect." byte(s)"
-			       );
+			);
 		}
 		else {
 			$self->log_trace(
 				"got complete packet, calling input_packet"
-			       );
+			);
 			$self->input_state("expect_length");
 			$self->input_packet($data);
 			$self->input_expect(4);
 			$self->log_trace(
 				"now expecting length packet"
-			       );
+			);
 		}
 		$expected = $self->input_expect;
 		$got_chunk = 1;
@@ -114,7 +114,7 @@ method input_event( Str $data? ) {
 	if ( $self->input_ready ) {
 		$self->log_trace(
 			"done input_event, but more input ready - yielding input_event"
-		       );
+		);
 		$self->yield("input_event");
 	}
 

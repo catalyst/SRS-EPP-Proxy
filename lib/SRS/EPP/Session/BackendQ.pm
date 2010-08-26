@@ -49,8 +49,9 @@ use List::Util qw(sum);
 method queue_size() {
 	sum 0, map { scalar @$_ } @{$self->queue};
 }
+
 method queue_flat() {
-	map { @$_ } @{$self->queue};
+	map {@$_} @{$self->queue};
 }
 
 # get the next N backend messages to be sent; marks them as sent
@@ -103,7 +104,7 @@ method dequeue_backend_response() {
 		}
 		$self->sent($sent);
 
-		if ( wantarray ) {
+		if (wantarray) {
 			($owner, @$rs_a);
 		}
 		else {

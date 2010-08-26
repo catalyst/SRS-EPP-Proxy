@@ -10,23 +10,24 @@ with 'MooseX::ConfigFromFile', { -excludes => "new_with_config" };
 # See rt.cpan.org#57023
 
 sub new_with_config {
-    my ($class, %opts) = @_;
+	my ($class, %opts) = @_;
 
-    my $configfile;
+	my $configfile;
 
-    if(defined $opts{configfile}) {
-        $configfile = $opts{configfile}
-    }
-    else {
-        $configfile = $class->configfile
-    }
+	if(defined $opts{configfile}) {
+		$configfile = $opts{configfile}
+	}
+	else {
+		$configfile = $class->configfile
+	}
 
-    if(defined $configfile) {
-        %opts = (%{$class->get_config_from_file($configfile)}, %opts);
-    }
+	if(defined $configfile) {
+		%opts = (%{$class->get_config_from_file($configfile)}, %opts);
+	}
 
-    $class->new(%opts);
+	$class->new(%opts);
 }
 
-no Moose::Role; 1;
+no Moose::Role;
+1;
 

@@ -36,10 +36,11 @@ sub make_greeting {
 	my $statements = $dcp ? $dcp->statements : undef;
 	$statements ||= [];
 	if ( !@$statements) {
+
 		# must have something...
 		push @$statements, {
-			purpose => [ qw(admin prov) ],
-			recipient => [ qw(ours) ],
+			purpose => [qw(admin prov)],
+			recipient => [qw(ours)],
 
 			retention => "business",
 		};
@@ -51,7 +52,7 @@ sub make_greeting {
 		access => $access,
 		statement => $statements,
 		( defined $expiry ? (expiry => $expiry) : () ),
-		);
+	);
 
 	return XML::EPP->new(
 		message => XML::EPP::Greeting->new(
@@ -60,8 +61,8 @@ sub make_greeting {
 			server_time => gmtimestamptz,
 			services => "auto",
 			dcp => $DCP,
-			),
-		);
+		),
+	);
 }
 
 no Moose;

@@ -20,8 +20,9 @@ my $packeter = SRS::EPP::Packets->new(session => $test_case);
 isa_ok($packeter, "SRS::EPP::Packets", "new Packets");
 
 $packeter->input_event;
-is($test_case->{output}[0], undef,
-   "single input event without data doesn't do too much");
+is(     $test_case->{output}[0], undef,
+	"single input event without data doesn't do too much"
+);
 $packeter->input_event;
 is_deeply($test_case->{output}, [ "U" x 17 ], "unpacked a single packet");
 shift @{$test_case->{output}};
@@ -33,7 +34,7 @@ my $test_stream = join(
 	"",
 	map { pack("N", length($_)+4) . $_ }
 		@test_packets,
-       );
+);
 
 while ( length $test_stream ) {
 	my $frag = substr $test_stream, 0, rand(71), "";
@@ -44,10 +45,10 @@ is_deeply($test_case->{output}, \@test_packets, "input line discipline worked!")
 # now do some tests with high-bit data
 
 (my $test_file = $0) =~ s{\.t}{/example-stream.raw};
-my $session = Mock::Session::FromFile->new( $test_file );
+my $session = Mock::Session::FromFile->new($test_file);
 $packeter = SRS::EPP::Packets->new(
 	session => $session,
-       );
+);
 
 while ( !eof $session->{fh} ) {
 	$packeter->input_event;

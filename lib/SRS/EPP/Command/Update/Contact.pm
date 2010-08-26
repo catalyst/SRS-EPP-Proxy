@@ -44,7 +44,7 @@ method process( SRS::EPP::Session $session ) {
 	if ($contact->postal_info) {
 		$address = $self->translate_address(
 			$contact->postal_info->[0]->addr,
-		       );
+		);
 
 		# Blank out any optional fields they didn't provide in
 		# the address. Otherwise the original values will be
@@ -65,7 +65,7 @@ method process( SRS::EPP::Session $session ) {
 		($contact->voice ? (phone => $contact->voice->content) : ()),
 		($contact->fax ? (fax => $contact->fax->content) : ()),
 		($contact->email ? (email => $contact->email) : ()),
-	       );
+	);
 }
 
 method notify( SRS::EPP::SRSResponse @rs ) {

@@ -34,28 +34,28 @@ method process( SRS::EPP::Session $session ) {
 
 	my %ddq_fields = map { $_ => 1 }
 		qw(delegate registered_date registrar_id billed_until
-		   audit_text effective_from registrant_contact
-		   admin_contact technical_contact status locked_date
-		   changed_by_registrar_id);
+		audit_text effective_from registrant_contact
+		admin_contact technical_contact status locked_date
+		changed_by_registrar_id);
 
 	# We only want to return name servers if the 'hosts' attribute
 	# is 'all' or 'del'
 	$ddq_fields{name_servers} = 1
 		if $payload->name->hosts eq 'all'
-		   || $payload->name->hosts eq 'del';
+			|| $payload->name->hosts eq 'del';
 
 	return (
 		XML::SRS::Whois->new(
 			domain => $payload->name->value,
 			full => 0,
-		       ),
+		),
 		XML::SRS::Domain::Query->new(
 			domain_name_filter => $payload->name->value,
 			field_list => XML::SRS::FieldList->new(
 				%ddq_fields,
-			       ),
-		       ),
-	       );
+			),
+		),
+	);
 }
 
 method notify( SRS::EPP::SRSResponse @rs ) {
@@ -70,7 +70,7 @@ method notify( SRS::EPP::SRSResponse @rs ) {
 
 	# if there was no domain, this registrar doesn't have access
 	# to it
-	unless ( $domain ) {
+	unless ($domain) {
 		return $self->make_response(code => 2201);
 	}
 
@@ -81,7 +81,7 @@ method notify( SRS::EPP::SRSResponse @rs ) {
 	return $self->make_response(
 		code => 1000,
 		payload => buildInfoResponse($domain),
-	       );
+	);
 }
 
 sub buildInfoResponse {
@@ -95,8 +95,8 @@ sub buildInfoResponse {
 		} @{$domain->nameservers->nameservers};
 
 		$nsList = XML::EPP::Domain::NS->new(
-			ns => [ @nameservers ],
-		       );
+			ns => [@nameservers],
+		);
 	}
 
 	my %contacts;
@@ -115,9 +115,9 @@ sub buildInfoResponse {
 					? 'tech' : $type;
 				push @{$contacts{contact}},
 					XML::EPP::Domain::Contact->new(
-						value => $contact->handle_id,
-						type => $epp_type,
-					       );
+					value => $contact->handle_id,
+					type => $epp_type,
+					);
 			}
 		}
 	}
@@ -126,9 +126,10 @@ sub buildInfoResponse {
 	#  time, we assume this domain has been updated at least once
 	#  (which EPP thinks is important)
 	my $domain_updated = 0;
-	if ($domain->registered_date->timestamptz
-		    ne $domain->audit->when->begin->timestamptz) {
-		$domain_updated = 1;
+	if (    $domain->registered_date->timestamptz
+		ne $domain->audit->when->begin->timestamptz
+		)
+	{       $domain_updated = 1;
 	}
 
 	## Do we also want to include the auth_info (UDAI) data?
@@ -137,8 +138,8 @@ sub buildInfoResponse {
 		$auth_info = XML::EPP::Domain::AuthInfo->new(
 			pw => XML::EPP::Common::Password->new(
 				content => $udai,
-			       ),
-		       );
+			),
+		);
 	}
 
 	return XML::EPP::Domain::Info::Response->new(
@@ -150,16 +151,22 @@ sub buildInfoResponse {
 		client_id => sprintf("%03d",$domain->registrar_id()), # clID
 		created => ($domain->registered_date())->timestamptz, # crDate
 		expiry_date => ($domain->billed_until())->timestamptz, # exDate
-		$domain_updated ?
-			(updated => # upDate
-				 ($domain->audit->when->begin())->timestamptz)
-			: (),
-		$domain_updated ?
-			(updated_by_id => # upID
-				 sprintf("%03d",$domain->audit->registrar_id))
-			: (),
+		$domain_updated
+		?
+			(
+			updated => # upDate
+				($domain->audit->when->begin())->timestamptz
+			)
+		: (),
+		$domain_updated
+		?
+			(
+			updated_by_id => # upID
+				sprintf("%03d",$domain->audit->registrar_id)
+			)
+		: (),
 		($auth_info ? (auth_info => $auth_info) : ()),
-	       );
+	);
 }
 
 sub getEppStatuses {
@@ -178,32 +185,33 @@ sub getEppStatuses {
 			serverRenewProhibited
 			serverTransferProhibited
 			serverUpdateProhibited
-			);
+		);
 	}
 
 	push @status, 'ok' unless @status;
 
 	return (map {
-		XML::EPP::Domain::Status->new( status => $_ );
-	} @status);
+			XML::EPP::Domain::Status->new( status => $_ );
+			} @status
+	);
 }
 
 sub convert_nameserver {
 	my $ns = shift;
 	my @addr = map { XML::EPP::Host::Address->new($_) }
-		grep { defined } (
-			$ns->ipv4_addr && +{
-				value => $ns->ipv4_addr,
-			},
-			$ns->ipv6_addr && +{
-				value => $ns->ipv6_addr,
-				ip => "v6",
-			},
-		       );
+		grep {defined} (
+		$ns->ipv4_addr && +{
+			value => $ns->ipv4_addr,
+		},
+		$ns->ipv6_addr && +{
+			value => $ns->ipv6_addr,
+			ip => "v6",
+		},
+		);
 	XML::EPP::Domain::HostAttr->new(
 		name => $ns->fqdn,
 		@addr ? ( addrs => \@addr ) : (),
-	       );
+	);
 }
 
 1;

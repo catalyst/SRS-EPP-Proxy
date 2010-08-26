@@ -13,7 +13,7 @@ use Test::More;
 
 BEGIN {
 
-       # the below are all dependencies of Test::Pod::Coverage so should be OK
+	# the below are all dependencies of Test::Pod::Coverage so should be OK
 	eval <<USE;
 use Test::Pod::Coverage 1.04;
 require Pod::Coverage;
@@ -68,7 +68,7 @@ for my $module (@modules) {
 				$module,
 				$rating * 100,
 				scalar @naked,
-			)
+				)
 		);
 		diag("\t$_") for @naked;
 	}

@@ -37,7 +37,7 @@ method process( SRS::EPP::Session $session ) {
 
 	return XML::SRS::Whois->new(
 		domain => $payload->name(),
-		);
+	);
 }
 
 has 'billed_until' =>
@@ -53,29 +53,31 @@ method notify( SRS::EPP::SRSResponse @rs ) {
 	my $message = $rs[0]->message;
 	my $response = $message->response or goto error_out;
 
-	if ( ! $self->billed_until() ) {
+	if ( !$self->billed_until() ) {
+
 		# This must be a response to our query TXN
 
 		if ( $response->status eq "Available" ) {
 			return $self->make_response(
 				code => 2303,
-				);
+			);
 		}
 		my $billed_until = $response->billed_until
 			or goto error_out;
 
-		if ( ! $self->dates_approx_match(
-			$billed_until,
-			$eppPayload->expiry_date,
-		       ) ) {
-			my $current = $billed_until->date;
+		if (    !$self->dates_approx_match(
+				$billed_until,
+				$eppPayload->expiry_date,
+			)
+			)
+		{       my $current = $billed_until->date;
 			my $reason = "Not close enough to current "
 				."expiry date ($current)";
 			return $self->make_error(
 				code => 2304,
 				value => $eppPayload->expiry_date,
 				reason => $reason,
-				);
+			);
 		}
 
 		$self->billed_until( $response->billed_until() );
@@ -87,7 +89,7 @@ method notify( SRS::EPP::SRSResponse @rs ) {
 			action_id => $self->client_id || $self->server_id,
 			renew => 1,
 			term => $eppPayload->period->months,
-			);
+		);
 	}
 
 	# By now, we must be dealing with the response to our update TXN
@@ -95,11 +97,11 @@ method notify( SRS::EPP::SRSResponse @rs ) {
 		my $epp_resp = XML::EPP::Domain::Renew::Response->new(
 			name => $response->name,
 			expiry_date => $response->billed_until->timestamptz,
-			);
+		);
 		return $self->make_response(
 			code => 1000,
 			payload => $epp_resp,
-			);
+		);
 	}
 
 error_out:

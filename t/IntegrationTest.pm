@@ -16,89 +16,96 @@ use Scriptalicious;
 use File::Basename;
 
 sub run_tests {
-    my @files = @_;
-    
-    my $stash = {};
-    if (ref $files[0] eq 'HASH') {
-        $stash = shift @files;   
-    }
-    
-    unless ($ENV{SRS_PROXY_HOST}) {
-        plan 'skip_all';    
-        exit 0;   
-    }
-    
-    my $test_dir = "$Bin/../../../submodules/SRS-EPP-Proxy/t/";
-    
-    @files = map { s|^t/||; $_ } @files;
-    
-    my @testfiles = @files ? @files : XMLMappingTests::find_tests('mappings');
-    
-    foreach my $testfile (sort @testfiles) {
-        my $data = XMLMappingTests::read_yaml($testfile);
-        
-        diag("Processing: " . $testfile);
-        
-        if ($data->{integration_skip}) {
-            SKIP: {
-                skip "Skipping in integration mode", 1;   
-            }
-            next;
-        }
- 
-         my %conf = (
-            host => $ENV{SRS_PROXY_HOST},
-            port => 700,
-            template_path => $test_dir . 'templates', 
-            debug => $VERBOSE ? 1 : 0,
-            ssl_key  => exists $data->{ssl_key} ?  $test_dir . 'auth/' . $data->{ssl_key}  : $test_dir . '/auth/client-key.pem',
-            ssl_cert => exists $data->{ssl_cert} ? $test_dir . 'auth/' . $data->{ssl_cert} : $test_dir . '/auth/client-cert.pem',
-        );
-        
-        my $vars = { %{$data->{vars} || {}}, ($data->{int_dont_use_stash} ? () : %$stash) };
-        $vars->{command} = $data->{template};
-        $vars->{command} =~ s/\.tt$//;
-        $vars->{transaction_id} = time;        
-                
-        my $login = {
-            command => 'login',
-            user => '100',
-            pass => 'foobar',   
-        };
-        
-        my $test = {
-            step => [
-                $data->{no_auto_login} ? () : $login,
-                $vars,
-                {
-                    command => 'logout',  
-                },
-                
-            ],
-        };
-                
-        require Brause;
-        my $res = eval { Brause::talk($test, \%conf) };
-        if ($@) {
-            if ($data->{expect_failure}) {
-                pass("Couldn't login to proxy: $@");
-                next;
-            }
-            
-            fail("Couldn't talk to Epp proxy: $@");   
-        }
-        
-        my $response = $res->{response}[$data->{no_auto_login} ? 0 : 1];
-        
-        if ($response) {                
-            XMLMappingTests::check_xml_assertions( $response, $data->{output_assertions}, basename $testfile );
-        }
-        else {
-            fail("No response received") 
-        }        
-    }
-    
-    done_testing();
+	my @files = @_;
+
+	my $stash = {};
+	if (ref $files[0] eq 'HASH') {
+		$stash = shift @files;
+	}
+
+	unless ($ENV{SRS_PROXY_HOST}) {
+		plan 'skip_all';
+		exit 0;
+	}
+
+	my $test_dir = "$Bin/../../../submodules/SRS-EPP-Proxy/t/";
+
+	@files = map { s|^t/||; $_ } @files;
+
+	my @testfiles = @files ? @files : XMLMappingTests::find_tests('mappings');
+
+	foreach my $testfile (sort @testfiles) {
+		my $data = XMLMappingTests::read_yaml($testfile);
+
+		diag("Processing: " . $testfile);
+
+		if ($data->{integration_skip}) {
+		SKIP: {
+				skip "Skipping in integration mode", 1;
+			}
+			next;
+		}
+
+		my %conf = (
+			host => $ENV{SRS_PROXY_HOST},
+			port => 700,
+			template_path => $test_dir . 'templates',
+			debug => $VERBOSE ? 1 : 0,
+			ssl_key  => exists $data->{ssl_key}
+			?  $test_dir . 'auth/' . $data->{ssl_key}
+			: $test_dir . '/auth/client-key.pem',
+			ssl_cert => exists $data->{ssl_cert}
+			? $test_dir . 'auth/' . $data->{ssl_cert}
+			: $test_dir . '/auth/client-cert.pem',
+		);
+
+		my $vars = { %{$data->{vars} || {}}, ($data->{int_dont_use_stash} ? () : %$stash) };
+		$vars->{command} = $data->{template};
+		$vars->{command} =~ s/\.tt$//;
+		$vars->{transaction_id} = time;
+
+		my $login = {
+			command => 'login',
+			user => '100',
+			pass => 'foobar',
+		};
+
+		my $test = {
+			step => [
+				$data->{no_auto_login} ? () : $login,
+				$vars,
+				{
+					command => 'logout',
+				},
+
+			],
+		};
+
+		require Brause;
+		my $res = eval { Brause::talk($test, \%conf) };
+		if ($@) {
+			if ($data->{expect_failure}) {
+				pass("Couldn't login to proxy: $@");
+				next;
+			}
+
+			fail("Couldn't talk to Epp proxy: $@");
+		}
+
+		my $response = $res->{response}[$data->{no_auto_login} ? 0 : 1];
+
+		if ($response) {
+			XMLMappingTests::check_xml_assertions(
+				$response,
+				$data->{output_assertions}, basename $testfile
+			);
+		}
+		else {
+			fail("No response received")
+		}
+	}
+
+	done_testing();
 }
 
 1;

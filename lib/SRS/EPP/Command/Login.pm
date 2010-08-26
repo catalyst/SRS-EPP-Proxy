@@ -1,5 +1,4 @@
 
-
 package SRS::EPP::Command::Login;
 
 use Moose;
@@ -16,7 +15,7 @@ sub action {
 	"login";
 }
 
-sub authenticated { 0 }
+sub authenticated {0}
 
 has "uid" =>
 	is => "rw",
@@ -28,8 +27,8 @@ has "server_id" =>
 	isa => "Str",
 	lazy => 1,
 	default => sub {
-		my $self = shift;
-		$self->session->new_server_id;
+	my $self = shift;
+	$self->session->new_server_id;
 	},
 	;
 
@@ -71,30 +70,33 @@ method process( SRS::EPP::Session $session ) {
 	$session->stalled($self);
 
 	return (XML::SRS::Registrar::Query->new(
-		registrar_id => $uid,
-	       ),
+			registrar_id => $uid,
+		),
 		XML::SRS::ACL::Query->new(
 			Resource => "epp_connect",
 			List => "whitelist",
 			Type => "registrar_ip",
 			filter_types => ["AddressFilter", "RegistrarIdFilter"],
 			filter => [$session->peerhost, $uid],
-		       ),
-		($session->proxy->rfc_compliant_ssl ?
-			 (
-			XML::SRS::ACL::Query->new(
-			Resource => "epp_client_certs",
-			List => "whitelist",
-			Type => "registrar_domain",
-			filter_types => ["DomainNameFilter", "RegistrarIdFilter"],
-			filter => [$session->peer_cn, $uid],
-		       )) : () ),
-	       );
+		),
+		(       $session->proxy->rfc_compliant_ssl
+			?
+				(
+				XML::SRS::ACL::Query->new(
+					Resource => "epp_client_certs",
+					List => "whitelist",
+					Type => "registrar_domain",
+					filter_types => ["DomainNameFilter", "RegistrarIdFilter"],
+					filter => [$session->peer_cn, $uid],
+					))
+			: ()
+		),
+	);
 }
-
 
 method notify( SRS::EPP::SRSResponse @rs ) {
 	if ( @rs > 1 ) {
+
 		# response to login
 		my $registrar = $rs[0];
 		my $ip_ok_acl = $rs[1];
@@ -105,10 +107,19 @@ method notify( SRS::EPP::SRSResponse @rs ) {
 
 		# check the password
 		my $password_ok;
-		if ( my $auth = eval {
-			$registrar->message->response->epp_auth
-		} ) {
-			$self->log_debug("checking provided password (".$self->password.") against ".Dumper($auth->crypted));
+		if (    my $auth = eval {
+				$registrar->message->response->epp_auth
+			}
+			)
+		{
+			$self->log_debug(
+				"checking provided password ("
+					.$self->password
+					.") against "
+					.Dumper(
+					$auth->crypted
+					)
+			);
 			$password_ok = $auth->check($self->password);
 			$self->log_info("supplied password does not match")
 				if !$password_ok;
@@ -119,10 +130,11 @@ method notify( SRS::EPP::SRSResponse @rs ) {
 
 		# must be an entry on the allow list
 		my $ip_ok;
-		if ( my $entry = eval {
-			$ip_ok_acl->message->response->entries->[0]
-		       }) {
-			$ip_ok = 1;
+		if (    my $entry = eval {
+				$ip_ok_acl->message->response->entries->[0]
+			}
+			)
+		{       $ip_ok = 1;
 			$self->log_info("IP ACL found for ".$entry->Address);
 		}
 		else {
@@ -131,11 +143,17 @@ method notify( SRS::EPP::SRSResponse @rs ) {
 
 		# the certificate must also have an entry
 		my $cn_ok = $cn_ok_acl ? 0 : 1;
-		if ( $cn_ok_acl && (my $entry = eval {
-			$cn_ok_acl->message->response->entries->[0];
-		})) {
-			$self->log_info("Domain ACL found for: "
-						.$entry->DomainName);
+		if (    $cn_ok_acl && (
+				my $entry = eval {
+					$cn_ok_acl->message->response->entries->[0];
+				}
+			)
+			)
+		{
+			$self->log_info(
+				"Domain ACL found for: "
+					.$entry->DomainName
+			);
 			$cn_ok = 1;
 		}
 		else {
@@ -158,22 +176,25 @@ method notify( SRS::EPP::SRSResponse @rs ) {
 			if ( $self->new_password() ) {
 				return XML::SRS::Registrar::Update->new(
 					registrar_id => $self->uid,
-					epp_auth => Crypt::Password::password( $self->new_password ),
+					epp_auth =>
+						Crypt::Password::password( $self->new_password ),
 					action_id => $self->server_id,
-					);
+				);
 			}
 			return $self->make_response(code => 1000);
 		}
 		return $self->make_response(code => 2200);
 	}
 	else {
+
 		# response to a password update
 		my $registrar = $rs[0];
-		if ( my $auth = eval {
-			$registrar->message->response->epp_auth
-		}) {
-			my $ok = $auth->check($self->new_password);
-			if ( $ok ) {
+		if (    my $auth = eval {
+				$registrar->message->response->epp_auth
+			}
+			)
+		{       my $ok = $auth->check($self->new_password);
+			if ($ok) {
 				$self->log_info("changed password successfully");
 				return $self->make_response(code => 1000);
 			}
@@ -184,6 +205,6 @@ method notify( SRS::EPP::SRSResponse @rs ) {
 		}
 	}
 
-};
+}
 
 1;

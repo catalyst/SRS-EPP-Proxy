@@ -9,9 +9,9 @@ getopt_lenient();
 
 $log_level = (
 	$main::VERBOSE > 2 ? $TRACE :
-	$main::VERBOSE > 1 ? $DEBUG :
-	$main::VERBOSE > 0 ? $INFO : $ERROR
-	);
+		$main::VERBOSE > 1 ? $DEBUG :
+		$main::VERBOSE > 0 ? $INFO : $ERROR
+);
 
 Log::Log4perl->easy_init($log_level);
 

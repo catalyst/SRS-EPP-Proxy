@@ -11,9 +11,11 @@ use t::Log4test;
 our $tests = 0;
 our $pid = $$;
 our $all_ok = 1;
+
 END {
 	print "1..$tests\n" if $pid == $$;
 }
+
 sub ok($;$) {
 	my $test = shift;
 	my $name = shift;
@@ -22,7 +24,7 @@ sub ok($;$) {
 		$all_ok = 0;
 	}
 	print "ok ".(++$tests);
-	if ( $name ) {
+	if ($name) {
 		print " - $name";
 	}
 	print "\n";
@@ -36,10 +38,12 @@ sub diag {
 	}
 }
 
-ok(eval "use SRS::EPP::Proxy::UA; 1",
-   "use SRS::EPP::Proxy::UA") or do {
-	   diag("got error: $@");
-   };
+ok(     eval "use SRS::EPP::Proxy::UA; 1",
+	"use SRS::EPP::Proxy::UA"
+	)
+	or do {
+	diag("got error: $@");
+	};
 
 my $ua = SRS::EPP::Proxy::UA->new;
 ok($ua && $ua->isa("SRS::EPP::Proxy::UA"), "made new UA");
@@ -55,8 +59,9 @@ do {
 } until (++$c > 15 or $ua->ready);
 my $response = $ua->get_response;
 
-ok($response && $response->isa("HTTP::Response"),
-   "got a response");
+ok(     $response && $response->isa("HTTP::Response"),
+	"got a response"
+);
 
 exit(0);
 

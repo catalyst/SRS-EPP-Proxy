@@ -1,5 +1,4 @@
 
-
 package SRS::EPP::Command::Check;
 
 use Moose;
