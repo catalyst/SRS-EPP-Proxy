@@ -34,14 +34,13 @@ method process( SRS::EPP::Session $session ) {
 
 	my $contact = $payload->change;
 
-	# Check they haven't given us some invalid fields
-	if (my $resp = $self->validate_epp_contact($contact)) {
-		return $resp;
-	}
-
 	my $address;
 	my $name;
 	if ($contact->postal_info) {
+		if ( my $resp = $self->validate_contact_postal($contact->postal_info) ) {
+			return $resp;
+		}
+
 		$address = $self->translate_address(
 			$contact->postal_info->[0]->addr,
 		);
@@ -55,6 +54,11 @@ method process( SRS::EPP::Session $session ) {
 		}
 
 		$name = $contact->postal_info->[0]->name;
+	}
+	if ($contact->voice) {
+		if ( my $resp = $self->validate_contact_voice($contact->voice)) {
+			return $resp;
+		}
 	}
 
 	return XML::SRS::Handle::Update->new(

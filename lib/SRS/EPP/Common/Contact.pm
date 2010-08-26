@@ -7,22 +7,20 @@ use Moose::Util::TypeConstraints;
 requires 'make_error';
 
 BEGIN {
-	class_type "XML::EPP::Contact::Change";
-	class_type "XML::EPP::Contact::Create";
+	class_type "XML::EPP::Contact::ChangePostalInfo";
+	class_type "XML::EPP::Contact::PostalInfo";
+	class_type "XML::EPP::Contact::E164";
 	class_type "XML::EPP::Contact::Addr";
-	subtype 'SRS::EPP::Common::Contact::Arg'
-		=> as "XML::EPP::Contact::Change|XML::EPP::Contact::Create";
+	subtype 'SRS::EPP::Common::Contact::PostalInfo'
+		=> as join "|", "XML::EPP::Contact::ChangePostalInfo",
+		"XML::EPP::Contact::PostalInfo";
 }
 
 # Check if an epp contact has certain field we don't support
 #  Return an error message if they do, nothing if it's valid
-method validate_epp_contact( SRS::EPP::Common::Contact::Arg $contact ) {
+method validate_contact_postal( ArrayRef[SRS::EPP::Common::Contact::PostalInfo] $epp_postal_info ) {
 
-	$self->log_debug(
-		"$self validating_epp_contact checking a ".ref($contact)
-	       );
-	my $epp_postal_info = $contact->postal_info();
-	if ( $epp_postal_info && scalar @$epp_postal_info != 1 ) {
+	if ( scalar @$epp_postal_info != 1 ) {
 
 		# The SRS doesn't support the US's idea of i18n.  That
 		# is that ASCII=international, anything else=local.
@@ -31,10 +29,10 @@ method validate_epp_contact( SRS::EPP::Common::Contact::Arg $contact ) {
 		# (because the SRS can't have two translations for one
 		# address)
 		$self->log_error(
-			"$self validating_epp_contact found "
+			"$self validating_contact_postal found "
 				.@$epp_postal_info
 				." contacts, wanted 1"
-		       );
+		);
 		return $self->make_error(
 			code => 2306,
 			value  => '',
@@ -42,9 +40,8 @@ method validate_epp_contact( SRS::EPP::Common::Contact::Arg $contact ) {
 				'Only one postal info element per contact supported',
 		);
 	}
-	my $postalInfo = $epp_postal_info->[0];
 
-	return unless $postalInfo;
+	my $postalInfo = $epp_postal_info->[0];
 
 	# The SRS doesn't have a 'org' field, we don't want to lose
 	# info, so
@@ -52,7 +49,7 @@ method validate_epp_contact( SRS::EPP::Common::Contact::Arg $contact ) {
 		$self->log_error(
 			"$self validating_epp_contact found unsupported "
 				."field organization"
-			       );
+		);
 		return $self->make_error(
 			code => 2306,
 			value  => $postalInfo->org,
@@ -72,7 +69,7 @@ method validate_epp_contact( SRS::EPP::Common::Contact::Arg $contact ) {
 			"$self validating_epp_contact found "
 				.@{$street_lines||[]}
 				." lines of street address, 1-2 allowed"
-			       );
+		);
 		return $self->make_error(
 			code => 2306,
 			value  => '',
@@ -81,18 +78,21 @@ method validate_epp_contact( SRS::EPP::Common::Contact::Arg $contact ) {
 		);
 	}
 
-	if ( !$contact->voice or !$contact->voice->content ) {
+	return;
+}
+
+method validate_contact_voice( XML::EPP::Contact::E164 $voice ) {
+
+	if ( !$voice->content ) {
 		$self->log_error(
-			"$self validating_epp_contact found no phone number"
+			"$self validate_contact_voice found no phone number"
 		);
 		return $self->make_error(
 			code => 2306,
 			value => '',
-			reason =>
-				'A phone number must be provided with the contact',
+			reason => 'Voice phone number cannot be blank',
 		);
 	}
-
 	return;
 }
 

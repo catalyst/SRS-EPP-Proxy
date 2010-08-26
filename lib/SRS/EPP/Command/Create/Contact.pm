@@ -22,36 +22,54 @@ method process( SRS::EPP::Session $session ) {
 	my $epp = $self->message;
 	my $message = $epp->message;
 	my $payload = $message->argument->payload;
+	my $error;
 
-	if (my $resp = $self->validate_epp_contact($payload)) {
-		return $resp;
+	my $epp_postal_info = $payload->postal_info()
+		or return $self->make_error(
+		code => 2306,
+		message => "Postal information must be provided",
+		);
+
+	if ($error = $self->validate_contact_postal($epp_postal_info)) {
+		return $error;
 	}
 
-	my $epp_postal_info = $payload->postal_info();
-	my $postalInfo = $epp_postal_info->[0];
+	my $postal_info = $epp_postal_info->[0];
 
-	my $address = $self->translate_address($postalInfo->addr);
+	my $address = $self->translate_address($postal_info->addr)
+		or goto error_out;
 
-	if ($address) {
-		my $txn = {
-			handle_id => $payload->id(),
-			name => $postalInfo->name(),
-			phone => $payload->voice()->content(),
-			address => $address,
-			email => $payload->email(),
-			action_id => $self->client_id || $self->server_id,
-		};
-		if ( $payload->fax() && $payload->fax()->content() ) {
-			$txn->{fax} = $payload->fax()->content();
-		}
-		if ( my $srsTxn =  XML::SRS::Handle::Create->new(%$txn) ) {
-			$self->log_info(
-				"$self: prepared HandleCreate, ActionId = "
-					.$txn->{action_id}
-			);
-			return $srsTxn;
-		}
+	my $voice = $payload->voice
+		or return $self->make_error(
+		code => 2306,
+		message => "Voice phone number must be provided",
+		);
+
+	if ($error = $self->validate_contact_voice($voice)) {
+		return $error;
 	}
+
+	my $txn = {
+		handle_id => $payload->id(),
+		name => $postal_info->name(),
+		phone => $payload->voice()->content(),
+		address => $address,
+		email => $payload->email(),
+		action_id => $self->client_id || $self->server_id,
+	};
+
+	if ( $payload->fax() && $payload->fax()->content() ) {
+		$txn->{fax} = $payload->fax()->content();
+	}
+
+	my $srsTxn = XML::SRS::Handle::Create->new(%$txn)
+		or goto error_out;
+
+	$self->log_info( "$self: prepared HandleCreate, ActionId = " .$txn->{action_id} );
+
+	return $srsTxn;
+
+error_out:
 
 	# Catch all (possibly not necessary)
 	return $self->make_response(code => 2400);
