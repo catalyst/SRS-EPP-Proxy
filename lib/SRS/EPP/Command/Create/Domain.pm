@@ -26,16 +26,20 @@ method process( SRS::EPP::Session $session ) {
 	my $message = $epp->message;
 	my $payload = $message->argument->payload;
 
+	$self->log_info("$self registering ".$payload->name);
+
 	# find the admin contact
 	my $contacts = $payload->contact;
 
 	# create all the contacts (using their handles)
 	my $contact_registrant = XML::SRS::Contact->new( handle_id => $payload->registrant() );
+	$self->log_info("$self registrant = ".$payload->registrant);
 	my ($contact_admin, $contact_technical);
 
 	foreach my $contact (@$contacts) {
 		if ( $contact->type eq 'admin' ) {
 			if ($contact_admin) {
+				$self->log_error("$self multiple admin contacts");
 				return $self->make_response(
 					Error => (
 						code      => 2306,
@@ -48,9 +52,11 @@ method process( SRS::EPP::Session $session ) {
 				);
 			}
 			$contact_admin = XML::SRS::Contact->new( handle_id => $contact->value );
+			$self->log_info("$self admin contact = ".$contact->value);
 		}
 		if ( $contact->type eq 'tech' ) {
 			if ($contact_technical) {
+				$self->log_error("$self multiple tech contacts");
 				return $self->make_response(
 					Error => (
 						code      => 2306,
@@ -63,13 +69,17 @@ method process( SRS::EPP::Session $session ) {
 				);
 			}
 			$contact_technical = XML::SRS::Contact->new( handle_id => $contact->value );
+			$self->log_info("$self tech contact = ".$contact->value);
 		}
 	}
 
 	my $term = 1;
+	my $default = " (default)";
 	if ($payload->period) {
 		$term = $payload->period->months;
+		$default = "";
 	}
+	$self->log_info("$self registering for $term month(s)$default");
 
 	my $request = XML::SRS::Domain::Create->new(
 		domain_name => $payload->name(),
@@ -85,6 +95,7 @@ method process( SRS::EPP::Session $session ) {
 	if ($ns) {
 		my @ns_objs = eval { $self->translate_ns_epp_to_srs(@$ns); };
 		my $error = $@;
+		$self->log_info("$self provided ".@ns_objs." nameserver(s)");
 		if ($error) {
 			return $error if $error->isa('SRS::EPP::Response::Error');
 			die $error; # rethrow
@@ -95,6 +106,9 @@ method process( SRS::EPP::Session $session ) {
 		);
 
 		$request->nameservers($list);
+	}
+	else {
+		$self->log_info("$self: no nameservers provided");
 	}
 
 	return $request;
@@ -107,6 +121,8 @@ method notify( SRS::EPP::SRSResponse @rs ) {
 
 	my $message = $rs[0]->message;
 	my $response = $message->response;
+
+	$self->log_info("$self: registered ".$response->name." OK");
 
 	# let's create the returned create domain response
 	my $r = XML::EPP::Domain::Create::Response->new(
