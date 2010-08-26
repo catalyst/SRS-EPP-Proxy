@@ -153,7 +153,7 @@ method notify( SRS::EPP::SRSResponse @rs ) {
 				my $action = $record->action();
 				my ($reason,$payload) = $self->extract_fact($action,$resp);
 				my $msgQ = XML::EPP::MsgQ->new(
-					count => $self->remaining(),
+					count => $response->unacked(),
 					id => $id,
 					qDate => $record->server_time->timestamptz,
 					## TODO: samv, please uncomment the following line, (and fix!)
