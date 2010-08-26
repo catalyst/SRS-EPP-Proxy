@@ -81,6 +81,18 @@ method validate_epp_contact( SRS::EPP::Common::Contact::Arg $contact ) {
 		);
 	}
 
+	if ( !$contact->voice or !$contact->voice->content ) {
+		$self->log_error(
+			"$self validating_epp_contact found no phone number"
+		);
+		return $self->make_error(
+			code => 2306,
+			value => '',
+			reason =>
+				'A phone number must be provided with the contact',
+		);
+	}
+
 	return;
 }
 
