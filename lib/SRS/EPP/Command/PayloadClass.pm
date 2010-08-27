@@ -12,10 +12,10 @@ sub payload_class {
 		$payload_classes->{$class} = {
 			map {
 				$_->can("xmlns")
-					?
-					($_->action.":".$_->xmlns => $_)
+					? ($_->action.":".$_->xmlns => $_)
 					: ();
-				} $self->plugins,
+				}
+				$self->plugins,
 		};
 
 		#print "payload classes for $class are: ".Dumper($payload_classes->{$class});

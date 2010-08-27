@@ -19,8 +19,7 @@ sub get_config_from_file {
 
 	my $can_config_any_args = $class->can('config_any_args');
 	my $extra_args = $can_config_any_args
-		?
-		$can_config_any_args->($class, $file)
+		? $can_config_any_args->($class, $file)
 		: {};
 	my $raw_cfany = Config::Any->load_files({
 			%$extra_args,

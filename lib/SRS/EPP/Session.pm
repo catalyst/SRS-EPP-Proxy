@@ -268,8 +268,7 @@ method input_packet( Str $data ) {
 	if ($error) {
 		my $error_rs = SRS::EPP::Response::Error->new(
 			(       $queue_item->client_id
-				?
-					(client_id => $queue_item->client_id)
+				? (client_id => $queue_item->client_id)
 				: ()
 			),
 			server_id => $self->new_server_id,
@@ -790,8 +789,7 @@ method process_responses() {
 			if ( $self->stalled and $self->stalled == $cmd ) {
 				$self->log_info(
 					$is_error
-					?
-						"re-enabling pipeline after command received untrapped error"
+					? "re-enabling pipeline after command received untrapped error"
 					: "command did not re-enable processing pipeline!"
 				);
 				$self->stalled(0);

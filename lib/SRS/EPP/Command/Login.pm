@@ -80,15 +80,14 @@ method process( SRS::EPP::Session $session ) {
 			filter => [$session->peerhost, $uid],
 		),
 		(       $session->proxy->rfc_compliant_ssl
-			?
-				(
-				XML::SRS::ACL::Query->new(
+			? (     XML::SRS::ACL::Query->new(
 					Resource => "epp_client_certs",
 					List => "whitelist",
 					Type => "registrar_domain",
 					filter_types => ["DomainNameFilter", "RegistrarIdFilter"],
 					filter => [$session->peer_cn, $uid],
-					))
+				)
+				)
 			: ()
 		),
 	);

@@ -152,16 +152,12 @@ sub buildInfoResponse {
 		created => ($domain->registered_date())->timestamptz, # crDate
 		expiry_date => ($domain->billed_until())->timestamptz, # exDate
 		$domain_updated
-		?
-			(
-			updated => # upDate
+		? (     updated => # upDate
 				($domain->audit->when->begin())->timestamptz
 			)
 		: (),
 		$domain_updated
-		?
-			(
-			updated_by_id => # upID
+		? (     updated_by_id => # upID
 				sprintf("%03d",$domain->audit->registrar_id)
 			)
 		: (),

@@ -33,8 +33,7 @@ sub rebless_class {
 		$map = {
 			map {
 				$_->can("match_class")
-					?
-					( $_->match_class => $_ )
+					? ( $_->match_class => $_ )
 					: ();
 				}# map { print "rebless_class checking plugin $_\n"; $_ }
 				grep m{${\(__PACKAGE__)}::[^:]*$},
@@ -51,8 +50,7 @@ sub action_class {
 		$action_classes = {
 			map {
 				$_->can("action")
-					?
-					($_->action => $_)
+					? ($_->action => $_)
 					: ();
 				}# map { print "action_class checking plugin $_\n"; $_ }
 				grep m{^${\(__PACKAGE__)}::[^:]*$},
