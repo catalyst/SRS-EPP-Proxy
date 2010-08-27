@@ -112,6 +112,8 @@ sub extract_fact {
 			SRS::EPP::Command::Info::Domain::buildInfoResponse($domain)
 		);
 	}
+
+  return "Unknown Message";
 }
 
 method notify( SRS::EPP::SRSResponse @rs ) {
