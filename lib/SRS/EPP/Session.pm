@@ -774,7 +774,14 @@ method process_responses() {
 			$self->log_info(
 				"notifying command $cmd of back-end response"
 			);
-			$resp = $cmd->notify(@rs);
+			$resp = eval{ $cmd->notify(@rs) };
+			if ( !$resp ) {
+				$resp = $cmd->make_error(
+					code => 2400,
+					message => "Error during processing",
+					($@ ? (exception => $@) : ()),
+				);
+			}
 		}
 		$self->log_trace("Resp isa " . ref $resp);
 
