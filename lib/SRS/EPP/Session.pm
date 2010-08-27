@@ -64,73 +64,73 @@ BEGIN {
 		for keys %SSL_ERROR;
 }
 
-has io =>
+has io => (
 	is => "ro",
 	isa => "Net::SSLeay::OO::SSL",
-	;
+);
 
 # so the socket doesn't fall out of scope and get closed...
-has 'socket' =>
+has 'socket' => (
 	is => "ro",
 	isa => "IO::Handle",
-	;
+);
 
-has user =>
+has user => (
 	is => "rw",
 	isa => "Maybe[Str]",
-	;
+);
 
 # hack for login message
-has want_user =>
+has want_user => (
 	is => "rw",
 	isa => "Str",
 	clearer => "clear_want_user",
-	;
+);
 
 # this "State" is the state according to the chart in RFC3730 and is
 # updated for amusement's sake only
-has state =>
+has state => (
 	is => "rw",
 	isa => "Str",
 	default => "Waiting for Client",
 	trigger => sub {
-	my $self = shift;
-	if ( $self->has_proxy ) {
-		$self->proxy->show_state(shift, $self);
-	}
+		my $self = shift;
+		if ( $self->has_proxy ) {
+			$self->proxy->show_state(shift, $self);
+		}
 	},
-	;
+);
 
-has 'proxy' =>
+has 'proxy' => (
 	is => "ro",
 	isa => "SRS::EPP::Proxy",
 	predicate => "has_proxy",
 	weak_ref => 1,
 	handles => [qw/openpgp/],
 	required => 1,
-	;
+);
 
 # this object is billed with providing an Event.pm-like interface.
-has event =>
+has event => (
 	is => "ro",
 	required => 1,
-	;
+);
 
-has output_event_watcher =>
+has output_event_watcher => (
 	is => "rw",
-	;
+);
 
-has input_event_watcher =>
+has input_event_watcher => (
 	is => "rw",
-	;
+);
 
 # 'yield' means to queue an event for running but not run it
 # immediately.
-has 'yielding' =>
+has 'yielding' => (
 	is => "ro",
 	isa => "HashRef",
 	default => sub { {} },
-	;
+);
 
 method yield(Str $method, @args) {
 	my $trace;
@@ -176,33 +176,33 @@ method yield(Str $method, @args) {
 	);
 }
 
-has 'connection_id' =>
+has 'connection_id' => (
 	is => "ro",
 	isa => "Str",
 	default => sub {
-	sprintf("sep.%x.%.4x",time(),$$&65535);
+		sprintf("sep.%x.%.4x",time(),$$&65535);
 	},
-	;
+);
 
-has 'peerhost' =>
+has 'peerhost' => (
 	is => "rw",
 	isa => "Str",
-	;
+);
 
-has 'peer_cn' =>
+has 'peer_cn' => (
 	is => "rw",
 	isa => "Str",
-	;
+);
 
-has 'server_id_seq' =>
+has 'server_id_seq' => (
 	is => "rw",
 	isa => "Num",
 	traits => [qw/Number/],
 	handles => {
-	'inc_server_id' => 'add',
+		'inc_server_id' => 'add',
 	},
 	default => 0,
-	;
+);
 
 # called when a response is generated from the server itself, not the
 # back-end.  Return an ephemeral ID based on the timestamp and a
@@ -216,13 +216,13 @@ method new_server_id() {
 
 #----
 # input packet chunking
-has 'input_packeter' =>
+has 'input_packeter' => (
 	default => sub {
-	my $self = shift;
-	SRS::EPP::Packets->new(session => $self);
+		my $self = shift;
+		SRS::EPP::Packets->new(session => $self);
 	},
 	handles => [qw( input_event input_state input_expect )],
-	;
+);
 
 method read_input( Int $how_much where { $_ > 0 } ) {
 	my $rv = $self->io->read($how_much);
@@ -289,32 +289,32 @@ method input_packet( Str $data ) {
 
 #----
 # queues
-has 'processing_queue' =>
+has 'processing_queue' => (
 	is => "ro",
 	default => sub {
-	my $self = shift;
-	SRS::EPP::Session::CmdQ->new();
+		my $self = shift;
+		SRS::EPP::Session::CmdQ->new();
 	},
 	handles => [
-	qw( queue_command next_command
-		add_command_response commands_queued
-		response_ready dequeue_response )
+		qw( queue_command next_command
+			add_command_response commands_queued
+			response_ready dequeue_response )
 	],
-	;
+);
 
-has 'backend_queue' =>
+has 'backend_queue' => (
 	is => "ro",
 	default => sub {
-	my $self = shift;
-	SRS::EPP::Session::BackendQ->new();
+		my $self = shift;
+		SRS::EPP::Session::BackendQ->new();
 	},
 	handles => [
-	qw( queue_backend_request backend_next
-		backend_pending
-		add_backend_response backend_response_ready
-		dequeue_backend_response )
+		qw( queue_backend_request backend_next
+			backend_pending
+			add_backend_response backend_response_ready
+			dequeue_backend_response )
 	],
-	;
+);
 
 # this shouldn't be required... but is a good checklist
 method check_queues() {
@@ -338,20 +338,20 @@ method check_queues() {
 #  the value in 'stalled' is the command which stalled the pipeline;
 #  so that it can be restarted without the command doing anything
 #  special.
-has stalled =>
+has stalled => (
 	is => "rw",
 	isa => "Maybe[SRS::EPP::Command|Bool]",
 	trigger => sub {
-	my $self = shift;
-	my $val = shift;
-	$self->log_debug(
-		"processing queue is ".($val?"":"un-")."stalled"
-	);
-	if ( !$val ) {
-		$self->check_queues;
-	}
-	}
-	;
+		my $self = shift;
+		my $val = shift;
+		$self->log_debug(
+			"processing queue is ".($val?"":"un-")."stalled"
+		);
+		if ( !$val ) {
+			$self->check_queues;
+		}
+		}
+);
 
 method process_queue( Int $count = 1 ) {
 	while ( $count-- > 0 ) {
@@ -547,66 +547,66 @@ method connected() {
 #----
 # Backend stuff.  Perhaps this should all go in the BackendQ class.
 
-has 'backend_tx_max' =>
+has 'backend_tx_max' => (
 	isa => "Int",
 	is => "rw",
 	default => 10,
-	;
+);
 
-has 'user_agent' =>
+has 'user_agent' => (
 	is => "rw",
 	lazy => 1,
 	default => sub {
-	my $self = shift;
-	my $ua = SRS::EPP::Proxy::UA->new(session => $self);
-	$self->log_trace("setting up UA input event");
-	my $w;
-	$w = $self->event->io(
-		desc => "user_agent",
-		fd => $ua->read_fh,
-		poll => 'r',
-		cb => sub {
-			if ( $self->user_agent ) {
-				$self->log_trace(
-					"UA input event fired, calling backend_response",
-				);
+		my $self = shift;
+		my $ua = SRS::EPP::Proxy::UA->new(session => $self);
+		$self->log_trace("setting up UA input event");
+		my $w;
+		$w = $self->event->io(
+			desc => "user_agent",
+			fd => $ua->read_fh,
+			poll => 'r',
+			cb => sub {
+				if ( $self->user_agent ) {
+					$self->log_trace(
+						"UA input event fired, calling backend_response",
+					);
 
-				eval {
-					$self->backend_response;
-				};
-				if ($@) {
-					my $error =
-						"Uncaught exception calling backend_response in user_agent: $@";
-					$self->log_info($error);
+					eval {
+						$self->backend_response;
+					};
+					if ($@) {
+						my $error =
+							"Uncaught exception calling backend_response in user_agent: $@";
+						$self->log_info($error);
 
-					die $error;
+						die $error;
+					}
 				}
-			}
-			else {
-				$self->log_trace(
-					"canceling UA watcher",
-				);
-				$w->cancel;
-			}
-		},
-	);
-	$ua;
+				else {
+					$self->log_trace(
+						"canceling UA watcher",
+					);
+					$w->cancel;
+				}
+			},
+		);
+		$ua;
 	},
 	handles => {
-	"user_agent_busy" => "busy",
+		"user_agent_busy" => "busy",
 	},
-	;
+);
 
-has 'backend_url' =>
+has 'backend_url' => (
 	isa => "Str",
 	is => "rw",
 	required => 1,
-	;
+);
 
-has 'active_request' =>
+has 'active_request' => (
 	is => "rw",
 	isa => "Maybe[SRS::EPP::SRSMessage]",
-	;
+);
 
 method next_message() {
 	my @next = $self->backend_next($self->backend_tx_max)
@@ -899,11 +899,11 @@ method send_pending_replies() {
 # Sending responses back
 
 # this is a queue of byte strings, which are ready for transmission
-has 'output_queue' =>
+has 'output_queue' => (
 	is => "ro",
 	isa => "ArrayRef[Str]",
 	default => sub { [] },
-	;
+);
 
 # this is the interface for sending replies.
 method send_reply( SRS::EPP::Response $rs ) {
@@ -932,10 +932,10 @@ method send_reply( SRS::EPP::Response $rs ) {
 # once we are "shutdown", no new commands will be allowed to process
 # (stalled queue) and the connection will be disconnected once the
 # back-end processing and output queue is cleared.
-has 'shutting_down' =>
+has 'shutting_down' => (
 	is => "rw",
 	isa => "Bool",
-	;
+);
 
 method shutdown() {
 	$self->log_info("shutting down session");
@@ -945,11 +945,11 @@ method shutdown() {
 	$self->yield("output_event");
 }
 
-has 'timeout' =>
+has 'timeout' => (
 	is => "ro",
 	isa => "Int",
 	default => 30,
-	;
+);
 
 method input_timeout() {
 
