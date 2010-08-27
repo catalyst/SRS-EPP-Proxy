@@ -161,18 +161,19 @@ method yield(Str $method, @args) {
 				);
 			}
 
-			eval {
+			my $ok = eval {
 				$self->$method(@args);
+				1;
 			};
 			my $error = $@;
-			if ($error) {
-				$self->log_info(
-					"Uncaught exception when yielding to $method: $error"
-				);
+			if (!$ok) {
+				my $message = "Uncaught exception when yielding to "
+					."$method: $error";
+				$self->log_error($message);
 
-				die $error;
+				die $error || $message;
 			}
-			}
+		},
 	);
 }
 
