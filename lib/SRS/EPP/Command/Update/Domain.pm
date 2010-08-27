@@ -272,30 +272,29 @@ method notify( SRS::EPP::SRSResponse @rs ) {
 				$ns{$ns->fqdn} =
 					$self->translate_ns_srs_to_epp($ns);
 			}
+		}
 
-			# check what the user wants to do (it's either
-			# an add, rem or both) do the add first
+		# check what the user wants to do (it's either
+		# an add, rem or both) do the add first
+		if ( $payload->add and $payload->add->ns ) {
+			my $add_ns = $payload->add->ns->ns;
 
-			if ( $payload->add and $payload->add->ns ) {
-				my $add_ns = $payload->add->ns->ns;
-
-				# loop through and add them
-				foreach my $ns (@$add_ns) {
-					$ns{$ns->name} = $ns;
-				}
-			}
-
-			# now do the remove
-			if ( $payload->remove and $payload->remove->ns ) {
-				my $rem_ns = $payload->remove->ns->ns;
-
-				# loop through and remove them
-				foreach my $ns (@$rem_ns) {
-					delete $ns{$ns->name};
-				}
+			# loop through and add them
+			foreach my $ns (@$add_ns) {
+				$ns{$ns->name} = $ns;
 			}
 		}
 
+		# now do the remove
+		if ( $payload->remove and $payload->remove->ns ) {
+			my $rem_ns = $payload->remove->ns->ns;
+
+			# loop through and remove them
+			foreach my $ns (@$rem_ns) {
+				delete $ns{$ns->name};
+			}
+		}
+			
 		my @ns_list = values %ns;
 
 		# so far all is good, now send the DomainUpdate
