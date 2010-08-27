@@ -126,10 +126,12 @@ sub buildInfoResponse {
 	#  time, we assume this domain has been updated at least once
 	#  (which EPP thinks is important)
 	my $domain_updated = 0;
-	if (    $domain->registered_date->timestamptz
+	if (
+		$domain->registered_date->timestamptz
 		ne $domain->audit->when->begin->timestamptz
 		)
-	{       $domain_updated = 1;
+	{
+		$domain_updated = 1;
 	}
 
 	## Do we also want to include the auth_info (UDAI) data?
@@ -152,12 +154,14 @@ sub buildInfoResponse {
 		created => ($domain->registered_date())->timestamptz, # crDate
 		expiry_date => ($domain->billed_until())->timestamptz, # exDate
 		$domain_updated
-		? (     updated => # upDate
+		? (
+			updated => # upDate
 				($domain->audit->when->begin())->timestamptz
 			)
 		: (),
 		$domain_updated
-		? (     updated_by_id => # upID
+		? (
+			updated_by_id => # upID
 				sprintf("%03d",$domain->audit->registrar_id)
 			)
 		: (),
@@ -186,7 +190,8 @@ sub getEppStatuses {
 
 	push @status, 'ok' unless @status;
 
-	return (map {
+	return (
+		map {
 			XML::EPP::Domain::Status->new( status => $_ );
 			} @status
 	);

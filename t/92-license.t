@@ -9,12 +9,14 @@ plan "no_plan";
 use FindBin qw($Bin);
 use File::Find;
 
-find(   sub {
+find(
+	sub {
 		if (m{\.(pm|pl|t)$}) {
 			open FILE, "<", $_ or die $!;
 			while (<FILE>) {
 				m{Copyright} && do {
-					pass(   "$File::Find::name mentions Copyright"
+					pass(
+						"$File::Find::name mentions Copyright"
 					);
 					return;
 				};

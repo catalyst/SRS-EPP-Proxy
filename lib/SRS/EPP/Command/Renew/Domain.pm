@@ -65,12 +65,14 @@ method notify( SRS::EPP::SRSResponse @rs ) {
 		my $billed_until = $response->billed_until
 			or goto error_out;
 
-		if (    !$self->dates_approx_match(
+		if (
+			!$self->dates_approx_match(
 				$billed_until,
 				$eppPayload->expiry_date,
 			)
 			)
-		{       my $current = $billed_until->date;
+		{
+			my $current = $billed_until->date;
 			my $reason = "Not close enough to current "
 				."expiry date ($current)";
 			return $self->make_error(

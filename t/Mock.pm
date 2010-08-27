@@ -133,7 +133,8 @@ package Mock;
 			last if !$event;
 			my $desc = $event->{desc};
 			my $cb = $event->{cb};
-			if (    $allowed
+			if (
+				$allowed
 				and
 				!($desc ~~ @$allowed)
 				)
@@ -249,7 +250,8 @@ package Mock;
 		my $length = shift;
 		my $packet = shift @{ $self->{input} };
 		$packet //= "";
-		warn(   "read was bigger than asked for! wanted $length,"
+		warn(
+			"read was bigger than asked for! wanted $length,"
 				." have ".length($packet)
 			)
 			if length $packet > $length;

@@ -40,12 +40,15 @@ sub resolve {
 	$DB::single = 1;
 	if ($HAVE_V6) {
 		my @res = getaddrinfo($hostname, "", AF_UNSPEC);
-		while ( my (    $family, $socktype, $proto, $address,
+		while (
+			my (
+				$family, $socktype, $proto, $address,
 				$canonical
 			)
 			= splice @res, 0, 5
 			)
-		{       my ($addr) = getnameinfo($address, &NI_NUMERICHOST);
+		{
+			my ($addr) = getnameinfo($address, &NI_NUMERICHOST);
 			push @addr, $addr unless grep { $_ eq $addr }
 					@addr;
 		}

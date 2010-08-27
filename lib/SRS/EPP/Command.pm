@@ -69,12 +69,14 @@ sub BUILD {
 	if ( my $epp = $self->message ) {
 		my $class;
 		$class = rebless_class( $epp->message );
-		if (    !$class
+		if (
+			!$class
 			and $epp->message
 			and
 			$epp->message->can("action")
 			)
-		{       $class = action_class($epp->message->action);
+		{
+			$class = action_class($epp->message->action);
 		}
 		if ($class) {
 

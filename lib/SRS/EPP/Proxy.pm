@@ -72,11 +72,13 @@ sub BUILD {
 	# prepend "log4perl." to config hashes
 	if ( ref $logging and ref $logging eq "HASH" ) {
 		for my $key ( keys %$logging ) {
-			if (    $key !~ /^log4perl\./
+			if (
+				$key !~ /^log4perl\./
 				and
 				!exists $logging->{"log4perl.$key"}
 				)
-			{       $logging->{"log4perl.$key"} =
+			{
+				$logging->{"log4perl.$key"} =
 					delete $logging->{$key};
 			}
 		}

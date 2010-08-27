@@ -60,7 +60,8 @@ method validate_contact_postal( ArrayRef[SRS::EPP::Common::Contact::PostalInfo] 
 	# SRS requires at least one address line, but not more than
 	# 2; Reject request if they send 0 or 3 street lines
 	my $street_lines = $postalInfo->addr->street;
-	if (    !$street_lines
+	if (
+		!$street_lines
 		|| scalar @$street_lines < 1
 		|| @$street_lines > 2
 		)

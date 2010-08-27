@@ -60,7 +60,8 @@ $event->loop_until(
 
 my $greeting = delete $session->io->{output};
 my $greeting_length = unpack("N", bytes::substr($greeting, 0, 4, ""));
-is(     bytes::length($greeting)+4, $greeting_length,
+is(
+	bytes::length($greeting)+4, $greeting_length,
 	"got a full packet back ($greeting_length bytes)"
 );
 
@@ -68,7 +69,8 @@ is_deeply(
 	[$session->event->queued_events], [],
 	"After issuing greeting, no events waiting"
 );
-is(     $session->state, "Waiting for Client Authentication",
+is(
+	$session->state, "Waiting for Client Authentication",
 	"RFC5730 session state flowchart state as expected"
 );
 
@@ -100,11 +102,13 @@ do {
 
 # 3. check that we got an error!
 use utf8;
-like(   $error->message->result->[0]->msg->content,
+like(
+	$error->message->result->[0]->msg->content,
 	qr/not logged in/i,
 	"got an appropriate error"
 );
-is(     $error->message->tx_id->client_id,
+is(
+	$error->message->tx_id->client_id,
 	"ÄBC-12345", "returned client ID OK"
 );
 
@@ -117,17 +121,20 @@ $event->loop_until(
 	"login produces a backend message",
 );
 
-ok(     $session->backend_pending,
+ok(
+	$session->backend_pending,
 	"login message produced backend messages"
 );
-ok(     $session->stalled,
+ok(
+	$session->stalled,
 	"waiting for login result before processing further commands"
 );
 my $rq = $session->next_message;
 is(@{$rq->parts}, 3, "login makes 3 messages");
 is_deeply(
 	[ map { $_->message->root_element } @{$rq->parts} ],
-	[       qw(RegistrarDetailsQry AccessControlListQry
+	[
+		qw(RegistrarDetailsQry AccessControlListQry
 			AccessControlListQry)
 	],
 	"login message transform",
@@ -210,14 +217,16 @@ my $rs_tx = SRS::EPP::SRSMessage->new( message => $srs_rs );
 $session->be_response($rs_tx);
 
 # now, with the response there, process_replies should be ready.
-ok(     $event->queued("process_responses"),
+ok(
+	$event->queued("process_responses"),
 	"Session wants to process that response",
 );
 
 my $response;
 $event->loop_until(
 	sub { $response = $session->io->get_packet },
-	[       qw(send_pending_replies input_event process_queue
+	[
+		qw(send_pending_replies input_event process_queue
 			process_responses output_event)
 	],
 	"response produced",

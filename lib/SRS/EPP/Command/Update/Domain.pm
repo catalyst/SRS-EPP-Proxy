@@ -101,7 +101,8 @@ method process( SRS::EPP::Session $session ) {
 
 	# if they want to add/remove a nameserver, then we need to hit the SRS
 	# first to find out what they are currently set to
-	if (    ( $payload->add and $payload->add->ns )
+	if (
+		( $payload->add and $payload->add->ns )
 		or ( $payload->remove and $payload->remove->ns )
 		)
 	{
@@ -111,7 +112,8 @@ method process( SRS::EPP::Session $session ) {
 
 	# If they've added or removed contacts, we also need to do a ddq
 	#  to make sure they've added or removed the correct contacts
-	if (    $payload->add
+	if (
+		$payload->add
 		&& $payload->add->contact
 		|| $payload->remove && $payload->remove->contact
 		)
@@ -227,9 +229,11 @@ method notify( SRS::EPP::SRSResponse @rs ) {
 
 				# Throw an error if they're removing a
 				# contact that doesn't exist
-				if (    $contact_removed
+				if (
+					$contact_removed
 					&&
-					(       !$existing_contact
+					(
+						!$existing_contact
 						||
 						$existing_contact->handle_id
 						ne $contact_removed->value
@@ -251,7 +255,8 @@ method notify( SRS::EPP::SRSResponse @rs ) {
 				my $contact_added =
 					$cc->{$contact_type}{add}[0];
 
-				if (    $contact_added
+				if (
+					$contact_added
 					&& $existing_contact
 					&& !$contact_removed
 					)
@@ -391,19 +396,23 @@ method make_request( $message, $payload, ArrayRef $new_nameservers? ) {
 	# Do we need to set or clear Delegate flag?
 	my $status_changes = $self->status_changes;
 	if ($status_changes) {
-		if (    $status_changes->{add}
+		if (
+			$status_changes->{add}
 			&&
 			grep { $_->status eq 'clientHold' }
 			@{$status_changes->{add}}
 			)
-		{       $request->delegate(0);
+		{
+			$request->delegate(0);
 		}
-		elsif ( $status_changes->{remove}
+		elsif (
+			$status_changes->{remove}
 			&&
 			grep { $_->status eq 'clientHold' }
 			@{$status_changes->{remove}}
 			)
-		{       $request->delegate(1);
+		{
+			$request->delegate(1);
 		}
 	}
 

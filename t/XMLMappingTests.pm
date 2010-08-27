@@ -41,7 +41,8 @@ sub find_tests {
 	my $group = shift || ($Script=~/(.*)\.t$/)[0];
 
 	my @tests;
-	find(   sub {
+	find(
+		sub {
 			if ( m{\.yaml$} && (!$grep||m{$grep}) ) {
 				my $name = $File::Find::name;
 				$name =~ s{^\Q$Bin\E/}{} or die;
@@ -338,7 +339,8 @@ sub _test_session_change {
 	my $cmd_q = $session->processing_queue;
 	my $new_tip = $be_q->queue->[-1];
 
-	if (    do { no warnings 'uninitialized'; $new_tip != $pre_be_queue_tip }
+	if (
+		do { no warnings 'uninitialized'; $new_tip != $pre_be_queue_tip }
 		and $new_tip
 		)
 	{
@@ -382,7 +384,8 @@ sub _test_session_change {
 		# process resulted in an immediate response (eg, an
 		# error)
 		use Data::Dumper;
-		ok(     !$test->data->{SRS}[$index],
+		ok(
+			!$test->data->{SRS}[$index],
 			"$desc: immediate error returned (and no assertions provided in test file)"
 			)
 			or diag "Found these SRS assertions in test file:\n"
@@ -393,7 +396,8 @@ sub _test_session_change {
 	else {
 
 		# neither happened - not even an internal error wtf?
-		fail(   "$desc: nothing queued/returned from "
+		fail(
+			"$desc: nothing queued/returned from "
 				."mapping (cycle $cycle)"
 		);
 		return;

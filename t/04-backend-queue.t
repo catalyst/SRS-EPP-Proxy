@@ -71,7 +71,8 @@ my @command_rs = map {
 
 # ok.  we've got some data, construct our test object.
 my $BE_q = SRS::EPP::Session::BackendQ->new();
-isa_ok( $BE_q, "SRS::EPP::Session::BackendQ",
+isa_ok(
+	$BE_q, "SRS::EPP::Session::BackendQ",
 	"SRS::EPP::Session::BackendQ->new()"
 );
 
@@ -116,7 +117,9 @@ my ($owner, @rs) = $BE_q->dequeue_backend_response;
 is($owner, $command, "->dequeue_backend_response (got all rs) - correct command");
 is(@rs, 3, "->dequeue_backend_response (got all rs) - correct # responses");
 
-ok(     !(      grep{
+ok(
+	!(
+		grep{
 			$rs[$_]->message->name ne $command_rq[$_]->message->name
 				or !$rs[$_]->message->response
 		}

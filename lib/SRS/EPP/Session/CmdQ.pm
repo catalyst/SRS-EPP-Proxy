@@ -62,11 +62,13 @@ method add_command_response( SRS::EPP::Response $response, SRS::EPP::Command $cm
 	my $rs = $self->responses;
 	my $ok;
 	for ( my $i = 0; $i <= $#$q; $i++ ) {
-		if (    ($cmd and $q->[$i] == $cmd)
+		if (
+			($cmd and $q->[$i] == $cmd)
 			or
 			!defined $rs->[$i]
 			)
-		{       $rs->[$i] = $response;
+		{
+			$rs->[$i] = $response;
 			$ok = 1;
 			last;
 		}

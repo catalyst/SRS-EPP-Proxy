@@ -108,11 +108,13 @@ has 'mapped_errors' =>
 	default => sub {
 	my $self = shift;
 	my $exceptions_a = $self->exception;
-	unless (ref $exceptions_a
+	unless (
+		ref $exceptions_a
 		and
 		ref $exceptions_a eq "ARRAY"
 		)
-	{       $exceptions_a = [$exceptions_a];
+	{
+		$exceptions_a = [$exceptions_a];
 	}
 	[ map { map_exception($_) } @$exceptions_a ];
 	};
@@ -197,16 +199,19 @@ sub parse_moose_error {
 
 	my $error = '';
 
-	if (    $string =~ m{
+	if (
+		$string =~ m{
 		Validation \s failed \s for \s
 		'.*::(\w+Type)'
 		\s (?:failed \s )?with \s value \s
 		(.*) \s at
 		}x
 		)
-	{       $error = "'$2' does not meet schema requirements for $1";
+	{
+		$error = "'$2' does not meet schema requirements for $1";
 	}
-	elsif ( $string =~ m{
+	elsif (
+		$string =~ m{
 		Attribute \s \((.+?)\) \s does \s not \s
 		pass \s the \s type \s constraint \s
 		because: \s Validation \s failed \s for \s
@@ -214,7 +219,8 @@ sub parse_moose_error {
 		with \s value \s (.+?) \s at
 		}x
 		)
-	{       my ($label, $value) = ($1, $2);
+	{
+		my ($label, $value) = ($1, $2);
 		unless ($value =~ m{^(?:ARRAY|HASH)}) {
 			$error = "Invalid value $value ($label)";
 		}

@@ -102,13 +102,15 @@ sub extract_fact {
 
 		# didn't notice anything specifically interesting, so we'll default to
 		# returning a full info response...
-		return ("Domain Update",
+		return (
+			"Domain Update",
 			SRS::EPP::Command::Info::Domain::buildInfoResponse($domain)
 		);
 	}
 
 	if ( $action eq "DomainCreate" ) {
-		return ("Domain Create",
+		return (
+			"Domain Create",
 			SRS::EPP::Command::Info::Domain::buildInfoResponse($domain)
 		);
 	}

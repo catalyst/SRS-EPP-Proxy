@@ -81,7 +81,8 @@ my @command_rs = map {
 
 # ok.  we've got some data, construct our test object.
 my $cq = SRS::EPP::Session::CmdQ->new();
-isa_ok( $cq, "SRS::EPP::Session::CmdQ",
+isa_ok(
+	$cq, "SRS::EPP::Session::CmdQ",
 	"SRS::EPP::Session::CmdQ->new()"
 );
 
@@ -136,11 +137,14 @@ while ( @rq_q or @rs_q ) {
 push @output_q, [ $cq->dequeue_response ]
 	while $cq->response_ready;
 
-is(     $cq->next, 0,
+is(
+	$cq->next, 0,
 	"->next not decremented even if the commands were not dequeued"
 );
 
-ok(     !(      grep{
+ok(
+	!(
+		grep{
 			my $rv = (
 				!$output_q[$_]
 					or
@@ -167,7 +171,8 @@ ok(     !(      grep{
 $cq->queue_command( $command_rq[0] );
 $cq->add_command_response($command_rs[0]);
 
-is(     $cq->next_command, undef,
+is(
+	$cq->next_command, undef,
 	"commands with immediate responses not returned by ->next_command"
 );
 

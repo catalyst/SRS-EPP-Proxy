@@ -38,7 +38,8 @@ sub diag {
 	}
 }
 
-ok(     eval "use SRS::EPP::Proxy::UA; 1",
+ok(
+	eval "use SRS::EPP::Proxy::UA; 1",
 	"use SRS::EPP::Proxy::UA"
 	)
 	or do {
@@ -59,7 +60,8 @@ do {
 } until (++$c > 15 or $ua->ready);
 my $response = $ua->get_response;
 
-ok(     $response && $response->isa("HTTP::Response"),
+ok(
+	$response && $response->isa("HTTP::Response"),
 	"got a response"
 );
 

@@ -79,10 +79,12 @@ method notify( SRS::EPP::SRSResponse @rs ) {
 	# Compare the contact's creation date against the audit time,
 	# to tell us if it has been updated
 	my $contact_updated = 0;
-	if (    $response->created_date->timestamptz ne
+	if (
+		$response->created_date->timestamptz ne
 		$response->audit->when->begin->timestamptz
 		)
-	{       $contact_updated = 1;
+	{
+		$contact_updated = 1;
 	}
 
 	# generate this required field
@@ -112,7 +114,8 @@ method notify( SRS::EPP::SRSResponse @rs ) {
 		created => $response->created_date->timestamptz,
 		creator_id => zero_pad($response->registrar_id),
 		status => [XML::EPP::Contact::Status->new(status => 'ok')],
-		(       $contact_updated
+		(
+			$contact_updated
 			? (
 				updated_by_id => zero_pad(
 					$response->audit->registrar_id,
@@ -167,7 +170,8 @@ sub _translate_phone_number {
 
 	return XML::EPP::Contact::E164->new(
 		content => $global_number,
-		(       $x ? (x => $x) : (),
+		(
+			$x ? (x => $x) : (),
 		),
 	);
 }

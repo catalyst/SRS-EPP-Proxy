@@ -267,7 +267,8 @@ method input_packet( Str $data ) {
 	$self->queue_command($queue_item);
 	if ($error) {
 		my $error_rs = SRS::EPP::Response::Error->new(
-			(       $queue_item->client_id
+			(
+				$queue_item->client_id
 				? (client_id => $queue_item->client_id)
 				: ()
 			),
@@ -418,7 +419,8 @@ method process_queue( Int $count = 1 ) {
 			}
 
 			# check what kind of messages these are
-			if (    $messages[0]
+			if (
+				$messages[0]
 				and
 				$messages[0]->does('XML::SRS::Action') ||
 				$messages[0]->does('XML::SRS::Query')
@@ -443,7 +445,8 @@ method process_queue( Int $count = 1 ) {
 				}
 				$self->yield("send_backend_queue");
 			}
-			elsif ( $messages[0]
+			elsif (
+				$messages[0]
 				and
 				$messages[0]->isa('XML::EPP')
 				)
@@ -460,7 +463,8 @@ method process_queue( Int $count = 1 ) {
 					$response, $command,
 				);
 			}
-			elsif ( $messages[0]
+			elsif (
+				$messages[0]
 				and
 				$messages[0]->isa('SRS::EPP::Response')
 				)
@@ -712,7 +716,8 @@ method be_response( SRS::EPP::SRSMessage $rs_tx ) {
 			.@$rs_parts." parts, "
 			."active request ".@$rq_parts." parts"
 	);
-	if (    @$rs_parts < @$rq_parts
+	if (
+		@$rs_parts < @$rq_parts
 		and @$rs_parts == 1
 		and
 		$rs_parts->[0]->message->isa("XML::SRS::Error")
@@ -741,11 +746,13 @@ method process_responses() {
 		my ($cmd, @rs) = $self->dequeue_backend_response;
 
 		# for easier tracking of messages.
-		if (    my $server_id = eval {
+		if (
+			my $server_id = eval {
 				$rs[0]->message->result_id;
 			}
 			)
-		{       my $before = $cmd->server_id
+		{
+			my $before = $cmd->server_id
 				if $cmd->has_server_id;
 			if ( @rs > 1 ) {
 				$server_id .= "+".(@rs-1);
@@ -803,11 +810,13 @@ method process_responses() {
 			$self->yield("send_pending_replies")
 				if $self->response_ready;
 		}
-		elsif ( $resp->does('XML::SRS::Action')
+		elsif (
+			$resp->does('XML::SRS::Action')
 			||
 			$resp->does('XML::SRS::Query')
 			)
-		{       $self->log_info("command $cmd not yet complete");
+		{
+			$self->log_info("command $cmd not yet complete");
 			my @messages = map {
 				SRS::EPP::SRSRequest->new(
 					message => $_,

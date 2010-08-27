@@ -25,11 +25,13 @@ has 'pgp' =>
 	default => sub {
 	my $self = shift;
 	Crypt::OpenPGP->new(
-		(       $self->_has_secret_keyring
+		(
+			$self->_has_secret_keyring
 			? (SecRing => $self->secret_keyring)
 			: ()
 		),
-		(       $self->_has_public_keyring
+		(
+			$self->_has_public_keyring
 			? (PubRing => $self->public_keyring)
 			: ()
 		),

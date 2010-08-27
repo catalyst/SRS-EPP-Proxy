@@ -63,7 +63,9 @@ for my $module (@modules) {
 
 	my $s = @naked == 1 ? "" : "s";
 	if (@naked) {
-		diag(   sprintf("Coverage for %s is %3.1f%%, with %d naked "
+		diag(
+			sprintf(
+				"Coverage for %s is %3.1f%%, with %d naked "
 					. "subroutine$s:",
 				$module,
 				$rating * 100,

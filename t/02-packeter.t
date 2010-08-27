@@ -20,7 +20,8 @@ my $packeter = SRS::EPP::Packets->new(session => $test_case);
 isa_ok($packeter, "SRS::EPP::Packets", "new Packets");
 
 $packeter->input_event;
-is(     $test_case->{output}[0], undef,
+is(
+	$test_case->{output}[0], undef,
 	"single input event without data doesn't do too much"
 );
 $packeter->input_event;
