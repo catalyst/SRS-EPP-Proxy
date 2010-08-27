@@ -20,7 +20,23 @@ request: |-
  aacYNfaA6A==
  =A2qP
  -----END PGP PUBLIC KEY BLOCK-----
- ]]></EncryptKey></EncryptKeys>
+ ]]></EncryptKey>
+ <EncryptKey><![CDATA[
+ -----BEGIN PGP PUBLIC KEY BLOCK-----
+Version: GnuPG v1.4.9 (GNU/Linux)
+
+mI0ESpIBXAEEAM7H9x37Ay5ZiQItzBohIs+/B+VAxbtfh+q4PVsNhqo0QTO4nTcG
+evwFZUFZGy7jl+0miJkD3zagWj5+Y/FvrQ4Lj0AE7awBbz9EupUmF26zEDRy1gAJ
+uenx7pKCNBmv07weBqMoPj+kYD9kdbiv825WvjjeQ0Is9CyLOfCYU6U3ABEBAAG0
+FDEwMCAoUmVnaXN0cmFyIDEwMC4piLwEEwECACYFAkqSAVwCGwMFCQHgYWQGCwkI
+BwMCBBUCCAMEFgIDAQIeAQIXgAAKCRB4eYu2rzeBjw7xBACz8abzYnfDsayglfnj
+aUZ2BloNrhpVRJnNoQI4dG/3mc+fJ7wcSRdgkhG8x0nuH8sCsKw8lfPIjopPHvIz
+YyZlmiTrg/1mj4psgxfRdAy+mtWEXVR6hlqL9f6IfvJEMt9srVG8/3cHG7EMVnn6
+7LPMJ4btd6AEX+J966ze0voqMA==
+=/AY3
+-----END PGP PUBLIC KEY BLOCK-----
+ ]]></EncryptKey>
+ </EncryptKeys>
   <EPPAuth Password="foobar" />
   <Roles>
     <Role RoleName="Registrar"/>
