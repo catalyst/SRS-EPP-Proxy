@@ -396,47 +396,34 @@ method process_queue( Int $count = 1 ) {
 				$command->process($self);
 			};
 			my $error = $@;
-			if ($error) {
+			if (!@messages or !blessed($messages[0])) {
 				$self->log_info(
-					"Error when calling process on $command: $error",
+					$error
+					? "Error when calling process on $command: $error"
+					: "Unblessed return from process: @messages"
+
 				);
 
-				# TODO: we're not setting the code correctly
-				my $error_resp = SRS::EPP::Response::Error->new(
-					exception => $error,
-					server_id => $command->server_id,
+				my $error_resp = $command->make_error(
+					($error ? (exception => $error) : ()),
 					code => 2400,
 				);
-				push @messages, $error_resp;
-			}
-
-			unless (blessed $messages[0]) {
-				my $error =
-					"Got an unblessed reference from process(). Cannot process queue";
-				$error .= "Messages: " . Dumper \@messages;
-				$self->log_info($error);
-				confess $error;
+				@messages = $error_resp;
 			}
 
 			# check what kind of messages these are
 			if (
-				$messages[0]
-				and
 				$messages[0]->does('XML::SRS::Action') ||
 				$messages[0]->does('XML::SRS::Query')
 				)
 			{
 				@messages = map {
-					SRS::EPP::SRSRequest->new(
-						message => $_,
-					);
+					SRS::EPP::SRSRequest->new( message => $_, );
 				} @messages;
 				$self->log_info(
 					"command produced ".@messages." SRS messages"
 				);
-				$self->queue_backend_request(
-					$command, @messages,
-				);
+				$self->queue_backend_request( $command, @messages, );
 				if ( $command->isa("SRS::EPP::Command::Login") ) {
 					$self->state("Processing <login>");
 				}
@@ -445,11 +432,7 @@ method process_queue( Int $count = 1 ) {
 				}
 				$self->yield("send_backend_queue");
 			}
-			elsif (
-				$messages[0]
-				and
-				$messages[0]->isa('XML::EPP')
-				)
+			elsif ( $messages[0]->isa('XML::EPP') )
 			{
 
 				# add these messages to the outgoing queue
@@ -459,20 +442,11 @@ method process_queue( Int $count = 1 ) {
 				);
 
 				# add to the queue
-				$self->add_command_response(
-					$response, $command,
-				);
+				$self->add_command_response( $response, $command, );
 			}
-			elsif (
-				$messages[0]
-				and
-				$messages[0]->isa('SRS::EPP::Response')
-				)
+			elsif ( $messages[0]->isa('SRS::EPP::Response') )
 			{
-
-				$self->add_command_response(
-					$messages[0], $command,
-				);
+				$self->add_command_response( $messages[0], $command, );
 			}
 			else {
 
@@ -482,12 +456,9 @@ method process_queue( Int $count = 1 ) {
 						." to be a SRS or EPP request, returning error"
 				);
 				my $rs = $command->make_response(
-					code => 2400
+					code => 2400,
 				);
-				$self->add_command_response(
-					$rs,
-					$command,
-				);
+				$self->add_command_response( $rs, $command, );
 			}
 		}
 		$self->yield("send_pending_replies")
