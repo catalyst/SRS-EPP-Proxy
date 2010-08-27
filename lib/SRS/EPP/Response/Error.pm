@@ -181,8 +181,9 @@ around 'build_response' => sub {
 	my $result = $message->message->result;
 
 	my $bad_node = $self->bad_node;
-	my $errors_a = $self->exception ?
-		$self->mapped_errors : [];
+	my $errors_a = $self->exception
+		? $self->mapped_errors
+		: [];
 
 	$result->[0]->add_error($_) for grep {defined} @$errors_a;
 	return $message;

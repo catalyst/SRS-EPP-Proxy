@@ -5,7 +5,7 @@ use Test::More;
 use FindBin qw($Bin);
 plan skip_all => 'set TEST_TIDY to enable this test'
 	unless $ENV{TEST_TIDY};
-my $perltidy = "$Bin/../perltidy.pl";
+my $perltidy = "$Bin/../perltidy";
 plan skip_all => 'no perltidy.pl script; run this from a git clone'
 	unless -x $perltidy;
 plan "no_plan";
