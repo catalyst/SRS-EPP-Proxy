@@ -16,13 +16,6 @@ use SRS::EPP::Command::Info::Domain;
 
 with 'SRS::EPP::Command::PayloadClass';
 
-has 'remaining' =>
-	is => 'rw',
-	isa => 'Int',
-	default => 10,
-	lazy => 1,
-	;
-
 # for plugin system to connect
 sub xmlns {
 	XML::EPP::Poll::Node::xmlns();
@@ -134,9 +127,8 @@ method notify( SRS::EPP::SRSResponse @rs ) {
 	if ( my $response = $responses->[0] ) {
 
 		if ( $response->isa("XML::SRS::Message::Ack::Response") ) {
-			$self->remaining($response->remaining());
 			my $msgQ = XML::EPP::MsgQ->new(
-				count => $self->remaining(),
+				count => $response->remaining(),
 				id => sprintf(
 					"%04d%s",$response->registrar_id(),$response->tx_id()
 				),
