@@ -6,14 +6,14 @@
 --indent-columns=8
 --continuation-indentation=8
 --entab-leading-whitespace=8
---vertical-tightness=2
+--vertical-tightness=0
 --vertical-tightness-closing=0
 --closing-token-indentation=0
 --paren-tightness=1
 --brace-tightness=1
 --square-bracket-tightness=1
 --block-brace-tightness=1
---block-brace-vertical-tightness=1
+--block-brace-vertical-tightness=0
 --nospace-for-semicolon
 -naws
 -ndnl
