@@ -48,6 +48,22 @@ use bytes qw();
 use utf8;
 use Encode qw(decode encode);
 
+our %SSL_ERROR;
+
+BEGIN {
+	my @errors =
+		qw( NONE ZERO_RETURN WANT_READ WANT_WRITE WANT_CONNECT
+		WANT_X509_LOOKUP SYSCALL SSL );
+	%SSL_ERROR = map { $_ => undef } @errors;
+}
+use Net::SSLeay::OO::Constants map {"ERROR_$_"} keys %SSL_ERROR;
+
+BEGIN {
+	no strict 'refs';
+	$SSL_ERROR{$_} = &{"ERROR_$_"}
+		for keys %SSL_ERROR;
+}
+
 has io =>
 	is => "ro",
 	isa => "Net::SSLeay::OO::SSL",
@@ -983,7 +999,19 @@ method write_to_client(ArrayRef $oq) {
 		my $datum = shift @$oq;
 		my $wrote = $io->write($datum);
 		if ( $wrote <= 0 ) {
-			$self->log_debug("error on write? \$! = $!");
+			my $error = $io->get_error($wrote);
+			my $err_info = "ret = $wrote, err = $error";
+			if ( $error == $SSL_ERROR{SYSCALL} ) {
+				$err_info .= ", \$! = $!";
+			}
+			my ($error_name) = grep { $SSL_ERROR{$_} == $error }
+				keys %SSL_ERROR;
+			$self->log_debug("error on write; $error_name ($err_info)");
+			if ( $error == $SSL_ERROR{WANT_READ} ) {
+
+				# try calling input_event straight away
+				$self->input_event;
+			}
 			unshift @$oq, $datum;
 			last;
 		}
