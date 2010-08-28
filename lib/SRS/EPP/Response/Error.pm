@@ -75,6 +75,9 @@ sub derive_extra {
 	my $self = shift;
 	my $exception = @_ ? shift : $self->exception;
 	given ($exception) {
+		when (undef) {
+			return "";
+		}
 		when (!ref $_) {
 			return $_;
 		}
