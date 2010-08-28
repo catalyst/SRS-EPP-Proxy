@@ -747,12 +747,22 @@ method process_responses() {
 
 		my (@messages, $error);
 
-		if ($messages[0] = $self->check_for_be_error($cmd, @rs)) {
-			$self->log_info(
-				"found srs errors in response to $cmd, "
-					."converting into errors and not calling notify"
+		my $check_ok = eval { @messages = $self->check_for_be_error($cmd, @rs); 1 };
+		$error = $@;
+		if ( @messages or $error or !$check_ok ) {
+			$self->log_error(
+				"$cmd received "
+					.(
+					$error
+					? "fault during BE error check"
+					: (
+						$check_ok
+						? "untrapped SRS error"
+						: "error without a clue"
+						)
+					)
 			);
-			$error = "SRS error";  # flag for process_notify_result
+			$error ||= "SRS error";  # flag for process_notify_result
 		}
 		else {
 			$self->log_info(
