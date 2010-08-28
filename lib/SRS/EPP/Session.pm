@@ -745,75 +745,24 @@ method process_responses() {
 			}
 		}
 
-		my $resp;
-		my $is_error;
+		my (@messages, $error);
 
-		if ($resp = $self->check_for_be_error($cmd, @rs)) {
+		if ($messages[0] = $self->check_for_be_error($cmd, @rs)) {
 			$self->log_info(
 				"found srs errors in response to $cmd, "
 					."converting into errors and not calling notify"
 			);
-			$is_error = 1;
+			$error = "SRS error";  # flag for process_notify_result
 		}
 		else {
 			$self->log_info(
 				"notifying command $cmd of back-end response"
 			);
-			$resp = eval{ $cmd->notify(@rs) };
-			if ( !$resp ) {
-				$resp = $cmd->make_error(
-					code => 2400,
-					message => "Error during processing",
-					($@ ? (exception => $@) : ()),
-				);
-			}
+			@messages = eval{ $cmd->notify(@rs) };
+			$error = $@;
 		}
-		$self->log_trace("Resp isa " . ref $resp);
 
-		if ( $resp->isa("SRS::EPP::Response") ) {
-			$self->log_info("command $cmd is complete");
-			if ( $self->stalled and $self->stalled == $cmd ) {
-				$self->log_info(
-					$is_error
-					? "re-enabling pipeline after command received untrapped error"
-					: "command did not re-enable processing pipeline!"
-				);
-				$self->stalled(0);
-			}
-
-			$self->state("Prepare Response");
-			$self->log_debug(
-				"response to $cmd is response $resp",
-			);
-			$self->add_command_response($resp, $cmd);
-			$self->yield("send_pending_replies")
-				if $self->response_ready;
-		}
-		elsif (
-			$resp->does('XML::SRS::Action')
-			||
-			$resp->does('XML::SRS::Query')
-			)
-		{
-			$self->log_info("command $cmd not yet complete");
-			my @messages = map {
-				SRS::EPP::SRSRequest->new(
-					message => $_,
-				);
-			} $resp;
-			$self->log_info(
-				"command $cmd produced ".@messages
-					." further SRS messages"
-			);
-			$self->queue_backend_request($cmd, @messages);
-			$self->yield("send_backend_queue");
-		}
-		else {
-
-			# TODO: should handle this more gracefully,
-			# i.e. return a response to the client
-			confess "Unknown response type: " . ref $resp;
-		}
+		$self->process_notify_result($cmd, $error, @messages);
 	}
 }
 
