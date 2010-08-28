@@ -420,6 +420,17 @@ method process_notify_result( SRS::EPP::Command $command, $error, @messages ) {
 		@messages = $error_resp;
 	}
 
+	# convert unwrapped responses to wrapped ones
+	if ( $messages[0]->isa('XML::EPP') ) {
+
+		# add these messages to the outgoing queue
+		die "wrong" if @messages > 1;
+		my $response = SRS::EPP::EPPResponse->new(
+			message => $messages[0],
+		);
+		@messages = $response;
+	}
+
 	# check what kind of messages these are
 	if (
 		$messages[0]->does('XML::SRS::Action') ||
@@ -436,18 +447,6 @@ method process_notify_result( SRS::EPP::Command $command, $error, @messages ) {
 			$self->state("Processing Command");
 		}
 		$self->yield("send_backend_queue");
-	}
-	elsif ( $messages[0]->isa('XML::EPP') )
-	{
-
-		# add these messages to the outgoing queue
-		die "wrong" if @messages > 1;
-		my $response = SRS::EPP::EPPResponse->new(
-			message => $messages[0],
-		);
-
-		# add to the queue
-		$self->add_command_response( $response, $command, );
 	}
 	elsif ( $messages[0]->isa('SRS::EPP::Response') )
 	{
