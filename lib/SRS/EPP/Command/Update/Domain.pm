@@ -299,7 +299,7 @@ method notify( SRS::EPP::SRSResponse @rs ) {
 				delete $ns{$ns->name};
 			}
 		}
-			
+
 		my @ns_list = values %ns;
 
 		# so far all is good, now send the DomainUpdate

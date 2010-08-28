@@ -115,7 +115,7 @@ sub extract_fact {
 		);
 	}
 
-  return "Unknown Message";
+	return "Unknown Message";
 }
 
 method notify( SRS::EPP::SRSResponse @rs ) {
