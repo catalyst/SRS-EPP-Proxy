@@ -397,73 +397,73 @@ method process_queue( Int $count = 1 ) {
 				$command->process($self);
 			};
 			my $error = $@;
-			if (!@messages or !blessed($messages[0])) {
-				$self->log_info(
-					$error
-					? "Error when calling process on $command: $error"
-					: "Unblessed return from process: @messages"
-
-				);
-
-				my $error_resp = $command->make_error(
-					($error ? (exception => $error) : ()),
-					code => 2400,
-				);
-				@messages = $error_resp;
-			}
-
-			# check what kind of messages these are
-			if (
-				$messages[0]->does('XML::SRS::Action') ||
-				$messages[0]->does('XML::SRS::Query')
-				)
-			{
-				@messages = map {
-					SRS::EPP::SRSRequest->new( message => $_, );
-				} @messages;
-				$self->log_info(
-					"command produced ".@messages." SRS messages"
-				);
-				$self->queue_backend_request( $command, @messages, );
-				if ( $command->isa("SRS::EPP::Command::Login") ) {
-					$self->state("Processing <login>");
-				}
-				else {
-					$self->state("Processing Command");
-				}
-				$self->yield("send_backend_queue");
-			}
-			elsif ( $messages[0]->isa('XML::EPP') )
-			{
-
-				# add these messages to the outgoing queue
-				die "wrong" if @messages > 1;
-				my $response = SRS::EPP::EPPResponse->new(
-					message => $messages[0],
-				);
-
-				# add to the queue
-				$self->add_command_response( $response, $command, );
-			}
-			elsif ( $messages[0]->isa('SRS::EPP::Response') )
-			{
-				$self->add_command_response( $messages[0], $command, );
-			}
-			else {
-
-				# We got something else unknown... return an error
-				$self->log_debug(
-					"process_queue: Unknown message type - $messages[0] ... doesn't appear"
-						." to be a SRS or EPP request, returning error"
-				);
-				my $rs = $command->make_response(
-					code => 2400,
-				);
-				$self->add_command_response( $rs, $command, );
-			}
+			$self->process_notify_result( $command, $error, @messages );
 		}
 		$self->yield("send_pending_replies")
 			if $self->response_ready;
+	}
+}
+
+method process_notify_result( SRS::EPP::Command $command, $error, @messages ) {
+	$self->log_debug("result: error=$error, messages=@messages");
+	if (!@messages or !blessed($messages[0])) {
+		$self->log_info(
+			$error
+			? "Error when calling process on $command: $error"
+			: "Unblessed return from process: @messages"
+		);
+
+		my $error_resp = $command->make_error(
+			($error ? (exception => $error) : ()),
+			code => 2400,
+		);
+		@messages = $error_resp;
+	}
+
+	# check what kind of messages these are
+	if (
+		$messages[0]->does('XML::SRS::Action') ||
+		$messages[0]->does('XML::SRS::Query')
+		)
+	{
+		@messages = map { SRS::EPP::SRSRequest->new( message => $_, ); } @messages;
+		$self->log_info( "command produced ".@messages." SRS messages" );
+		$self->queue_backend_request( $command, @messages, );
+		if ( $command->isa("SRS::EPP::Command::Login") ) {
+			$self->state("Processing <login>");
+		}
+		else {
+			$self->state("Processing Command");
+		}
+		$self->yield("send_backend_queue");
+	}
+	elsif ( $messages[0]->isa('XML::EPP') )
+	{
+
+		# add these messages to the outgoing queue
+		die "wrong" if @messages > 1;
+		my $response = SRS::EPP::EPPResponse->new(
+			message => $messages[0],
+		);
+
+		# add to the queue
+		$self->add_command_response( $response, $command, );
+	}
+	elsif ( $messages[0]->isa('SRS::EPP::Response') )
+	{
+		$self->add_command_response( $messages[0], $command, );
+	}
+	else {
+
+		# We got something else unknown... return an error
+		$self->log_debug(
+			"process_queue: Unknown message type - $messages[0] ... doesn't appear"
+				." to be a SRS or EPP request, returning error"
+		);
+		my $rs = $command->make_response(
+			code => 2400,
+		);
+		$self->add_command_response( $rs, $command, );
 	}
 }
 
