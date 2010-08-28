@@ -438,7 +438,7 @@ method process_notify_result( SRS::EPP::Command $command, $error, @messages ) {
 		)
 	{
 		@messages = map { SRS::EPP::SRSRequest->new( message => $_, ); } @messages;
-		$self->log_info( "command produced ".@messages." SRS messages" );
+		$self->log_info( "$command produced ".@messages." SRS messages" );
 		$self->queue_backend_request( $command, @messages, );
 		if ( $command->isa("SRS::EPP::Command::Login") ) {
 			$self->state("Processing <login>");
