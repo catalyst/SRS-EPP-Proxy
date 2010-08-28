@@ -450,6 +450,14 @@ method process_notify_result( SRS::EPP::Command $command, $error, @messages ) {
 	}
 	elsif ( $messages[0]->isa('SRS::EPP::Response') )
 	{
+		if ( $self->stalled and $self->stalled == $command ) {
+			$self->log_info(
+				$error
+				? "re-enabling pipeline after command received untrapped error"
+				: "command did not re-enable processing pipeline!"
+			);
+			$self->stalled(0);
+		}
 		$self->add_command_response( $messages[0], $command, );
 	}
 	else {
