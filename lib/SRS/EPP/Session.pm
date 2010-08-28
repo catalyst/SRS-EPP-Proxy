@@ -405,7 +405,10 @@ method process_queue( Int $count = 1 ) {
 }
 
 method process_notify_result( SRS::EPP::Command $command, $error, @messages ) {
-	$self->log_debug("result: error=$error, messages=@messages");
+	$self->log_debug(
+		"$command process/notify result: error=".($error//"(none)")
+			.", messages=@messages",
+	);
 	if (!@messages or !blessed($messages[0])) {
 		$self->log_info(
 			$error
@@ -458,6 +461,7 @@ method process_notify_result( SRS::EPP::Command $command, $error, @messages ) {
 			);
 			$self->stalled(0);
 		}
+		$self->log_info("$command produced $messages[0]");
 		$self->add_command_response( $messages[0], $command, );
 	}
 	else {
