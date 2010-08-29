@@ -27,6 +27,16 @@ my $input = do {
 	<$input>
 };
 
+XML::EPP::register_obj_uri(
+	"urn:ietf:params:xml:ns:obj1",
+	"urn:ietf:params:xml:ns:obj2",
+	"urn:ietf:params:xml:ns:obj3",
+);
+
+XML::EPP::register_ext_uri(
+	"http://custom/obj1ext-1.0",
+);
+
 my $event = Mock::Event->new();
 my $proxy = Mock::Base->new(rfc_compliant_ssl => 1);
 my $session = SRS::EPP::Session->new(

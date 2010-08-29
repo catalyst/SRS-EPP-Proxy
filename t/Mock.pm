@@ -26,6 +26,16 @@ package Mock;
 
 	package Mock::Proxy;
 	use base 'Mock::Base';
+
+	sub new {
+		my $class = shift;
+		my $self = $class->SUPER::new(@_);
+		XML::EPP::register_obj_uri(
+			"urn:ietf:params:xml:ns:domain-1.0",
+			"urn:ietf:params:xml:ns:contact-1.0",
+		);
+		return $self;
+	}
 }
 
 {

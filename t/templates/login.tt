@@ -1,3 +1,6 @@
+[% DEFAULT
+   svcs = ['urn:ietf:params:xml:ns:domain-1.0', 'urn:ietf:params:xml:ns:contact-1.0']
+%]
 <login>
   <clID>[% user %]</clID>
   <pw>[% pass %]</pw>
@@ -7,7 +10,8 @@
     <lang>[% IF lang.defined %][% lang %][% ELSE %]en[% END %]</lang>
   </options>
   <svcs>
-    <objURI>urn:ietf:params:xml:ns:domain-1.0</objURI>
-    <objURI>urn:ietf:params:xml:ns:contact-1.0</objURI>
+[% FOR svc = svcs %]
+    <objURI>[% svc %]</objURI>
+[% END %]
   </svcs>
 </login>

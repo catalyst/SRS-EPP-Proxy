@@ -68,6 +68,30 @@ method process( SRS::EPP::Session $session ) {
 	$self->uid($uid);
 	$self->session->want_user($uid);
 	$session->stalled($self);
+	my @rq_services = $login->services;
+	my @rq_extensions = $login->extensions
+
+		if $login->has_ext_services;
+
+	for my $rq_service (@rq_services) {
+		if ( !$XML::EPP::obj_uris{$rq_service} ) {
+			return $self->make_error(
+				code => 2307,
+				value => $rq_service,
+				reason => "This object service is not available on this server",
+			);
+		}
+	}
+
+	for my $rq_ext (@rq_extensions) {
+		if ( !$XML::EPP::ext_uris{$rq_ext} ) {
+			return $self->make_error(
+				code => 2307,
+				value => $rq_ext,
+				reason => "This extension is not available on this server",
+			);
+		}
+	}
 
 	return (
 		XML::SRS::Registrar::Query->new(

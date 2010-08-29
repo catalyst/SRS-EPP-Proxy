@@ -23,7 +23,7 @@ is($services->lang->[0], 'en', "English supported");
 
 is($message->dcp->access->access, 'personalAndOther', "DCP access set correctly");
 
-is($services->objURI->[0], 'urn:ietf:params:xml:ns:contact-1.0', "Correct objURI 1");
-is($services->objURI->[1], 'urn:ietf:params:xml:ns:domain-1.0', "Correct objURI 2");
+is($services->services->[0], 'urn:ietf:params:xml:ns:contact-1.0', "Correct service 1");
+is($services->services->[1], 'urn:ietf:params:xml:ns:domain-1.0', "Correct service 2");
 
 done_testing();
