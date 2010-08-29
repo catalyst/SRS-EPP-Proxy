@@ -92,7 +92,8 @@ sub BUILD {
 	# TODO: Probably should be configured...
 	use XML::EPP;
 	XML::EPP::register_obj_uri(
-		qw/urn:ietf:params:xml:ns:epp:domain-1.0 urn:ietf:params:xml:ns:epp:contact-1.0/
+		"urn:ietf:params:xml:ns:domain-1.0",
+		"urn:ietf:params:xml:ns:contact-1.0",
 	);
 }
 
