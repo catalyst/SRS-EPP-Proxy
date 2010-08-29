@@ -26,8 +26,7 @@ method process( SRS::EPP::Session $session ) {
 
 	my $op = $message->argument->op;
 
-	if ( $op eq "request" ) {
-
+	if ($op eq 'request') {
 		# Get the auth info (could do some more validation here...)
 		my $auth = $payload->auth_info();
 		my $pass = $auth->pw();
@@ -49,13 +48,10 @@ method process( SRS::EPP::Session $session ) {
 			),
 		);
 	}
-
-	if ( $op eq "query" ) {
-		my $msg = "This server does support pending transfers";
+	else {
+		my $msg = "This server does not support pending transfers";
 		return $self->make_response(code => 2102, extra => $msg);
-	}
-
-	return $self->make_response(code => 2400);
+	}	
 }
 
 method notify( SRS::EPP::SRSResponse @rs ) {
