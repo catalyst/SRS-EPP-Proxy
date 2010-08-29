@@ -42,7 +42,7 @@ sub clean_id_out {
 
 sub clean_id_in {
 	my $id = shift;
-	if (m{[+%]}) {
+	if ($id =~ m{[+%]}) {
 		$id =~ s{\+}{ }g;
 		$id =~ s{%([0-9a-f]{2})}{chr(hex($1))}ieg;
 	}
