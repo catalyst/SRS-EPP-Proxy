@@ -407,7 +407,7 @@ method process_queue( Int $count = 1 ) {
 method process_notify_result( SRS::EPP::Command $command, $error, @messages ) {
 	$self->log_debug(
 		"$command process/notify result: error=".($error//"(none)")
-			.", messages=@messages",
+			.", ".(@messages?"messages=@messages":"no messages"),
 	);
 	if (!@messages or !blessed($messages[0])) {
 		$self->log_info(
@@ -441,7 +441,7 @@ method process_notify_result( SRS::EPP::Command $command, $error, @messages ) {
 		)
 	{
 		@messages = map { SRS::EPP::SRSRequest->new( message => $_, ); } @messages;
-		$self->log_info( "$command produced ".@messages." SRS messages" );
+		$self->log_info( "$command produced ".@messages." SRS message(s)" );
 		$self->queue_backend_request( $command, @messages, );
 		if ( $command->isa("SRS::EPP::Command::Login") ) {
 			$self->state("Processing <login>");
