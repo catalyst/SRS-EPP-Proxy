@@ -123,9 +123,21 @@ method unlock_cert( Crypt::OpenPGP::Certificate $cert ) {
 	return $self->unlock_cert($cert);
 }
 
-has 'default_signing_key' =>
+has 'default_signing_key' => (
 	is => "rw",
-	;
+	lazy => 1,
+	default => sub {
+		my $self = shift;
+		my $sec_ring = $self->secret_keyring;
+		my $kb = $self->get_sec_key_block
+			or die "no secret key block";
+		my $cert = $kb->signing_key
+			or croak "Invalid default secret key; specify pgp_keyid in config";
+		$self->unlock_cert($cert);
+		$cert->uid($kb->primary_uid);
+		$cert;
+	},
+);
 
 has 'default_encrypting_key' =>
 	is => "rw",

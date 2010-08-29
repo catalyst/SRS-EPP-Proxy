@@ -227,7 +227,8 @@ has 'openpgp' =>
 		public_keyring => $pubring_file,
 		secret_keyring => $secring_file,
 	);
-	$pgp->uid($self->pgp_keyid);
+	$pgp->uid($self->pgp_keyid) if $self->pgp_keyid;
+	my $key = $pgp->default_signing_key;
 	$pgp;
 	},
 	handles => ["pgp"],
