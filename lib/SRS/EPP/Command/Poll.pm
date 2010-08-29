@@ -125,12 +125,14 @@ method notify( SRS::EPP::SRSResponse @rs ) {
 	my $responses = $message->responses;
 
 	if ( !(scalar @$responses) ) {
+		$self->log_info("$self: no responses - returning 1300");
 		return $self->make_response(code => 1300);
 	}
 
 	if ( my $response = $responses->[0] ) {
 
 		if ( $response->isa("XML::SRS::Message::Ack::Response") ) {
+			$self->log_info("$self: ack response, ".$response->remaining." remaining");
 			my $msgQ = XML::EPP::MsgQ->new(
 				count => $response->remaining(),
 				id => sprintf(
@@ -147,6 +149,7 @@ method notify( SRS::EPP::SRSResponse @rs ) {
 
 			for my $resp ( $record->response() ) {
 				my $action = $record->action();
+				$self->log_debug("$self: req processing a $action");
 				my ($reason,$payload) = $self->extract_fact($action,$resp);
 				my $mixed_msg = XML::EPP::MixedMsg->new(
 					contents => [$reason],
