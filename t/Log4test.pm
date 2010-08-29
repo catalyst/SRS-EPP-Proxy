@@ -13,6 +13,6 @@ $log_level = (
 		$main::VERBOSE > 0 ? $INFO : $FATAL
 );
 
-Log::Log4perl->easy_init($log_level);
+Log::Log4perl->easy_init({ level => $log_level, layout => "[%p - %C:%L] %m{chomp}%n" });
 
 1;
