@@ -4,7 +4,7 @@ registrar: 100
 
 request: |-
  <NZSRSRequest VerMajor="4" VerMinor="4" RegistrarId="101">
-  <DomainUpdate ActionId="[% actionid %]">
+  <DomainUpdate ActionId="[% actionid %] ">
     <DomainNameFilter>pepper.co.te</DomainNameFilter>
   </DomainUpdate>
  </NZSRSRequest>

@@ -25,6 +25,30 @@ sub action {
 	"poll";
 }
 
+sub clean_id_out {
+	my $id = shift;
+	our $min_token_type ||= Moose::Util::TypeConstraints::find_type_constraint(
+		"XML::EPP::Common::minTokenType"
+	);
+	if ( $min_token_type->check($id) and $id !~ m{[%+]}) {
+		return $id;
+	}
+
+	# not really urlencoding, but this is very minimal.
+	$id =~ s{([%+\t\r\n\v])}{sprintf("%%%.2x",ord($1))}eg;
+	$id =~ s{ }{+}g;
+	$id;
+}
+
+sub clean_id_in {
+	my $id = shift;
+	if (m{[+%]}) {
+		$id =~ s{\+}{ }g;
+		$id =~ s{%([0-9a-f]{2})}{chr(hex($1))}ieg;
+	}
+	$id;
+}
+
 method process( SRS::EPP::Session $session ) {
 	$self->session($session);
 
@@ -50,7 +74,7 @@ method process( SRS::EPP::Session $session ) {
 		my ($registrar_id,$client_id) = $msgId =~ m/(....)(.*)/
 			or return;
 		return XML::SRS::AckMessage->new(
-			transaction_id => $client_id,
+			transaction_id => clean_id_in($client_id),
 			originating_registrar => $registrar_id+0,
 			action_id => $self->client_id || $self->server_id,
 		);
@@ -145,7 +169,9 @@ method notify( SRS::EPP::SRSResponse @rs ) {
 		if ( $response->isa("XML::SRS::Message") ) {
 			my $record = $response->result();
 
-			my $id = sprintf("%04d%s",$record->by_id,$record->client_id);
+			my $id = sprintf(
+				"%04d%s", $record->by_id, clean_id_out($record->client_id),
+			);
 
 			for my $resp ( $record->response() ) {
 				my $action = $record->action();
