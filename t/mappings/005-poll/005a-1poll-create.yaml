@@ -21,6 +21,6 @@ output_assertions:
     - [ '//epp:msgQ', 1, 'EPP: found msg info' ]
   attr_is:
     - [ '//epp:result', 'code', 1301, 'EPP: Correct response code' ]
-    - [ '//epp:msgQ', 'count', '6', 'EPP: Message count correct' ]
+    - [ '//epp:msgQ', 'count', '8', 'EPP: Message count correct' ]
   match:
 
