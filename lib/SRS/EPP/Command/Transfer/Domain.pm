@@ -34,6 +34,14 @@ method process( SRS::EPP::Session $session ) {
 		if ( !$udaiType->check($pass->content()) ) {
 			return $self->make_response(code => 2202);
 		}
+		
+		my %renew_params;
+		if ($payload->period) {
+			# If they've provided a period, we need to set the term to the one provided,
+			#  and renew the domain
+			$renew_params{term} = $payload->period->months;
+			$renew_params{renew} = 1;
+		}
 
 		return (
 			XML::SRS::Whois->new(
@@ -45,6 +53,7 @@ method process( SRS::EPP::Session $session ) {
 				action_id => $self->client_id || $self->server_id,
 				udai => $pass->content(),
 				convert_contacts_to_handles => 1,
+				%renew_params,
 			),
 		);
 	}
