@@ -463,6 +463,9 @@ method process_notify_result( SRS::EPP::Command $command, $error, @messages ) {
 		}
 		$self->log_info("$command produced $messages[0]");
 		$self->add_command_response( $messages[0], $command, );
+		
+		$self->yield("send_pending_replies")
+ 			if $self->response_ready;		
 	}
 	else {
 
