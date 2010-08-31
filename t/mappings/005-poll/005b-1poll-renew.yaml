@@ -21,6 +21,6 @@ output_assertions:
   attr_is:
     - [ '//epp:result', 'code', 1301, 'EPP: Correct response code' ]
     - [ '//epp:msgQ', 'id', '0001Test /tmp/srsregn-regression//submodules/SRS-EPP-Proxy/t/mappings/005-poll/create/005b-2-renew.yml 0', 'EPP: found msg id' ]
-    - [ '//epp:msgQ', 'count', '4', 'EPP: Message count correct' ]
+    - [ '//epp:msgQ', 'count', '5', 'EPP: Message count correct' ]
 
 

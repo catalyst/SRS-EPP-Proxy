@@ -1,7 +1,7 @@
 <NZSRSResponse VerMajor="5" VerMinor="0">
 <Response Action="GetMessages" FeId="8" FeSeq="4993802" MoreRowsAvailable="1" OrigRegistrarId="90" RecipientRegistrarId="90" Rows="1">
 <FeTimeStamp Day="7" Hour="09" Minute="45" Month="7" Second="37" TimeZoneOffset="+12:00" Year="2010"/>
-<Message Remaining="5">
+<Message Remaining="6">
 <Response Action="DomainCreate" FeId="8" FeSeq="4861516" OrigRegistrarId="1" RecipientRegistrarId="922" TransId="srsrps-1_476">
 <FeTimeStamp Day="21" Hour="16" Minute="15" Month="7" Second="41" TimeZoneOffset="+12:00" Year="2010"/>
 <Domain Delegate="1" DomainName="eppregistrar2.co.nz" RegistrarId="922" Status="Active" Term="1" UDAI="9GS97hDz">
