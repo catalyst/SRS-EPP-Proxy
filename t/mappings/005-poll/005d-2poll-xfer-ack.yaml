@@ -1,7 +1,7 @@
 template: poll-ack.tt
 
 vars:
-  msg_id: 0001Test /tmp/srsregn-regression//submodules/SRS-EPP-Proxy/t/mappings/005-poll/create/005d-2-xfer.yml 0
+  msg_id: 0001Test /tmp/srsregn-regression//submodules/SRS-EPP-Proxy/t/mappings/005-poll/create/005d-2-xfer.yml 0%20
 
 input_assertions:
   class: SRS::EPP::Command::Poll
@@ -11,6 +11,8 @@ SRS:
  - assertions:
      count:
      attr_is:
+      - [ '//AckMessage', 'TransId', 'Test /tmp/srsregn-regression//submodules/SRS-EPP-Proxy/t/mappings/005-poll/create/005d-2-xfer.yml 0 ', 'EPP: TransId has trailing space' ]
+     
 output_assertions:
   attr_is:
     - [ '//epp:result', 'code', 1000, 'EPP: response code' ]
