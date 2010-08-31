@@ -1,0 +1,43 @@
+# Create with dns sec values
+template: create-domain.tt
+
+vars:
+  domain: 09m.co.te
+  owner: id123
+  dnssec:
+    -
+        keytag: 1
+        alg: 2
+        digest_type: 3
+        digest: 1234abcd
+    -
+        keytag: 4
+        alg: 5
+        digest_type: 6
+        digest: 8888zxy    
+
+input_assertions:
+  class: SRS::EPP::Command::Create::Domain
+
+SRS:
+  - assertions:
+      count:
+         - [ '//DNSSEC', '1', 'One DNSSEC sec in request' ]
+         - [ '//DS', '2', 'Two DS records in request' ]
+      match:
+         - [ '//DS[1]/Digest', '1234abcd', 'First digest element correct' ]
+         - [ '//DS[2]/Digest', '8888zxy', 'Second digest element correct' ]
+      match_all:
+      attr_is:
+        - [ '//DS[1]', 'KeyTag', '1', 'First keytag attribute correct' ]
+        - [ '//DS[1]', 'Algorithm', '2', 'First algorithm attribute correct' ]
+        - [ '//DS[1]', 'DigestType', '3', 'First digest type attribute correct' ]
+        - [ '//DS[2]', 'KeyTag', '4', 'Second keytag attribute correct' ]
+        - [ '//DS[2]', 'Algorithm', '5', 'Second algorithm attribute correct' ]
+        - [ '//DS[2]', 'DigestType', '6', 'Second digest type attribute correct' ]
+
+output_assertions:
+  count:
+  match:
+  attr_is:
+    - [ '//epp:result', 'code', '1000', 'SRS: Check result code' ]

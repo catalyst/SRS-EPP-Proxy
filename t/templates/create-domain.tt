@@ -28,5 +28,21 @@
     <domain:authInfo>
       <domain:pw></domain:pw>
     </domain:authInfo>
-  </domain:create>
+  </domain:create>  
 </create>
+[% IF dnssec %]
+   <extension>
+     <secDNS:create
+      xmlns:secDNS="urn:ietf:params:xml:ns:secDNS-1.1">
+
+	[% FOREACH dnssec_data IN dnssec %]
+       <secDNS:dsData>
+         <secDNS:keyTag>[% dnssec_data.keytag %]</secDNS:keyTag>
+         <secDNS:alg>[% dnssec_data.alg %]</secDNS:alg>
+         <secDNS:digestType>[% dnssec_data.digest_type %]</secDNS:digestType>
+         <secDNS:digest>[% dnssec_data.digest %]</secDNS:digest>
+       </secDNS:dsData>
+    [% END %]
+     </secDNS:create>
+   </extension>
+[% END %]
