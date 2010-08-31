@@ -26,6 +26,7 @@ my $xmlns = {
 	domain => 'urn:ietf:params:xml:ns:domain-1.0',
 	host => 'urn:ietf:params:xml:ns:host-1.0',
 	contact => 'urn:ietf:params:xml:ns:contact-1.0',
+	secDNS => 'urn:ietf:params:xml:ns:secDNS-1.1',
 };
 
 # get a template object
