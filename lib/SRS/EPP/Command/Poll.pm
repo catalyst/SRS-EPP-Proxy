@@ -160,7 +160,7 @@ method notify( SRS::EPP::SRSResponse @rs ) {
 			my $msgQ = XML::EPP::MsgQ->new(
 				count => $response->remaining(),
 				id => sprintf(
-					"%04d%s",$response->registrar_id(),$response->tx_id()
+					"%04d%s",$response->registrar_id(),clean_id_out($response->tx_id()),
 				),
 			);
 			return $self->make_response(code => 1000, msgQ => $msgQ);
