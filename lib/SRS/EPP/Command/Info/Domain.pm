@@ -176,7 +176,7 @@ sub buildInfoResponse {
 sub buildExtensionResponse {
 	my $domain = shift;
 	
-	if ($domain->dns_sec) {
+	if ($domain->dns_sec && $domain->dns_sec->ds_list) {
 		my @ds;
 		foreach my $srs_ds (@{ $domain->dns_sec->ds_list }) {
 			push @ds, XML::EPP::DNSSEC::DSData->new(
