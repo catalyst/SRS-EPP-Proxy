@@ -8,11 +8,11 @@
         <Server FQDN="ns3.hidns.com"/>
       </NameServers>
       <DNSSEC>
-       <DS DigestType="3" KeyTag="1" Algorithm="2">
-         <Digest>1234abcd</Digest>
+       <DS DigestType="1" KeyTag="1" Algorithm="5">
+         <Digest>1234abcd11111111111111111111111111111111</Digest>
        </DS>
-       <DS DigestType="6" KeyTag="4" Algorithm="5">
-         <Digest>8888fff</Digest>
+       <DS DigestType="2" KeyTag="4" Algorithm="6">
+         <Digest>8888ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff</Digest>
        </DS>
      </DNSSEC>
       <RegistrantContact ActionId="Update handle registrant-001 1" Email="new001@registrant.co.nz" HandleId="registrant-001" Name="new registrant 001">

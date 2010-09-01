@@ -14,16 +14,13 @@ output_assertions:
     - [ '//secDNS:dsData', 2, 'Two dsData elements returned' ]
   match:
     - [ '//secDNS:dsData[1]/secDNS:keyTag', 1, 'First keytag element correct' ]
-    - [ '//secDNS:dsData[1]/secDNS:alg', 2, 'First alg element correct' ]
-    - [ '//secDNS:dsData[1]/secDNS:digestType', 3, 'First digestType element correct' ]
-    - [ '//secDNS:dsData[1]/secDNS:digest', '1234abcd', 'First digest element correct' ]
+    - [ '//secDNS:dsData[1]/secDNS:alg', 5, 'First alg element correct' ]
+    - [ '//secDNS:dsData[1]/secDNS:digestType', 1, 'First digestType element correct' ]
+    - [ '//secDNS:dsData[1]/secDNS:digest', '1234abcd11111111111111111111111111111111', 'First digest element correct' ]
     - [ '//secDNS:dsData[2]/secDNS:keyTag', 4, 'First keytag element correct' ]
-    - [ '//secDNS:dsData[2]/secDNS:alg', 5, 'First alg element correct' ]
-    - [ '//secDNS:dsData[2]/secDNS:digestType', 6, 'First digestType element correct' ]
-    - [ '//secDNS:dsData[2]/secDNS:digest', '8888fff', 'First digest element correct' ]
+    - [ '//secDNS:dsData[2]/secDNS:alg', 6, 'First alg element correct' ]
+    - [ '//secDNS:dsData[2]/secDNS:digestType', 2, 'First digestType element correct' ]
+    - [ '//secDNS:dsData[2]/secDNS:digest', '8888ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff', 'First digest element correct' ]
   match_all:
   attr_is:
     - [ '//epp:result', 'code', 1000, 'EPP: command ok' ]
-
-
-

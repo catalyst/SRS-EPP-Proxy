@@ -13,11 +13,11 @@
         <Server FQDN="ns4.everydns.net"/>
       </NameServers>
       <DNSSEC>
-       <DS DigestType="3" KeyTag="1" Algorithm="2">
-         <Digest>1234abcd</Digest>
+       <DS DigestType="1" KeyTag="1" Algorithm="5">
+         <Digest>1234abcd11111111111111111111111111111111</Digest>
        </DS>
-       <DS DigestType="6" KeyTag="4" Algorithm="5">
-         <Digest>8888fff</Digest>
+       <DS DigestType="2" KeyTag="4" Algorithm="6">
+         <Digest>8888ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff</Digest>
        </DS>
      </DNSSEC>
       <RegistrantContact Email="e@xample.com" Name="Mr Ben">

@@ -6,13 +6,13 @@ request: |-
   <DomainCreate Delegate="0" DomainName="05p.co.te" Term="1" ActionId="[% actionid %] 1">
     <RegistrantContact HandleId="reg1"/>
       <DNSSEC>
-       <DS DigestType="3" KeyTag="1" Algorithm="2">
-         <Digest>1234abcd</Digest>
+       <DS DigestType="1" KeyTag="1" Algorithm="5">
+         <Digest>1234abcd11111111111111111111111111111111</Digest>
        </DS>
-       <DS DigestType="6" KeyTag="4" Algorithm="5">
-         <Digest>8888fff</Digest>
+       <DS DigestType="2" KeyTag="4" Algorithm="6">
+         <Digest>8888ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff</Digest>
        </DS>
-     </DNSSEC>    
+     </DNSSEC>  
   </DomainCreate>
  </NZSRSRequest>
 
