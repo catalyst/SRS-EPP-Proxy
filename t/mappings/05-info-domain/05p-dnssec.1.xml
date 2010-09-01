@@ -17,7 +17,7 @@
          <Digest>1234abcd</Digest>
        </DS>
        <DS DigestType="6" KeyTag="4" Algorithm="5">
-         <Digest>8888zxy</Digest>
+         <Digest>8888fff</Digest>
        </DS>
      </DNSSEC>
       <RegistrantContact Email="e@xample.com" Name="Mr Ben">

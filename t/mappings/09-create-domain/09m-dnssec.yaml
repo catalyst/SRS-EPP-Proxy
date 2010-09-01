@@ -14,7 +14,7 @@ vars:
         keytag: 4
         alg: 5
         digest_type: 6
-        digest: 8888zxy    
+        digest: 8888fff    
 
 input_assertions:
   class: SRS::EPP::Command::Create::Domain
@@ -26,7 +26,7 @@ SRS:
          - [ '//DS', '2', 'Two DS records in request' ]
       match:
          - [ '//DS[1]/Digest', '1234abcd', 'First digest element correct' ]
-         - [ '//DS[2]/Digest', '8888zxy', 'Second digest element correct' ]
+         - [ '//DS[2]/Digest', '8888fff', 'Second digest element correct' ]
       match_all:
       attr_is:
         - [ '//DS[1]', 'KeyTag', '1', 'First keytag attribute correct' ]

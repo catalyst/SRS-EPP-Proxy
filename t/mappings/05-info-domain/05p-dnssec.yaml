@@ -20,7 +20,7 @@ output_assertions:
     - [ '//secDNS:dsData[2]/secDNS:keyTag', 4, 'First keytag element correct' ]
     - [ '//secDNS:dsData[2]/secDNS:alg', 5, 'First alg element correct' ]
     - [ '//secDNS:dsData[2]/secDNS:digestType', 6, 'First digestType element correct' ]
-    - [ '//secDNS:dsData[2]/secDNS:digest', '8888zxy', 'First digest element correct' ]
+    - [ '//secDNS:dsData[2]/secDNS:digest', '8888fff', 'First digest element correct' ]
   match_all:
   attr_is:
     - [ '//epp:result', 'code', 1000, 'EPP: command ok' ]

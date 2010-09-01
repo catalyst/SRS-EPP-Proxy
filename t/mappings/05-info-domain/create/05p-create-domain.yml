@@ -3,8 +3,16 @@ registrar: 1
 
 request: |-
  <NZSRSRequest VerMajor="4" VerMinor="4" RegistrarId="100">
-  <DomainCreate Delegate="0" DomainName="05o.co.te" Term="1" ActionId="[% actionid %] 1">
+  <DomainCreate Delegate="0" DomainName="05p.co.te" Term="1" ActionId="[% actionid %] 1">
     <RegistrantContact HandleId="reg1"/>
+      <DNSSEC>
+       <DS DigestType="3" KeyTag="1" Algorithm="2">
+         <Digest>1234abcd</Digest>
+       </DS>
+       <DS DigestType="6" KeyTag="4" Algorithm="5">
+         <Digest>8888fff</Digest>
+       </DS>
+     </DNSSEC>    
   </DomainCreate>
  </NZSRSRequest>
 

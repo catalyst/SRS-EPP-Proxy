@@ -12,7 +12,7 @@
          <Digest>1234abcd</Digest>
        </DS>
        <DS DigestType="6" KeyTag="4" Algorithm="5">
-         <Digest>8888zxy</Digest>
+         <Digest>8888fff</Digest>
        </DS>
      </DNSSEC>
       <RegistrantContact ActionId="Update handle registrant-001 1" Email="new001@registrant.co.nz" HandleId="registrant-001" Name="new registrant 001">
