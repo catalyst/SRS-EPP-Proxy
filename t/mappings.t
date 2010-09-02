@@ -34,6 +34,9 @@ our @testfiles = @files ? @files : find_tests;
 my $proxy = Mock::Proxy->new();
 $proxy->rfc_compliant_ssl(1);
 
+use XML::EPP;
+XML::EPP::register_ext_uri('urn:ietf:params:xml:ns:secDNS-1.1' => 'dns_sec');
+
 run_unit_tests(
 	sub {
 		SRS::EPP::Session->new(

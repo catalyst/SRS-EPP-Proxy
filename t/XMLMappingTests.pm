@@ -503,9 +503,6 @@ sub run_unit_tests {
 	my $gen_session = shift;
 	my @testfiles = @_;
 	
-	use XML::EPP;
-	XML::EPP::register_ext_uri('urn:ietf:params:xml:ns:secDNS-1.1' => 'dns_sec');
-
 	for my $testfile ( sort @testfiles ) {
 		diag("Reading $testfile") if $main::VERBOSE>0;
 		my $test = load_test($testfile);
