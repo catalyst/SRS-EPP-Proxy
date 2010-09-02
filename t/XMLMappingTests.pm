@@ -502,6 +502,9 @@ use Storable qw(dclone);
 sub run_unit_tests {
 	my $gen_session = shift;
 	my @testfiles = @_;
+	
+	use XML::EPP;
+	XML::EPP::register_ext_uri('urn:ietf:params:xml:ns:secDNS-1.1' => 'dns_sec');
 
 	for my $testfile ( sort @testfiles ) {
 		diag("Reading $testfile") if $main::VERBOSE>0;
@@ -516,6 +519,10 @@ sub run_unit_tests {
 		my $session = $gen_session->();
 		if ( exists $test->data->{user} ) {
 			$session->user($test->data->{user});
+		}
+		
+		if ( $test->data->{extensions} ) {
+			$session->extensions->set(@{$test->data->{extensions}});
 		}
 	SKIP:{
 			input_packet_test($test, $session)

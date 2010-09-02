@@ -87,14 +87,6 @@ sub BUILD {
 	Log::Log4perl->init($logging);
 
 	# pass configuration options to the session class?
-
-	# Register namespaces to be returned by greeting
-	# TODO: Probably should be configured...
-	use XML::EPP;
-	XML::EPP::register_obj_uri(
-		"urn:ietf:params:xml:ns:domain-1.0",
-		"urn:ietf:params:xml:ns:contact-1.0",
-	);
 }
 
 our $VERSION = "0.21";
@@ -252,6 +244,34 @@ has 'pgp_dir' =>
 
 method init_pgp() {
 	$self->pgp;
+}
+
+has 'extensions' =>
+	metaclass => "Getopt",
+	is => "ro",
+	isa => "HashRef",
+	required => 0,
+	;
+	
+has 'services' =>
+	metaclass => "Getopt",
+	is => "ro",
+	isa => "ArrayRef",
+	required => 1,
+	;
+
+method init_uris {
+	# Register namespaces to be returned by greeting
+	use XML::EPP;
+	XML::EPP::register_obj_uri(
+		@{ $self->services },
+	);
+	
+	if ($self->extensions) {
+		XML::EPP::register_ext_uri(
+			%{ $self->extensions },
+		);
+	}
 }
 
 has 'running' =>
