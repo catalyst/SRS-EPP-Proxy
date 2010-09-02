@@ -202,6 +202,8 @@ method init() {
 	$self->init_pgp;
 	$self->log_info("Initializing SSL");
 	$self->init_ssl;
+	$self->log_info("Initializing URIs");
+	$self->init_uris;
 	$self->log_info("Initializing Listener");
 	$self->init_listener;
 }
