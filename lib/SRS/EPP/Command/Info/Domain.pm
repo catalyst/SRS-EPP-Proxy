@@ -79,7 +79,7 @@ method notify( SRS::EPP::SRSResponse @rs ) {
 	# let's do this one bit at a time
 	my $payload = $self->message->message->argument->payload;
 
-	my $extension = buildExtensionResponse($domain);
+	my $extension = $self->buildExtensionResponse($domain);
 
 	return $self->make_response(
 		code => 1000,
@@ -89,7 +89,7 @@ method notify( SRS::EPP::SRSResponse @rs ) {
 }
 
 sub buildInfoResponse {
-	my ($domain) = @_;
+	my $domain = shift;
 
 	# get some things out to make it easier on the eye below
 	my $nsList;
@@ -174,9 +174,10 @@ sub buildInfoResponse {
 }
 
 sub buildExtensionResponse {
+	my $self = shift;
 	my $domain = shift;
-	
-	if ($domain->dns_sec && $domain->dns_sec->ds_list) {
+		
+	if ($self->session->extensions->enabled->{dns_sec} && $domain->dns_sec && $domain->dns_sec->ds_list) {
 		my @ds;
 		foreach my $srs_ds (@{ $domain->dns_sec->ds_list }) {
 			push @ds, XML::EPP::DNSSEC::DSData->new(
