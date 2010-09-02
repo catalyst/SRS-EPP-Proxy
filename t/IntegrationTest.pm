@@ -76,6 +76,7 @@ sub run_tests {
 			command => 'login',
 			user => '100',
 			pass => 'foobar',
+			$data->{extensions} ? (extSvcs => $data->{extensions}) : (), 
 		};
 
 		my $test = {
