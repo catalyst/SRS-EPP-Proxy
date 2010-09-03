@@ -106,6 +106,29 @@ method process( SRS::EPP::Session $session ) {
 	if ($message->extension) {
 		foreach my $ext_obj (@{ $message->extension->ext_objs }) {
 			if ($ext_obj->isa('XML::EPP::DNSSEC::Create')) {
+				# Check for any elements we don't support
+				if ($ext_obj->key_data) {
+					return $self->make_error(
+						code => 2306,
+						message => 'Key data not supported',
+					);
+				}
+				
+				if ($ext_obj->max_sig_life) {
+					return $self->make_error(
+						code => 2306,
+						message => 'Max sig life not supported',
+					);					
+				}
+				
+				# Make sure we have some ds data
+				unless ($ext_obj->ds_data) {
+					return $self->make_error(
+						code => 2306,
+						message => 'At least one dsData element must be supplied',
+					);
+				}
+				
 				foreach my $epp_ds (@{$ext_obj->ds_data}) {
 					push @ds, XML::SRS::DS->new(
 						key_tag => $epp_ds->key_tag,
