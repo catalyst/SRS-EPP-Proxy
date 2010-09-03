@@ -42,15 +42,9 @@ method process( SRS::EPP::Session $session ) {
 		if ( $contact->type eq 'admin' ) {
 			if ($contact_admin) {
 				$self->log_error("$self multiple admin contacts");
-				return $self->make_response(
-					Error => (
-						code      => 2306,
-						exception => XML::EPP::Error->new(
-							value  => '',
-							reason =>
-								'Only one admin contact per domain supported',
-						),
-						)
+				return $self->make_error(
+					code => 2306,
+					message => 'Only one admin contact per domain supported',
 				);
 			}
 			$contact_admin = XML::SRS::Contact->new( handle_id => $contact->value );
@@ -59,15 +53,9 @@ method process( SRS::EPP::Session $session ) {
 		if ( $contact->type eq 'tech' ) {
 			if ($contact_technical) {
 				$self->log_error("$self multiple tech contacts");
-				return $self->make_response(
-					Error => (
-						code      => 2306,
-						exception => XML::EPP::Error->new(
-							value  => '',
-							reason =>
-								'Only one tech contact per domain supported',
-						),
-						)
+				return $self->make_error(
+					code => 2306,
+					message => 'Only one tech contact per domain supported',
 				);
 			}
 			$contact_technical = XML::SRS::Contact->new( handle_id => $contact->value );
