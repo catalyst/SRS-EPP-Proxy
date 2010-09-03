@@ -92,6 +92,8 @@ method process( SRS::EPP::Session $session ) {
 			);
 		}
 	}
+	
+	$session->extensions->set(@rq_extensions);
 
 	return (
 		XML::SRS::Registrar::Query->new(
