@@ -239,7 +239,6 @@ has 'pgp_keyid' =>
 	metaclass => "Getopt",
 	is => "ro",
 	isa => "Str",
-	required => 1,
 	;
 
 has 'pgp_dir' =>
