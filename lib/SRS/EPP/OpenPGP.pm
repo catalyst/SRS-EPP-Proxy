@@ -163,13 +163,19 @@ method find_encrypting_key(SRS::EPP::OpenPGP::key_id $key_id) {
 
 method get_sec_key_block(SRS::EPP::OpenPGP::key_id $key_id?) {
 	my $sec_ring = $self->secret_keyring;
-	$key_id =~ s{^0x}{};
-	my $kb = $key_id
-		? $sec_ring->find_keyblock_by_keyid( pack("H*", $key_id) )
-		: $sec_ring->find_keyblock_by_index(-1)
-		or croak "Can't find keyblock ("
-		.($key_id ? $key_id : "default")
-		."): " . $sec_ring->errstr;
+
+	my $func = sub{$sec_ring->find_keyblock_by_index(@_)};
+	my $param = -1;
+	my $label = "default";
+	if ($key_id) {
+		$key_id =~ s{^0x}{};
+		$func = sub{$sec_ring->find_by_keyid(@_)};
+		$param = pack("H*", $key_id);
+		$label = $key_id;
+	}
+
+	my $kb = $func->($param)
+		or croak "Can't find keyblock ($label): " . $sec_ring->errstr;
 	return $kb;
 }
 
