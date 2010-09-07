@@ -84,6 +84,10 @@ method notify( SRS::EPP::SRSResponse @rs ) {
 	);
 }
 
+# Note, this is called by Poll (and should probably be in a role)
+#  This means we have to be pretty defensive here - the domain
+#  record we're dealing with may not have many fields, so we
+#  have to check for the existence of most things
 sub buildInfoResponse {
 	my ($domain) = @_;
 
@@ -127,10 +131,9 @@ sub buildInfoResponse {
 	#  (which EPP thinks is important)
 	my $domain_updated = 0;
 	if (
-		$domain->registered_date->timestamptz
-		ne $domain->audit->when->begin->timestamptz
-		)
-	{
+		$domain->registered_date && 
+		$domain->registered_date->timestamptz ne $domain->audit->when->begin->timestamptz
+	) {
 		$domain_updated = 1;
 	}
 
@@ -150,21 +153,17 @@ sub buildInfoResponse {
 		status => [ getEppStatuses($domain) ],
 		%contacts,
 		($nsList ? (ns => $nsList) : ()),
-		client_id => sprintf("%03d",$domain->registrar_id()), # clID
-		created => ($domain->registered_date())->timestamptz, # crDate
-		expiry_date => ($domain->billed_until())->timestamptz, # exDate
+		$domain->registrar_id() ? (client_id => sprintf("%03d",$domain->registrar_id())) : (), # clID
+		$domain->registered_date() ? (created => ($domain->registered_date())->timestamptz) : (), # crDate
+		$domain->billed_until() ? (expiry_date => ($domain->billed_until())->timestamptz) : (), # exDate
 		$domain_updated
 		? (
 			updated => # upDate
-				($domain->audit->when->begin())->timestamptz
-			)
-		: (),
-		$domain_updated
-		? (
+				($domain->audit->when->begin())->timestamptz,
 			updated_by_id => # upID
 				sprintf("%03d",$domain->audit->registrar_id)
 			)
-		: (),
+		: (),		
 		($auth_info ? (auth_info => $auth_info) : ()),
 	);
 }
@@ -173,7 +172,7 @@ sub getEppStatuses {
 	my ($domain) = @_;
 
 	my @status;
-	if ( $domain->delegate() == 0 ) {
+	if ( defined $domain->delegate() && $domain->delegate() == 0 ) {
 		push @status, 'clientHold';
 	}
 	if ( $domain->status eq 'PendingRelease' ) {
