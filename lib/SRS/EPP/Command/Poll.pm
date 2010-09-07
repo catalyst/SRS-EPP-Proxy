@@ -84,7 +84,7 @@ method process( SRS::EPP::Session $session ) {
 }
 
 sub extract_fact {
-	my  ($self,$action,$domain) = @_;
+	my ($self,$action,$domain) = @_;
 
 	if ( $action eq "DomainTransfer" ) {
 		my $name = $domain->TransferredDomain();
@@ -98,38 +98,40 @@ sub extract_fact {
 	}
 
 	if ( $action eq "DomainUpdate" ) {
-		if ( my $udai = $domain->UDAI() ) {
-			return "New UDAI", XML::EPP::Domain::Info::Response->new(
-				name => $domain->name,
-				roid => substr(md5_hex($domain->name), 0, 12) . '-DOM',
-				status => [
-					SRS::EPP::Command::Info::Domain::getEppStatuses($domain)
-				],
-				auth_info => XML::EPP::Domain::AuthInfo->new(
-					pw => XML::EPP::Common::Password->new(
-						content => $udai,
+		if ( $domain ) {
+			if ( my $udai = $domain->UDAI() ) {
+				return "New UDAI", XML::EPP::Domain::Info::Response->new(
+					name => $domain->name,
+					roid => substr(md5_hex($domain->name), 0, 12) . '-DOM',
+					status => [
+						SRS::EPP::Command::Info::Domain::getEppStatuses($domain)
+					],
+					auth_info => XML::EPP::Domain::AuthInfo->new(
+						pw => XML::EPP::Common::Password->new(
+							content => $udai,
+						),
 					),
-				),
+				);
+			}
+
+			if ( $domain->audit()->comment() =~ m/RenewDomains/ ) {
+				return "Domain Renewal", XML::EPP::Domain::Info::Response->new(
+					name => $domain->name,
+					roid => substr(md5_hex($domain->name), 0, 12) . '-DOM',
+					status => [
+						SRS::EPP::Command::Info::Domain::getEppStatuses($domain)
+					],
+					expiry_date => $domain->billed_until->timestamptz,
+				);
+			}
+
+			# didn't notice anything specifically interesting, so we'll default to
+			# returning a full info response...
+			return (
+				"Domain Update",
+				SRS::EPP::Command::Info::Domain::buildInfoResponse($domain)
 			);
 		}
-
-		if ( $domain->audit()->comment() =~ m/RenewDomains/ ) {
-			return "Domain Renewal", XML::EPP::Domain::Info::Response->new(
-				name => $domain->name,
-				roid => substr(md5_hex($domain->name), 0, 12) . '-DOM',
-				status => [
-					SRS::EPP::Command::Info::Domain::getEppStatuses($domain)
-				],
-				expiry_date => $domain->billed_until->timestamptz,
-			);
-		}
-
-		# didn't notice anything specifically interesting, so we'll default to
-		# returning a full info response...
-		return (
-			"Domain Update",
-			SRS::EPP::Command::Info::Domain::buildInfoResponse($domain)
-		);
 	}
 
 	if ( $action eq "DomainCreate" ) {
