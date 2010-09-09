@@ -185,6 +185,13 @@ method notify( SRS::EPP::SRSResponse @rs ) {
 
 		# restart the processing pipeline
 		$self->session->stalled(0);
+		
+		# If no response returned, they must not own this domain 
+		unless ($res) {
+			return $self->make_response(
+				code => 2303,
+			);
+		}
 
 		# Check if the contacts added or removed are correct
 		if (my $cc = $self->contact_changes) {
