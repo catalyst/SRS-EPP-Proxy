@@ -9,6 +9,7 @@ use Crypt::Password;
 
 use XML::SRS::Server;
 use XML::SRS::Server::List;
+use XML::SRS::DS;
 
 # List of statuses the user is allowed to add or remove
 my @ALLOWED_STATUSES = qw(clientHold);
@@ -41,6 +42,11 @@ has 'contact_changes' => (
 	'isa' => 'HashRef',
 );
 
+has 'dnssec_changes' => (
+	'is' => 'rw',
+	'isa' => 'HashRef',
+);
+
 # we only ever enter here once, so we know what state we're in
 method process( SRS::EPP::Session $session ) {
 	$self->session($session);
@@ -50,13 +56,14 @@ method process( SRS::EPP::Session $session ) {
 	my $payload = $message->argument->payload;
 
 	# firstly check that we have at least one of add, rem and chg
-	unless ( $payload->add or $payload->remove or $payload->change ) {
-		return $self->make_response(
+	unless ( $payload->add or $payload->remove or $payload->change or $message->extension ) {
+		return $self->make_error(
 			code => 2002,
+			message => 'Incomplete request, expecting add, rem, chg or extension element',
 		);
 	}
 
-	# Validate that statuses supplied (if any)
+	# Validate statuses supplied (if any)
 	my %statuses = (
 		($payload->add ? (add => $payload->add->status) : ()),
 		($payload->remove ? (remove => $payload->remove->status) : ()),
@@ -112,70 +119,33 @@ method process( SRS::EPP::Session $session ) {
 
 	# If they've added or removed contacts, we also need to do a ddq
 	#  to make sure they've added or removed the correct contacts
+	# We also validate that contact data they've sent here
 	if (
-		$payload->add
-		&& $payload->add->contact
+		$payload->add && $payload->add->contact
 		|| $payload->remove && $payload->remove->contact
 		)
 	{
 
-		my %contact_changes = ();
+		my $result = $self->check_contacts($payload);
+		
+		return $result if blessed $result && $result->isa('SRS::EPP::Response::Error');
 
-		for my $contact_type (qw/admin tech/) {
-			for my $action (qw/add remove/) {
-				my @contacts;
-				@contacts = grep {
-					$_->type eq $contact_type
-					} @{$payload->$action->contact}
-					if $payload->$action;
+		%ddq_fields = (%ddq_fields, %{ $result });
 
-				$contact_changes{$contact_type}{$action}
-					= \@contacts;
-			}
-		}
-
-		$self->contact_changes(\%contact_changes);
-
-		for my $contact_type (keys %contact_changes) {
-			my %changes = %{$contact_changes{$contact_type}};
-
-			next unless %changes;
-
-			# Check they're not adding or removing more than
-			# one contact of the same type
-			for my $action (keys %changes) {
-				if (scalar @{$changes{$action}} > 1) {
-					return $self->make_error(
-						code => 2306,
-						value => '',
-						reason =>
-							"Only one $contact_type contact per domain supported",
-					);
-				}
-			}
-
-			# The only valid actions are to remove, or add
-			#  & remove.  An add on its own is invalid
-			#  (because there's always a default) so
-			#  reject it
-			if (@{$changes{add}} && !@{$changes{remove}}) {
-				return $self->make_error(
-					code => 2306,
-					value => '',
-					reason =>
-						"Only one $contact_type contact per domain supported",
-				);
-			}
-
-			# We have some changes to this contact type,
-			# so we need to request it in the ddq
-
-			my $long_type = $contact_type eq 'tech'
-				? 'technical' : $contact_type;
-
-			$ddq_fields{$long_type . '_contact'} = 1;
-		}
 	}
+	
+	# Handle DNS sec changes
+	if ($message->extension) {
+		foreach my $ext_obj (@{ $message->extension->ext_objs }) {
+			if ($ext_obj->isa('XML::EPP::DNSSEC::Update')) {
+				my $result = $self->check_dnssec($ext_obj);
+				
+				return $result if blessed $result && $result->isa('SRS::EPP::Response::Error');
+
+				%ddq_fields = (%ddq_fields, %{ $result });				
+			}
+		}
+	}				
 
 	if (%ddq_fields) {
 
@@ -270,6 +240,50 @@ method notify( SRS::EPP::SRSResponse @rs ) {
 				}
 			}
 		}
+		
+		my @dnssec_update;
+		if (my $dnssec_changes = $self->dnssec_changes) {
+			my @existing_ds = ();
+			
+			unless ($dnssec_changes->{remove_all}) {
+				@existing_ds = @{ $res->dns_sec->ds_list } if $res->dns_sec && $res->dns_sec->ds_list;
+				
+				# Translate changes to SRS DS objects
+				for my $action (keys %$dnssec_changes) {
+					next if $action eq 'remove_all';
+					
+					$dnssec_changes->{$action} = 
+						[ map { $self->_translate_ds_epp_to_srs($_) } @{$dnssec_changes->{$action}} ]; 	
+				}
+	
+				# Check if removes were correct
+				foreach my $ds_to_rem (@{ $dnssec_changes->{remove} }) {
+					my $found = 0;
+					foreach my $existing_ds (@existing_ds) {
+						next unless $ds_to_rem->is_equal($existing_ds);
+						            
+						$found = 1;
+						last;
+					}
+					
+					unless ($found) {
+						return $self->make_error(
+							code => 2002,
+							value =>
+								$ds_to_rem->digest,
+							reason =>
+								"Attempting to remove a DS record that does not exist on this domain",
+						);
+					}
+					
+					# We can now remove from the existing list
+					@existing_ds = grep { ! $_->is_equal($ds_to_rem) } @existing_ds;
+				}
+			}
+						
+			# The list of ds records to keep is the existing list, minus removals, plus additions
+			@dnssec_update = (@existing_ds, @{ $dnssec_changes->{add} || [] });
+		}
 
 		my %ns;
 		if ($res->nameservers) {
@@ -305,7 +319,7 @@ method notify( SRS::EPP::SRSResponse @rs ) {
 		# so far all is good, now send the DomainUpdate
 		# request to the SRS
 		my $request = $self->make_request(
-			$message, $payload, \@ns_list,
+			$message, $payload, \@ns_list, \@dnssec_update
 		);
 		$self->state('SRS-DomainUpdate');
 		return $request;
@@ -331,7 +345,7 @@ method notify( SRS::EPP::SRSResponse @rs ) {
 	}
 }
 
-method make_request( $message, $payload, ArrayRef $new_nameservers? ) {
+method make_request( $message, $payload, ArrayRef $new_nameservers?, ArrayRef $new_ds_records? ) {
 
 	# the first thing we're going to check for is a change to the
 	# registrant
@@ -415,8 +429,135 @@ method make_request( $message, $payload, ArrayRef $new_nameservers? ) {
 			$request->delegate(1);
 		}
 	}
+	
+	# Add ds record changes, if any
+	$request->dns_sec($new_ds_records) if $new_ds_records;
 
 	return $request;
+}
+
+# Check the contacts on a request, make sure they are valid, 
+# (returning a SRS::EPP::Response::Error if not), store
+#  the changes for later use, and return a hashref indicating
+#  which contacts need to be queried before the update can be performed 
+sub check_contacts {
+	my $self = shift;
+	my $payload = shift;
+	
+	my %contact_changes = ();
+
+	for my $contact_type (qw/admin tech/) {
+		for my $action (qw/add remove/) {
+			my @contacts;
+			@contacts = grep {
+				$_->type eq $contact_type
+				} @{$payload->$action->contact}
+				if $payload->$action;
+
+			$contact_changes{$contact_type}{$action}
+				= \@contacts;
+		}
+	}
+
+	$self->contact_changes(\%contact_changes);
+	
+	my %queries_needed;
+
+	for my $contact_type (keys %contact_changes) {
+		my %changes = %{$contact_changes{$contact_type}};
+
+		next unless %changes;
+
+		# Check they're not adding or removing more than
+		# one contact of the same type
+		for my $action (keys %changes) {
+			if (scalar @{$changes{$action}} > 1) {
+				return $self->make_error(
+					code => 2306,
+					value => '',
+					reason =>
+						"Only one $contact_type contact per domain supported",
+				);
+			}
+		}
+
+		# The only valid actions are to remove, or add
+		#  & remove.  An add on its own is invalid
+		#  (because there's always a default) so
+		#  reject it
+		if (@{$changes{add}} && !@{$changes{remove}}) {
+			return $self->make_error(
+				code => 2306,
+				value => '',
+				reason =>
+					"Only one $contact_type contact per domain supported",
+			);
+		}
+
+		# We have some changes to this contact type,
+		# so we need to request it in the ddq
+
+		my $long_type = $contact_type eq 'tech'
+			? 'technical' : $contact_type;
+
+		$queries_needed{$long_type . '_contact'} = 1;
+	}
+	
+	return \%queries_needed;
+}
+
+sub check_dnssec {
+	my $self = shift;
+	my $update = shift;
+	
+	# Reject chg element - it only contains maxSigLife, which we don't support
+	if ($update->chg) {
+		return $self->make_error(
+			code => 2306,
+			message => "maxSigLife element not supported",
+		);
+	}
+	
+	# keyData elements rejected
+	if ($update->add && $update->add->key_data ||
+	    $update->rem && $update->rem->key_data) {
+	
+		return $self->make_error(
+			code => 2306,
+			message => "keyData not supported",
+		);	    	
+	}
+	
+	# Must add or remove something
+	unless ($update->add || $update->rem) {
+		return $self->make_error(
+			code => 2003,
+			message => "No dsData to add or remove",
+		);
+	}
+	
+	my %dnssec_changes;
+	my %query_required;
+	
+	$dnssec_changes{remove_all} = $update->rem && $update->rem->all && $update->rem->all eq 'true' ? 1 : 0;
+	
+	if ($update->rem && ! $dnssec_changes{remove_all}) {
+		$dnssec_changes{remove} = $update->rem->ds_data;		
+	}
+	
+	if ($update->add) {
+		$dnssec_changes{add} = $update->add->ds_data;
+	}
+	
+	# We could avoid a query if they're removing all, but this ends up
+	#  complicating everything else a fair bit
+	$query_required{dns_sec} = 1;
+	
+	$self->dnssec_changes(\%dnssec_changes);
+	
+	return \%query_required;
+	
+	
 }
 
 sub _make_contact {
@@ -451,6 +592,18 @@ sub _extract_contact {
 		return $c->value if $c->type eq $type;
 	}
 	return;
+}
+
+sub _translate_ds_epp_to_srs {
+	my $self = shift;
+	my $epp_ds = shift;
+	
+	return XML::SRS::DS->new(
+		key_tag => $epp_ds->key_tag,
+		algorithm => $epp_ds->alg,
+		digest_type => $epp_ds->digest_type,
+		digest => $epp_ds->digest,
+	);	
 }
 
 1;

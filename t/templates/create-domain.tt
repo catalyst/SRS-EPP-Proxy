@@ -28,5 +28,31 @@
     <domain:authInfo>
       <domain:pw></domain:pw>
     </domain:authInfo>
-  </domain:create>
+  </domain:create>  
 </create>
+[% IF dnssec %]
+   <extension>
+     <secDNS:create
+      xmlns:secDNS="urn:ietf:params:xml:ns:secDNS-1.1">
+
+    [% IF dnssec_max_sig_life %]<secDNS:maxSigLife>[% dnssec_max_sig_life %]</secDNS:maxSigLife>[% END %]
+	[% FOREACH dnssec_data IN dnssec %]
+		[% IF dnssec_data.is_key_data %]
+          <secDNS:keyData>
+            <secDNS:flags>[% dnssec_data.flags %]</secDNS:flags>
+            <secDNS:protocol>[% dnssec_data.protocol %]</secDNS:protocol>
+            <secDNS:alg>[% dnssec_data.alg %]</secDNS:alg>
+            <secDNS:pubKey>[% dnssec_data.pub_key %]</secDNS:pubKey>
+          </secDNS:keyData>
+		[% ELSE %]
+	       <secDNS:dsData>
+	         <secDNS:keyTag>[% dnssec_data.keytag %]</secDNS:keyTag>
+	         <secDNS:alg>[% dnssec_data.alg %]</secDNS:alg>
+	         <secDNS:digestType>[% dnssec_data.digest_type %]</secDNS:digestType>
+	         <secDNS:digest>[% dnssec_data.digest %]</secDNS:digest>
+	       </secDNS:dsData>
+         [% END %]
+    [% END %]
+     </secDNS:create>
+   </extension>
+[% END %]

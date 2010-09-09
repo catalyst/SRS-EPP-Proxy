@@ -13,6 +13,8 @@ use XML::SRS::TimeStamp;
 use XML::SRS::Server::List;
 use XML::SRS::Server;
 use XML::SRS::Contact;
+use XML::SRS::DS;
+use XML::SRS::DS::List;
 
 # for plugin system to connect
 sub xmlns {
@@ -40,15 +42,9 @@ method process( SRS::EPP::Session $session ) {
 		if ( $contact->type eq 'admin' ) {
 			if ($contact_admin) {
 				$self->log_error("$self multiple admin contacts");
-				return $self->make_response(
-					Error => (
-						code      => 2306,
-						exception => XML::EPP::Error->new(
-							value  => '',
-							reason =>
-								'Only one admin contact per domain supported',
-						),
-						)
+				return $self->make_error(
+					code => 2306,
+					message => 'Only one admin contact per domain supported',
 				);
 			}
 			$contact_admin = XML::SRS::Contact->new( handle_id => $contact->value );
@@ -57,15 +53,9 @@ method process( SRS::EPP::Session $session ) {
 		if ( $contact->type eq 'tech' ) {
 			if ($contact_technical) {
 				$self->log_error("$self multiple tech contacts");
-				return $self->make_response(
-					Error => (
-						code      => 2306,
-						exception => XML::EPP::Error->new(
-							value  => '',
-							reason =>
-								'Only one tech contact per domain supported',
-						),
-						)
+				return $self->make_error(
+					code => 2306,
+					message => 'Only one tech contact per domain supported',
 				);
 			}
 			$contact_technical = XML::SRS::Contact->new( handle_id => $contact->value );
@@ -110,6 +100,47 @@ method process( SRS::EPP::Session $session ) {
 	}
 	else {
 		$self->log_info("$self: no nameservers provided");
+	}
+		
+	my @ds;
+	if ($message->extension) {
+		foreach my $ext_obj (@{ $message->extension->ext_objs }) {
+			if ($ext_obj->isa('XML::EPP::DNSSEC::Create')) {
+				# Check for any elements we don't support
+				if ($ext_obj->key_data) {
+					return $self->make_error(
+						code => 2306,
+						message => 'Key data not supported',
+					);
+				}
+				
+				if ($ext_obj->max_sig_life) {
+					return $self->make_error(
+						code => 2306,
+						message => 'Max sig life not supported',
+					);					
+				}
+				
+				# Make sure we have some ds data
+				unless ($ext_obj->ds_data) {
+					return $self->make_error(
+						code => 2306,
+						message => 'At least one dsData element must be supplied',
+					);
+				}
+				
+				foreach my $epp_ds (@{$ext_obj->ds_data}) {
+					push @ds, XML::SRS::DS->new(
+						key_tag => $epp_ds->key_tag,
+						algorithm => $epp_ds->alg,
+						digest => $epp_ds->digest,
+						digest_type => $epp_ds->digest_type,
+					);
+				};					
+			}
+		}
+		
+		$request->dns_sec(\@ds);
 	}
 
 	return $request;

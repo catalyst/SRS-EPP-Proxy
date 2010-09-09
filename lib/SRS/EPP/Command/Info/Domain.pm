@@ -15,6 +15,7 @@ use XML::EPP::Common;
 use XML::EPP::Domain::NS;
 use XML::EPP::Domain::HostAttr;
 use XML::SRS::FieldList;
+use XML::EPP::DNSSEC::DSData;
 
 # for plugin system to connect
 sub xmlns {
@@ -36,7 +37,7 @@ method process( SRS::EPP::Session $session ) {
 		qw(delegate registered_date registrar_id billed_until
 		audit_text effective_from registrant_contact
 		admin_contact technical_contact status locked_date
-		changed_by_registrar_id);
+		changed_by_registrar_id dns_sec);
 
 	# We only want to return name servers if the 'hosts' attribute
 	# is 'all' or 'del'
@@ -78,9 +79,12 @@ method notify( SRS::EPP::SRSResponse @rs ) {
 	# let's do this one bit at a time
 	my $payload = $self->message->message->argument->payload;
 
+	my $extension = $self->buildExtensionResponse($domain);
+
 	return $self->make_response(
 		code => 1000,
 		payload => buildInfoResponse($domain),
+		$extension ? (extension => $extension) : (),
 	);
 }
 
@@ -89,7 +93,7 @@ method notify( SRS::EPP::SRSResponse @rs ) {
 #  record we're dealing with may not have many fields, so we
 #  have to check for the existence of most things
 sub buildInfoResponse {
-	my ($domain) = @_;
+	my $domain = shift;
 
 	# get some things out to make it easier on the eye below
 	my $nsList;
@@ -166,6 +170,27 @@ sub buildInfoResponse {
 		: (),		
 		($auth_info ? (auth_info => $auth_info) : ()),
 	);
+}
+
+sub buildExtensionResponse {
+	my $self = shift;
+	my $domain = shift;
+		
+	if ($self->session->extensions->enabled->{dns_sec} && $domain->dns_sec && $domain->dns_sec->ds_list) {
+		my @ds;
+		foreach my $srs_ds (@{ $domain->dns_sec->ds_list }) {
+			push @ds, XML::EPP::DNSSEC::DSData->new(
+				key_tag => $srs_ds->key_tag,
+				alg => $srs_ds->algorithm,
+				digest_type => $srs_ds->digest_type,
+				digest => $srs_ds->digest,
+			);
+		}
+		
+		my $response = XML::EPP::DNSSEC::InfoResponse->new(
+			ds_data => \@ds,
+		);
+	}
 }
 
 sub getEppStatuses {

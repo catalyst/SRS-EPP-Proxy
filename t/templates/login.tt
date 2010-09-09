@@ -13,5 +13,12 @@
 [% FOR svc = svcs %]
     <objURI>[% svc %]</objURI>
 [% END %]
+[% IF extSvcs %]
+<svcExtension>
+[% FOR extSvc in extSvcs %]
+	<extURI>[% extSvc %]</extURI>
+[% END %]
+</svcExtension>
+[% END %]
   </svcs>
 </login>

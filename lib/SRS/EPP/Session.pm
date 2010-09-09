@@ -205,6 +205,15 @@ has 'server_id_seq' => (
 	default => 0,
 );
 
+use SRS::EPP::Session::Extensions;
+has 'extensions' => (
+	is => "ro",
+	isa => 'SRS::EPP::Session::Extensions',
+	default => sub {
+		SRS::EPP::Session::Extensions->new(),
+	}
+);
+
 # called when a response is generated from the server itself, not the
 # back-end.  Return an ephemeral ID based on the timestamp and a
 # session counter.

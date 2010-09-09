@@ -26,6 +26,7 @@ my $xmlns = {
 	domain => 'urn:ietf:params:xml:ns:domain-1.0',
 	host => 'urn:ietf:params:xml:ns:host-1.0',
 	contact => 'urn:ietf:params:xml:ns:contact-1.0',
+	secDNS => 'urn:ietf:params:xml:ns:secDNS-1.1',
 };
 
 # get a template object
@@ -501,7 +502,7 @@ use Storable qw(dclone);
 sub run_unit_tests {
 	my $gen_session = shift;
 	my @testfiles = @_;
-
+	
 	for my $testfile ( sort @testfiles ) {
 		diag("Reading $testfile") if $main::VERBOSE>0;
 		my $test = load_test($testfile);
@@ -515,6 +516,10 @@ sub run_unit_tests {
 		my $session = $gen_session->();
 		if ( exists $test->data->{user} ) {
 			$session->user($test->data->{user});
+		}
+		
+		if ( $test->data->{extensions} ) {
+			$session->extensions->set(@{$test->data->{extensions}});
 		}
 	SKIP:{
 			input_packet_test($test, $session)

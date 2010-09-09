@@ -16,6 +16,7 @@ use MooseX::Method::Signatures;
 extends 'SRS::EPP::Message';
 
 use SRS::EPP::SRSResponse;
+use XML::EPP::Extension;
 
 has 'code' =>
 	is => 'ro',
@@ -33,6 +34,10 @@ has 'msgQ' =>
 	isa => "XML::EPP::msgQType";
 
 has 'payload' =>
+	is => "ro",
+	;
+
+has 'extension' =>
 	is => "ro",
 	;
 
@@ -61,16 +66,27 @@ method build_response() {
 		($msg ? (msg => $msg) : ()),
 		code => $self->code,
 	);
-	my $payload;
+	my ($payload, $extension);
 	if ( $self->payload ) {
 		$payload = XML::EPP::SubResponse->new(
 			payload => $self->payload,
 		);
 	}
+	
+	if ($self->extension) {
+		# We only support one extension at the moment...
+		$extension = XML::EPP::Extension->new(
+			ext_objs => [$self->extension],
+		);
+
+	}
+
+	
 	XML::EPP->new(
 		message => XML::EPP::Response->new(
 			result => [$result],
 			($payload ? (response => $payload) : ()),
+			($extension ? (extension => $extension) : ()),
 			($self->msgQ ? (msgQ => $self->msgQ) : ()),
 			($tx_id ? (tx_id => $tx_id) : () ),
 		),
