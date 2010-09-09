@@ -34,9 +34,9 @@
     </domain:add>
     [%~ END %]
 
-    [%~ IF admin_old OR tech_old OR nslist_old OR status_list_old %]
+    [%~ IF admin_old.defined OR tech_old OR nslist_old OR status_list_old %]
     <domain:rem>
-      [%~ IF admin_old %]
+      [%~ IF admin_old.defined %]
       <domain:contact type="admin">[% admin_old %]</domain:contact>
       [%~ END %]
       [%~ IF admin_old2 %]

@@ -213,7 +213,7 @@ method notify( SRS::EPP::SRSResponse @rs ) {
 					return $self->make_error(
 						code => 2002,
 						value =>
-							$contact_removed->value,
+							$contact_removed->value || '',
 						reason =>
 							"Attempting to remove $contact_type contact which does not exist on the domain",
 					);
