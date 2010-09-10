@@ -112,6 +112,7 @@ method notify( SRS::EPP::SRSResponse @rs ) {
 		$self->_maybe_phone_number($response->fax, "fax"),
 		email => $response->email,
 		created => $response->created_date->timestamptz,
+		client_id => zero_pad($response->registrar_id),
 		creator_id => zero_pad($response->registrar_id),
 		status => [XML::EPP::Contact::Status->new(status => 'ok')],
 		(
