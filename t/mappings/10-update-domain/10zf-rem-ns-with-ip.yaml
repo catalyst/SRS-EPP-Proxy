@@ -4,7 +4,7 @@ template: update-domain.tt
 vars:
   domain: 10zf.co.te
   nslist_old:
-    - ns1.10ze.co.te
+    - ns1.blah.com
 
 SRS:
     -

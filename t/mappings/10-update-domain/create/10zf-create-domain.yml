@@ -9,7 +9,7 @@ request: |-
     <AdminContact HandleId="10d"/>
     <TechnicalContact HandleId="10d"/>
     <NameServers>
-      <Server FQDN="ns1.10ze.co.te"/>
+      <Server FQDN="ns1.blah.com"/>
       <Server FQDN="ns2.10ze.co.te" IP4Addr="200.200.200.200"/>
       <Server FQDN="ns3.10ze.co.te" IP6Addr="1080:0:0:0:8:800:200C:417A" />
       <Server FQDN="ns4.10ze.co.te" IP4Addr="200.200.200.201" IP6Addr="1080:0:0:0:8:800:200C:417B" />
