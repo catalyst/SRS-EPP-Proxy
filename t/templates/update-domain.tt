@@ -3,7 +3,7 @@
 
     <domain:name>[% domain %]</domain:name>
 
-    [%~ IF admin OR tech OR nslist OR status_list %]
+    [%~ IF admin OR tech OR billing OR nslist OR status_list %]
     <domain:add>
       [%~ IF admin %]
       <domain:contact type="admin">[% admin %]</domain:contact>
@@ -16,6 +16,9 @@
       [%~ END %]
       [%~ IF tech2 %]
       <domain:contact type="tech">[% tech2 %]</domain:contact>
+      [%~ END %]
+      [%~ IF billing %]
+      <domain:contact type="billing">[% billing %]</domain:contact>
       [%~ END %]
       [%~ IF nslist %]
       <domain:ns>

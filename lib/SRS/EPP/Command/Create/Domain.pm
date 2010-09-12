@@ -16,6 +16,8 @@ use XML::SRS::Contact;
 use XML::SRS::DS;
 use XML::SRS::DS::List;
 
+use feature 'switch';
+
 # for plugin system to connect
 sub xmlns {
 	return XML::EPP::Domain::Node::xmlns();
@@ -39,27 +41,36 @@ method process( SRS::EPP::Session $session ) {
 	my ($contact_admin, $contact_technical);
 
 	foreach my $contact (@$contacts) {
-		if ( $contact->type eq 'admin' ) {
-			if ($contact_admin) {
-				$self->log_error("$self multiple admin contacts");
-				return $self->make_error(
-					code => 2306,
-					message => 'Only one admin contact per domain supported',
-				);
+		given ($contact->type) {
+			when ('admin') {
+				if ($contact_admin) {
+					$self->log_error("$self multiple admin contacts");
+					return $self->make_error(
+						code => 2306,
+						message => 'Only one admin contact per domain supported',
+					);
+				}
+				$contact_admin = XML::SRS::Contact->new( handle_id => $contact->value );
+				$self->log_info("$self admin contact = ".$contact->value);
 			}
-			$contact_admin = XML::SRS::Contact->new( handle_id => $contact->value );
-			$self->log_info("$self admin contact = ".$contact->value);
-		}
-		if ( $contact->type eq 'tech' ) {
-			if ($contact_technical) {
-				$self->log_error("$self multiple tech contacts");
-				return $self->make_error(
-					code => 2306,
-					message => 'Only one tech contact per domain supported',
-				);
+			when ('tech') {
+				if ($contact_technical) {
+					$self->log_error("$self multiple tech contacts");
+					return $self->make_error(
+						code => 2306,
+						message => 'Only one tech contact per domain supported',
+					);
+				}
+				$contact_technical = XML::SRS::Contact->new( handle_id => $contact->value );
+				$self->log_info("$self tech contact = ".$contact->value);
 			}
-			$contact_technical = XML::SRS::Contact->new( handle_id => $contact->value );
-			$self->log_info("$self tech contact = ".$contact->value);
+			default {
+				# Contacts other than admin or tech not supported
+				return $self->make_error(
+					code => 2102,
+					message => "Only contacts of type 'admin' or 'tech' are supported",
+				);				
+			}
 		}
 	}
 

@@ -25,6 +25,7 @@
     [% IF admin.defined %]<domain:contact type="admin">[% admin %]</domain:contact>[% END %]
     [% IF admin2.defined %]<domain:contact type="admin">[% admin2 %]</domain:contact>[% END %]
     [% IF tech.defined %]<domain:contact type="tech">[% tech %]</domain:contact>[% END %]
+    [% IF billing.defined %]<domain:contact type="billing">[% billing %]</domain:contact>[% END %]
     <domain:authInfo>
       <domain:pw></domain:pw>
     </domain:authInfo>

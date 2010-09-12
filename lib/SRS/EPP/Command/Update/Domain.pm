@@ -451,15 +451,30 @@ sub check_contacts {
 	my $self = shift;
 	my $payload = shift;
 	
-	my %contact_changes = ();
+	my %contact_changes = ();	
+
+	my %epp_contacts = (
+		add => [$payload->add && $payload->add->contact ? @{$payload->add->contact} : ()],
+		remove => [$payload->remove && $payload->remove->contact ? @{$payload->remove->contact} : ()],
+	);
+
+	# Firstly check only contacts of type 'admin' or 'tech'
+	#  were requested.
+	foreach my $action (keys %epp_contacts) {
+		if (grep { $_->type ne 'admin' && $_->type ne 'tech' } @{$epp_contacts{$action}}) {
+			return $self->make_error(
+				code => 2102,
+				message => "Only contacts of type 'admin' or 'tech' are supported",
+			);
+		}
+	} 
 
 	for my $contact_type (qw/admin tech/) {
 		for my $action (qw/add remove/) {
 			my @contacts;
 			@contacts = grep {
 				$_->type eq $contact_type
-				} @{$payload->$action->contact}
-				if $payload->$action && $payload->$action->contact;
+			} @{$epp_contacts{$action}};
 
 			$contact_changes{$contact_type}{$action}
 				= \@contacts;
