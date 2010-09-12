@@ -67,7 +67,27 @@ sub translate_ns_srs_to_epp {
 	my $self = shift;
 	my @ns = @_;
 
-	my @nameservers = map { XML::EPP::Domain::HostAttr->new(name => $_->fqdn) } @ns;
+	my @nameservers;
+	foreach my $srs_ns (@ns) {
+		my ($ipv4addr, $ipv6addr);
+		$ipv4addr = XML::EPP::Host::Address->new(
+			value => $srs_ns->ipv4_addr,
+			ip => 'v4',
+		) if $srs_ns->ipv4_addr;
+
+		$ipv6addr = XML::EPP::Host::Address->new(
+			value => $srs_ns->ipv6_addr,
+			ip => 'v6',
+		) if $srs_ns->ipv6_addr;
+
+		push @nameservers, XML::EPP::Domain::HostAttr->new(
+			name => $srs_ns->fqdn,
+			addrs => [
+				$ipv4addr // (),
+				$ipv6addr // (),
+			],
+		);
+	}
 
 	return scalar @ns != 1 ? @nameservers : $nameservers[0];
 
