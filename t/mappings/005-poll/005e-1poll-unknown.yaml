@@ -21,4 +21,6 @@ output_assertions:
     - [ '//epp:msgQ/epp:msg', 1, 'EPP: found msg text' ]
   attr_is:
     - [ '//epp:result', 'code', 1301, 'EPP: Correct response code' ]
+  match:
+    - [ '//epp:msgQ/epp:msg', 'Domain Update', 'EPP: Correct message type' ]
 
