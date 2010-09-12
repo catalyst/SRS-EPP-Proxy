@@ -459,7 +459,7 @@ sub check_contacts {
 			@contacts = grep {
 				$_->type eq $contact_type
 				} @{$payload->$action->contact}
-				if $payload->$action;
+				if $payload->$action && $payload->$action->contact;
 
 			$contact_changes{$contact_type}{$action}
 				= \@contacts;

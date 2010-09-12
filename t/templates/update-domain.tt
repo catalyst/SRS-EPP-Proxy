@@ -64,6 +64,10 @@
       [%~ END %]
     </domain:rem>
     [%~ END %]
+    
+    [% IF empty_rem %]
+    <domain:rem></domain:rem>
+    [% END %]
 
     [%~ IF owner %]
     <domain:chg>
