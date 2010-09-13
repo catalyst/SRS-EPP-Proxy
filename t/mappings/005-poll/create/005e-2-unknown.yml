@@ -3,7 +3,7 @@ registrar: 1
 
 
 request: |-
- <NZSRSRequest VerMajor="4" VerMinor="4" RegistrarId="101">
+ <NZSRSRequest VerMajor="4" VerMinor="4" RegistrarId="100">
   <DomainUpdate ActionId="[% actionid %]" Lock="1">
     <DomainNameFilter>cumin.co.te</DomainNameFilter>
   </DomainUpdate>
