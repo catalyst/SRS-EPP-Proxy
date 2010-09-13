@@ -4,7 +4,7 @@ registrar: 1
 
 request: |-
  <NZSRSRequest VerMajor="4" VerMinor="4" RegistrarId="100">
-  <DomainCreate Delegate="1" DomainName="10ze.co.te" Term="1" ActionId="[% actionid %] 1">
+  <DomainCreate Delegate="1" DomainName="10zf.co.te" Term="1" ActionId="[% actionid %] 1">
     <RegistrantContact HandleId="10d"/>
     <AdminContact HandleId="10d"/>
     <TechnicalContact HandleId="10d"/>
