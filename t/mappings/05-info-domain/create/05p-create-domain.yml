@@ -5,6 +5,10 @@ request: |-
  <NZSRSRequest VerMajor="4" VerMinor="4" RegistrarId="100">
   <DomainCreate Delegate="0" DomainName="05p.co.te" Term="1" ActionId="[% actionid %] 1">
     <RegistrantContact HandleId="reg1"/>
+      <NameServers>
+        <Server FQDN="ns1.everydns.net"/>
+        <Server FQDN="ns2.everydns.net"/>
+      </NameServers>   
       <DNSSEC>
        <DS DigestType="1" KeyTag="1" Algorithm="5">
          <Digest>1234abcd11111111111111111111111111111111</Digest>

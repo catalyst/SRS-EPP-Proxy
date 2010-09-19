@@ -4,6 +4,10 @@ template: create-domain.tt
 vars:
   domain: 09m.co.te
   owner: id123
+  ns:
+    - ns1.hidns.com
+    - ns2.hidns.com
+    - ns3.hidns.com  
   dnssec:
     -
         keytag: 1
