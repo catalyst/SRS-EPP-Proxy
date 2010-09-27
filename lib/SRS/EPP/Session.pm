@@ -322,7 +322,7 @@ has 'backend_queue' => (
 		qw( queue_backend_request backend_next
 			backend_pending
 			add_backend_response backend_response_ready
-			dequeue_backend_response )
+			dequeue_backend_response get_owner_of_request )
 	],
 );
 
@@ -448,8 +448,21 @@ method process_notify_result( SRS::EPP::Command $command, $error, @messages ) {
 		$messages[0]->does('XML::SRS::Action') ||
 		$messages[0]->does('XML::SRS::Query')
 		)
-	{
-		@messages = map { SRS::EPP::SRSRequest->new( message => $_, ); } @messages;
+	{		
+		foreach my $i (0 .. $#messages) {
+			# Make sure every message has a unique action or query id
+			# TODO: perhaps we should override anything the mapping has set, so we can
+			#  be sure it is actually unique. Would also make sense to have one place
+			#  where the ids are controlled.
+			unless ($messages[$i]->unique_id) {
+				my $id = $command->client_id || $command->server_id;
+				$id .= "[$i]" if scalar @messages > 1;
+				$messages[$i]->unique_id($id);
+			}			
+			
+			$messages[$i] = SRS::EPP::SRSRequest->new( message => $messages[$i], );
+		}
+		
 		$self->log_info( "$command produced ".@messages." SRS message(s)" );
 		$self->queue_backend_request( $command, @messages, );
 		if ( $command->isa("SRS::EPP::Command::Login") ) {
@@ -684,12 +697,10 @@ method backend_response() {
 	$self->openpgp->verify_detached($fields{r}, $fields{s})
 		or die "failed to verify BE response integrity";
 
-	# decode message
 	$self->log_packet("BE response", $fields{r});
-	my $message = eval { XML::SRS::Response->parse($fields{r}) };
-	my $error = $@;
-	confess "Exception parsing SRS Response: $error" if $error;
-	my $rs_tx = SRS::EPP::SRSMessage->new( message => $message );
+
+	my $rs_tx = $self->parse_be_response($fields{r});
+	return unless $rs_tx;
 
 	$self->be_response($rs_tx);
 
@@ -698,11 +709,41 @@ method backend_response() {
 		if $self->backend_pending;
 }
 
+method parse_be_response(Str $xml) {
+	# decode message
+	my $message = eval { XML::SRS::Response->parse($xml) };
+	my $error = $@;
+	if ($error) {
+		# Got an error parsing response. Log and generate a 2500 error
+		$self->log_error("Exception parsing SRS Response: $error");
+
+		my $request = $self->active_request;
+		my $rq_parts = $request->parts;
+		
+		my $command = $self->get_owner_of_request($rq_parts->[0]);
+	
+		my $error_resp = SRS::EPP::Response::Error->new(
+			code => 2500,
+			server_id => 'unknown',
+		);
+		
+		$self->add_command_response(
+			$error_resp,
+			$command,
+		);
+		$self->yield("send_pending_replies");
+		
+		return;
+		
+	}
+		
+	return SRS::EPP::SRSMessage->new( message => $message );	
+}
+
 method be_response( SRS::EPP::SRSMessage $rs_tx ) {
 	my $request = $self->active_request;
 
-	#$self->active_request(undef);
-	my $rq_parts = $request->parts;
+ 	my $rq_parts = $request->parts;
 	my $rs_parts = $rs_tx->parts;
 	my $result_id = eval { $rs_parts->[0]->message->result_id }
 		|| "(no unique_id)";
@@ -717,12 +758,12 @@ method be_response( SRS::EPP::SRSMessage $rs_tx ) {
 		and
 		$rs_parts->[0]->message->isa("XML::SRS::Error")
 		)
-	{
-
+	{ 
 		# this is a more fundamental type of error than others
 		# ... 'extend' to the other messages
 		@$rs_parts = ((@$rs_parts) x @$rq_parts);
 	}
+	
 	(@$rq_parts == @$rs_parts) or do {
 		die "rs parts != rq parts";
 	};

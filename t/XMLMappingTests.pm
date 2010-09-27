@@ -460,15 +460,13 @@ sub backend_return_test {
 		}
 	}
 
-	#FIXME: split backend_response so as not to duplicate it here.
-	my $message = XML::SRS::Response->parse($rs);
-	my $rs_tx = SRS::EPP::SRSMessage->new( message => $message );
-
 	my $session = $test->session;
 	my $be_q = $session->backend_queue;
 	my $queue_tip = $be_q->queue->[-1];
 
-	$session->be_response($rs_tx);
+	my $rs_tx = $session->parse_be_response($rs); 
+
+	$session->be_response($rs_tx) if $rs_tx;
 	$DB::single = 1;
 	$session->process_responses;
 

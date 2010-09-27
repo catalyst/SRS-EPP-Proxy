@@ -116,6 +116,19 @@ method dequeue_backend_response() {
 	}
 }
 
+# Get the command object that 'owns' a SRS request
+method get_owner_of_request( SRS::EPP::SRSRequest $request ) {
+	my @queue = @{ $self->queue };
+	for my $i (0 .. $#queue) {
+		next unless ref $queue[$i] eq 'ARRAY';
+		foreach my $rq (@{$queue[$i]}) {
+			if ($rq->message->unique_id eq $request->message->unique_id) {
+				return $self->owner->[$i];	
+			}	
+		}
+	}
+}
+
 1;
 
 __END__
