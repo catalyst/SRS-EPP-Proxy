@@ -65,6 +65,7 @@ method process( SRS::EPP::Session $session ) {
 
 method notify( SRS::EPP::SRSResponse @rs ) {
 	my $epp = $self->message;
+	my $payload = $epp->message->argument->payload;
 
 	for (@rs) {
 		my $message = $_->message;
@@ -78,6 +79,14 @@ method notify( SRS::EPP::SRSResponse @rs ) {
 			}
 			if ( $message->action() eq "DomainUpdate" ) {
 				if ( $response->isa("XML::SRS::Domain") ) {
+					my $exDate;
+					
+					# If the domain is PendingRelease, we return the cancelled date as the exDate
+					$exDate = $response->cancelled_date if $response->status eq 'PendingRelease';
+					
+					# If the request updated the period, we return the billed until as the exDate
+					$exDate = $response->billed_until if $payload->period;
+					
 					my $epp_resp = XML::EPP::Domain::Transfer::Response->new(
 						name => $response->name,
 						trStatus => 'serverApproved',
@@ -87,6 +96,7 @@ method notify( SRS::EPP::SRSResponse @rs ) {
 						action_id =>  $response->registrar_id,
 						action_date =>
 							$response->audit->when->begin->timestamptz,
+						($exDate ? (expiry_date => $exDate->timestamptz) : ()), 
 					);
 
 					return $self->make_response(
