@@ -150,6 +150,9 @@ sub buildInfoResponse {
 			),
 		);
 	}
+	
+	# The 'exDate' we return depends on the domain's status
+	my $exDate = $domain->status eq 'PendingRelease' ? $domain->cancelled_date : $domain->billed_until;
 
 	return XML::EPP::Domain::Info::Response->new(
 		name => $domain->name,
@@ -159,7 +162,7 @@ sub buildInfoResponse {
 		($nsList ? (ns => $nsList) : ()),
 		$domain->registrar_id() ? (client_id => sprintf("%03d",$domain->registrar_id())) : (), # clID
 		$domain->registered_date() ? (created => ($domain->registered_date())->timestamptz) : (), # crDate
-		$domain->billed_until() ? (expiry_date => ($domain->billed_until())->timestamptz) : (), # exDate
+		$exDate ? (expiry_date => $exDate->timestamptz) : (), # exDate
 		$domain_updated
 		? (
 			updated => # upDate
