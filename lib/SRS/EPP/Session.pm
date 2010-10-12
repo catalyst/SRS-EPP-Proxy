@@ -732,6 +732,7 @@ method parse_be_response(Str $xml) {
 			$command,
 		);
 		$self->yield("send_pending_replies");
+		$self->shutdown;
 		
 		return;
 		
