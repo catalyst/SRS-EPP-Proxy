@@ -1,0 +1,27 @@
+registrar: 1
+description: Enable DNSSEC
+
+request: |-
+ <NZSRSRequest [% version %] RegistrarId="1">
+    <SysParamsCreate ActionId="[% actionid %] 1">
+      <SysParam Name="Maximum Domain DNSSEC Keys">
+        <ParamValue>10</ParamValue>
+      </SysParam>
+      <AuditText>create new sysparam record</AuditText>
+    </SysParamsCreate>
+    <SysParamsCreate ActionId="[% actionid %] 2">
+      <SysParam Name="DNSSEC DS Allowed Algorithms">
+        <ParamValue>5, 6, 7, 8, 10</ParamValue>
+      </SysParam>
+      <AuditText>create new sysparam record</AuditText>
+    </SysParamsCreate>
+    <SysParamsCreate ActionId="[% actionid %] 3">
+      <SysParam Name="DNSSEC DS Allowed DigestTypes">
+        <ParamValue>1, 2</ParamValue>
+      </SysParam>
+      <AuditText>create new sysparam record</AuditText>
+    </SysParamsCreate>        
+ </NZSRSRequest>
+
+assertions:
+ - xpath_matches:  [ '//Error', '0', "Error free response" ]
