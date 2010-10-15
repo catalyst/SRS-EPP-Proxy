@@ -34,7 +34,7 @@ XML::EPP::register_obj_uri(
 );
 
 XML::EPP::register_ext_uri(
-	"http://custom/obj1ext-1.0",
+	"http://custom/obj1ext-1.0" => "obj",
 );
 
 my $event = Mock::Event->new();
