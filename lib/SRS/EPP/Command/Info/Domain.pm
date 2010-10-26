@@ -37,7 +37,7 @@ method process( SRS::EPP::Session $session ) {
 		qw(delegate registered_date registrar_id billed_until
 		audit_text effective_from registrant_contact
 		admin_contact technical_contact status locked_date
-		changed_by_registrar_id dns_sec);
+		changed_by_registrar_id dns_sec cancelled_date);
 
 	# We only want to return name servers if the 'hosts' attribute
 	# is 'all' or 'del'

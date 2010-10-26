@@ -34,6 +34,7 @@ SRS:
         - [ '//FieldList', 'Delegate', '1', 'SRS: Delegate field requested' ]
         - [ '//FieldList', 'ChangedByRegistrarId', '1', 'SRS: ChangedByRegistrarId field requested' ]
         - [ '//FieldList', 'DNSSEC', '1', 'SRS: DNSSEC field requested' ]
+        - [ '//FieldList', 'CancelledDate', '1', 'SRS: DNSSEC field requested' ]
 
 output_assertions:
   count:
