@@ -206,6 +206,8 @@ method init() {
 	$self->init_uris;
 	$self->log_info("Initializing Listener");
 	$self->init_listener;
+	$self->log_info("Dropping Privileges");
+	$self->drop_privs;
 }
 
 has 'openpgp' =>
@@ -527,6 +529,27 @@ after 'start' => sub {
 	$self->accept_loop
 		if $self->is_daemon;
 };
+
+has 'user' =>
+	is => "ro",
+	isa => "Str",
+	default => "nobody",
+	;
+
+method drop_privs() {
+	if ( $< and $> ) {
+		$self->log_info("Not dropping privilegs, already UID $<");
+	}
+	my $user = $self->user;
+	my ($uid, $gid) = (getpwnam $user)[2,3] or do {
+		$self->log_error("cannot drop privileges; no such user '$user'");
+	};
+	my $group = getgrgid($gid) || $gid;
+	$self->log_debug("Setting UID:GID to $user:$group");
+
+	$( = $) = $gid;
+	$< = $> = $uid;
+}
 
 1;
 
