@@ -525,7 +525,7 @@ method connected() {
 			$self->log_trace("got input callback");
 			$self->input_event;
 		},
-		timeout => 300,
+		timeout => $self->timeout,
 		timeout_cb => sub {
 			$self->log_trace("got input timeout event");
 			$self->input_timeout;
@@ -540,7 +540,7 @@ method connected() {
 		cb => sub {
 			$self->output_event;
 		},
-		timeout => 300,
+		timeout => $self->timeout,
 		timeout_cb => sub {
 			$self->log_trace("got output timeout event");
 		},
@@ -944,7 +944,7 @@ method shutdown() {
 has 'timeout' => (
 	is => "ro",
 	isa => "Int",
-	default => 30,
+	default => 300,
 );
 
 method input_timeout() {

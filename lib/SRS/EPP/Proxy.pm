@@ -298,6 +298,7 @@ has 'backend' =>
 has 'timeout' =>
 	is => "ro",
 	isa => "Int",
+	default => 300,
 	;
 
 method accept_one() {
@@ -455,7 +456,7 @@ method accept_loop() {
 				);
 				Event::unloop_all;
 			};
-			Event::loop(120);
+			Event::loop($self->timeout);
 			$self->log_info("Session ends");
 			exit unless $self->foreground;
 		}
