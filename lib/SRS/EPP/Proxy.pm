@@ -206,8 +206,6 @@ method init() {
 	$self->init_uris;
 	$self->log_info("Initializing Listener");
 	$self->init_listener;
-	$self->log_info("Dropping Privileges");
-	$self->drop_privs;
 }
 
 has 'openpgp' =>
@@ -527,8 +525,11 @@ before 'start' => sub {
 
 after 'start' => sub {
 	my $self = shift;
-	$self->accept_loop
-		if $self->is_daemon;
+	if ($self->is_daemon) {
+		$self->log_info("Dropping Privileges");
+		$self->drop_privs;
+		$self->accept_loop;
+	}
 };
 
 has 'user' =>
